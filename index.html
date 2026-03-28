@@ -929,27 +929,25 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 .arb-notes .disc{color:#ff6080;font-weight:700}
 
 
+/* ── Dropdown nav ── */
+.nav-dropdown{position:relative;display:flex;align-items:stretch}
+.nav-dropdown-btn{display:flex;align-items:center;gap:7px;padding:0 18px;height:42px;font-family:var(--font);font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--gray);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;user-select:none;}
+.nav-dropdown-btn:hover{color:var(--blue3);background:rgba(58,111,216,.08)}
+.nav-dropdown-btn.open{color:var(--white);background:rgba(58,111,216,.08)}
+.nav-dropdown-btn .dd-arrow{font-size:8px;opacity:.6;transition:transform .15s}
+.nav-dropdown-btn.open .dd-arrow{transform:rotate(180deg);opacity:1}
+.nav-dropdown-menu{display:none;position:absolute;top:42px;left:0;z-index:500;background:var(--navy3);border:1px solid var(--border);border-top:2px solid var(--blue);min-width:200px;padding:4px 0;box-shadow:0 8px 24px rgba(0,0,0,.5);}
+.nav-dropdown.open .nav-dropdown-menu{display:block}
+.nav-dropdown-item{display:flex;align-items:center;gap:9px;padding:8px 16px;font-family:var(--font);font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--gray2);cursor:pointer;border:none;background:none;width:100%;text-align:left;text-decoration:none;transition:all .12s;border-left:2px solid transparent;}
+.nav-dropdown-item:hover{color:var(--white);background:rgba(58,111,216,.12);border-left-color:var(--blue);}
+.nav-dropdown-item.active{color:var(--blue3);background:rgba(58,111,216,.1);border-left-color:var(--blue2);}
+.nav-dropdown-item .di-icon{font-size:13px;width:16px;text-align:center}
+
 /* ── iframe shell ── */
-html, body {
-  height: 100%;
-  overflow: hidden;
-}
-.iframe-container {
-  position: fixed;
-  top: 98px; /* top-bar(56) + nav-bar(42) */
-  left: 0; right: 0; bottom: 0;
-}
-.page-frame {
-  display: none;
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: var(--navy);
-}
-.page-frame.active {
-  display: block;
-}
-/* hide inner nav when inside iframe */
+html,body{height:100%;overflow:hidden}
+.iframe-container{position:fixed;top:98px;left:0;right:0;bottom:0}
+.page-frame{display:none;width:100%;height:100%;border:none;background:var(--navy)}
+.page-frame.active{display:block}
 </style>
 </head>
 <body>
@@ -980,55 +978,102 @@ html, body {
 </div>
 
 
-<!-- NAV BAR -->
+<!-- NAV BAR con dropdowns -->
 <div class="nav-bar">
   <button class="nav-tab active" id="nav-resumen" onclick="showPage('resumen')"><span class="tab-icon">◉</span> Resumen</button>
-  <button class="nav-tab" id="nav-cauc"   onclick="showPage('cauc')"><span class="tab-icon">⬡</span> Cauciones</button>
-  <button class="nav-tab" id="nav-dcto"   onclick="showPage('dcto')"><span class="tab-icon">◈</span> Descuento de Cheques</button>
-  <button class="nav-tab" id="nav-lecap"  onclick="showPage('lecap')"><span class="tab-icon">◆</span> LECAP / BONCAP</button>
-  <button class="nav-tab" id="nav-bonos"  onclick="showPage('bonos')"><span class="tab-icon">◇</span> Bonos Soberanos</button>
-  <button class="nav-tab" id="nav-arb"    onclick="showPage('arb')"><span class="tab-icon">⇄</span> Arbitraje</button>
+
+  <div class="nav-dropdown" id="dd-calc">
+    <button class="nav-dropdown-btn" id="ddbtn-calc">🧮 Calculadoras <span class="dd-arrow">▼</span></button>
+    <div class="nav-dropdown-menu">
+      <button class="nav-dropdown-item" onclick="showPage('cauc')">  <span class="di-icon">⬡</span> Cauciones</button>
+      <button class="nav-dropdown-item" onclick="showPage('dcto')">  <span class="di-icon">◈</span> Descuento de Cheques</button>
+    </div>
+  </div>
+
+  <div class="nav-dropdown" id="dd-bonos">
+    <button class="nav-dropdown-btn" id="ddbtn-bonos">📊 Bonos <span class="dd-arrow">▼</span></button>
+    <div class="nav-dropdown-menu">
+      <button class="nav-dropdown-item" onclick="showPage('lecap')">      <span class="di-icon">◆</span> LECAP / BONCAP</button>
+      <button class="nav-dropdown-item" onclick="showPage('bonos')">      <span class="di-icon">◇</span> Soberanos USD</button>
+      <button class="nav-dropdown-item" onclick="showPage('cer')">        <span class="di-icon">◎</span> Bonos CER</button>
+      <button class="nav-dropdown-item" onclick="showPage('dolarlinked')"><span class="di-icon">◐</span> Dólar Linked</button>
+    </div>
+  </div>
+
+  <div class="nav-dropdown" id="dd-estrat">
+    <button class="nav-dropdown-btn" id="ddbtn-estrat">⚡ Estrategias <span class="dd-arrow">▼</span></button>
+    <div class="nav-dropdown-menu">
+      <button class="nav-dropdown-item" onclick="showPage('arb')"><span class="di-icon">⇄</span> Arbitraje GD30/AL30</button>
+    </div>
+  </div>
+
   <div class="nav-spacer"></div>
   <div class="nav-meta"><span class="nav-meta-txt">REF.06 · BYMA 2026</span></div>
 </div>
 
-<!-- IFRAMES — cada uno apunta al archivo standalone -->
+<!-- IFRAMES -->
 <div class="iframe-container">
-  <iframe class="page-frame active" id="frame-resumen" src="resumen.html"   title="Resumen"></iframe>
-  <iframe class="page-frame"        id="frame-cauc"    src="cauciones.html" title="Cauciones"></iframe>
-  <iframe class="page-frame"        id="frame-dcto"    src="cheques.html"   title="Descuento de Cheques"></iframe>
-  <iframe class="page-frame"        id="frame-lecap"   src="lecap.html"     title="LECAP / BONCAP"></iframe>
-  <iframe class="page-frame"        id="frame-bonos"   src="bonos.html"     title="Bonos Soberanos"></iframe>
-  <iframe class="page-frame"        id="frame-arb"     src="arbitraje.html" title="Arbitraje"></iframe>
+  <iframe class="page-frame active" id="frame-resumen"     src="resumen.html"      title="Resumen"></iframe>
+  <iframe class="page-frame"        id="frame-cauc"        src="cauciones.html"    title="Cauciones"></iframe>
+  <iframe class="page-frame"        id="frame-dcto"        src="cheques.html"      title="Descuento de Cheques"></iframe>
+  <iframe class="page-frame"        id="frame-lecap"       src="lecap.html"        title="LECAP / BONCAP"></iframe>
+  <iframe class="page-frame"        id="frame-bonos"       src="bonos.html"        title="Soberanos USD"></iframe>
+  <iframe class="page-frame"        id="frame-cer"         src="cer.html"          title="Bonos CER"></iframe>
+  <iframe class="page-frame"        id="frame-dolarlinked" src="dolarlinked.html"  title="Dólar Linked"></iframe>
+  <iframe class="page-frame"        id="frame-arb"         src="arbitraje.html"    title="Arbitraje"></iframe>
 </div>
 
 <script>
-function tick(){
-  const n=new Date(),p=v=>String(v).padStart(2,'0');
-  document.getElementById('clock').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
-}
-tick(); setInterval(tick, 1000);
+const PAGE_IDS = ["resumen", "cauc", "dcto", "lecap", "bonos", "cer", "dolarlinked", "arb"];
+const CALC_GROUP  = ['cauc','dcto'];
+const BONOS_GROUP = ['lecap','bonos','cer','dolarlinked'];
+const ESTRAT_GROUP= ['arb'];
 
-const PAGES = ['resumen','cauc','dcto','lecap','bonos','arb'];
+// Clock
+function tick(){const n=new Date(),p=v=>String(v).padStart(2,'0');document.getElementById('clock').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;}
+tick();setInterval(tick,1000);
 
-function showPage(id) {
-  // Nav tabs
-  PAGES.forEach(p => {
-    document.getElementById('nav-'+p).classList.toggle('active', p === id);
+function showPage(id){
+  // iframes
+  PAGE_IDS.forEach(p=>{
+    document.getElementById('frame-'+p).classList.toggle('active',p===id);
   });
-  // Iframes
-  PAGES.forEach(p => {
-    document.getElementById('frame-'+p).classList.toggle('active', p === id);
-  });
-  // URL hash para poder compartir links directos
-  history.replaceState(null, '', '#' + id);
+  // top-level tab
+  document.querySelectorAll('.nav-bar > .nav-tab').forEach(t=>t.classList.remove('active'));
+  const topBtn=document.getElementById('nav-'+id);
+  if(topBtn)topBtn.classList.add('active');
+  // dropdown items highlight
+  document.querySelectorAll('.nav-dropdown-item').forEach(item=>item.classList.remove('active'));
+  // close all dropdowns
+  document.querySelectorAll('.nav-dropdown').forEach(d=>d.classList.remove('open'));
+  document.querySelectorAll('.nav-dropdown-btn').forEach(b=>b.classList.remove('open'));
+  // URL hash
+  history.replaceState(null,'','#'+id);
 }
 
-// Al cargar, leer hash si viene de un redirect externo
-(function() {
-  const hash = location.hash.replace('#','');
-  if (PAGES.includes(hash)) showPage(hash);
+// Hash-based routing on load
+(function(){
+  const hash=location.hash.replace('#','');
+  if(PAGE_IDS.includes(hash))showPage(hash);
 })();
+
+
+// ── Dropdown nav logic (index shell) ──
+document.querySelectorAll('.nav-dropdown-btn').forEach(btn=>{
+  btn.addEventListener('click',function(e){
+    e.stopPropagation();
+    const dd=this.closest('.nav-dropdown');
+    const isOpen=dd.classList.contains('open');
+    document.querySelectorAll('.nav-dropdown').forEach(d=>d.classList.remove('open'));
+    document.querySelectorAll('.nav-dropdown-btn').forEach(b=>b.classList.remove('open'));
+    if(!isOpen){dd.classList.add('open');this.classList.add('open');}
+  });
+});
+document.addEventListener('click',()=>{
+  document.querySelectorAll('.nav-dropdown').forEach(d=>d.classList.remove('open'));
+  document.querySelectorAll('.nav-dropdown-btn').forEach(b=>b.classList.remove('open'));
+});
+
 </script>
 </body>
 </html>
