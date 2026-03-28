@@ -1046,19 +1046,11 @@ id="page-cer">
     <div style="display:flex;align-items:center;gap:20px">
       <div><div style="font-family:var(--mono);font-size:8px;color:rgba(122,153,196,.4);letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px">Inflación últimas 30 ruedas</div><div id="cer-infl30" style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--amber)">—</div></div>
       <div><div style="font-family:var(--mono);font-size:8px;color:rgba(122,153,196,.4);letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px">Inflación anualizada</div><div id="cer-inflA" style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--cyan)">—</div></div>
-      <div><div style="font-family:var(--mono);font-size:8px;color:rgba(122,153,196,.4);letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px">Fuente</div><div id="cer-fuente-lbl" style="font-family:var(--mono);font-size:10px;color:rgba(74,106,154,.5)">EstadísticasBCRA</div></div>
-    </div>
-    <!-- ── TOKEN input para estadisticasbcra.com ── -->
-    <div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.25);border:1px solid rgba(42,74,122,.4);border-radius:6px;padding:4px 10px">
-      <span style="font-family:var(--mono);font-size:8px;font-weight:700;color:rgba(240,180,41,.6);letter-spacing:.14em;text-transform:uppercase;white-space:nowrap">BCRA TOKEN</span>
-      <input id="cer-token-inp" type="password"
-        placeholder="Pegá tu Bearer token..."
-        style="background:transparent;border:none;outline:none;font-family:var(--mono);font-size:10px;color:var(--yellow);width:180px;letter-spacing:.03em;padding:0 4px"
-        autocomplete="off" spellcheck="false">
-      <button id="cer-token-btn" onclick="cerSaveToken()"
-        style="background:rgba(58,111,216,.2);border:1px solid rgba(58,111,216,.4);color:var(--blue3);font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 8px;cursor:pointer;border-radius:3px;white-space:nowrap;letter-spacing:.06em;transition:all .12s">
-        GUARDAR
-      </button>
+      <div>
+        <div style="font-family:var(--mono);font-size:8px;color:rgba(122,153,196,.4);letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px">CER T-10 (settlement)</div>
+        <div id="cer-t10-val" style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--blue3)">—</div>
+      </div>
+      <div><div style="font-family:var(--mono);font-size:8px;color:rgba(122,153,196,.4);letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px">Fuente</div><div id="cer-fuente-lbl" style="font-family:var(--mono);font-size:10px;color:rgba(74,106,154,.5)">BCRA</div></div>
     </div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
       <div id="cer-dot" style="width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 6px var(--amber);animation:arbpulse 2s infinite"></div>
@@ -1116,7 +1108,7 @@ id="page-cer">
 
   <div class="lc-statusbar">
     <span id="cer-last-upd" style="color:var(--gray)">—</span>
-    <span style="color:var(--blue3)">Precios: data912.com · CER: estadisticasbcra.com (BEARER token) · argentinadatos.com (fallback)</span>
+    <span style="color:var(--blue3)">Precios: data912.com · CER: BCRA v4.0 vía Netlify · argentinadatos.com (fallback)</span>
   </div>
 </div>
 </div>
@@ -1304,34 +1296,33 @@ let CER_HOY = null, CER_INFL_MENSUAL = null;
 let cerData = [], cerFilter = 'all', cerSortCol = 'venc', cerSortDir = 'asc';
 let cerCurveChart = null, cerCurrentBond = null;
 
-// ── Guardar / cargar TOKEN de estadisticasbcra.com ──────────
-function cerSaveToken() {
-  const inp = document.getElementById('cer-token-inp');
-  const val = inp ? inp.value.trim() : '';
-  if (val) {
-    localStorage.setItem('bcra_api_token', val);
-    const btn = document.getElementById('cer-token-btn');
-    if (btn) { btn.textContent = '✔ GUARDADO'; btn.style.color='var(--green)'; setTimeout(()=>{btn.textContent='GUARDAR';btn.style.color='';},1800); }
-    cerFetchCER(); // refetch inmediato con el nuevo token
-  } else {
-    localStorage.removeItem('bcra_api_token');
-    document.getElementById('cer-token-btn').textContent = 'BORRADO';
-    setTimeout(()=>document.getElementById('cer-token-btn').textContent='GUARDAR', 1600);
-  }
+// ── Globals CER ─────────────────────────────────────────────
+let CER_T10 = null; // CER para settlement T+1 (T-10 hábiles)
+
+// ── Helpers Netlify function URLs ────────────────────────────
+const NETLIFY_CER_ULTIMO  = '/.netlify/functions/cer-ultimo';
+const NETLIFY_CER_T10     = '/.netlify/functions/cer-t10';
+const NETLIFY_CER_PRICES  = '/.netlify/functions/cer-prices';
+
+// Detectar si estamos en Netlify (para usar funciones serverless) o local
+function isNetlify() {
+  return !window.location.protocol.startsWith('file') &&
+    (window.location.hostname.endsWith('netlify.app') ||
+     window.location.hostname.endsWith('netlify.com') ||
+     window.location.pathname.startsWith('/.netlify') ||
+     // también si hay un _redirects o netlify.toml: lo detectamos por dominio propio desplegado
+     (!['localhost','127.0.0.1'].includes(window.location.hostname) &&
+      !window.location.protocol.startsWith('file')));
 }
 
-// Cargar token guardado al inicio (con default hardcodeado)
-(function() {
-  const DEFAULT_TOKEN = 'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4MDYyMzgwODgsInR5cGUiOiJleHRlcm5hbCIsInVzZXIiOiJub3ZvYS5sYXV0YXJvLjIwMDJAZ21haWwuY29tIn0.75_5_n_IWE3VD0nV8nvwmr2VCW8Q9HVx1IDv4DxwAABrYPRCsTIPyp0LttfnqFBtnV6FoLZscHbC4-eExJ12SA';
-  if (!localStorage.getItem('bcra_api_token')) {
-    localStorage.setItem('bcra_api_token', DEFAULT_TOKEN);
-  }
-  const t = localStorage.getItem('bcra_api_token');
-  const inp = document.getElementById('cer-token-inp');
-  if (inp && t) inp.value = t;
-})();
-
-// ── Fetch CER — fuente principal: estadisticasbcra.com ───────
+// ── Fetch CER ────────────────────────────────────────────────
+// Jerarquía:
+//   1. /.netlify/functions/cer-ultimo  + cer-t10  (Netlify deploy)
+//   2. estadisticasbcra.com  con token localStorage  (fallback directo)
+//   3. argentinadatos.com · UVA ≈ CER
+//   4. argentinadatos.com · IPC mensual
+//   5. BCRA v4 via CORS proxy
+//   6. Referencia estática
 async function cerFetchCER() {
   const dot = document.getElementById('cer-dot');
   const src = document.getElementById('cer-src');
@@ -1340,116 +1331,139 @@ async function cerFetchCER() {
     if (cerVal) {
       CER_HOY = cerVal;
       document.getElementById('cer-valor').textContent = cerVal.toFixed(6);
-      document.getElementById('cer-fecha').textContent = cerFechaStr ? 'al '+cerFechaStr : '';
+      document.getElementById('cer-fecha').textContent = cerFechaStr ? 'al ' + cerFechaStr : '';
     } else {
       document.getElementById('cer-valor').textContent = 'N/D';
       document.getElementById('cer-fecha').textContent = 'estimado por inflación mensual';
     }
     if (inflMensual !== null && inflMensual !== undefined) {
       CER_INFL_MENSUAL = inflMensual;
-      document.getElementById('cer-infl30').textContent = inflMensual.toFixed(2)+'%';
-      document.getElementById('cer-inflA').textContent = ((Math.pow(1+inflMensual/100,12)-1)*100).toFixed(1)+'%';
+      document.getElementById('cer-infl30').textContent = inflMensual.toFixed(2) + '%';
+      document.getElementById('cer-inflA').textContent = ((Math.pow(1 + inflMensual / 100, 12) - 1) * 100).toFixed(1) + '%';
       const inp = document.getElementById('cer-inp-infl');
       if (inp && !inp.dataset.userEdited) inp.value = Math.max(1.5, inflMensual).toFixed(1);
     }
     const live = !!cerVal;
     dot.style.background = live ? '#22d68a' : '#f0b429';
     dot.style.boxShadow  = live ? '0 0 6px #22d68a' : '0 0 6px #f0b429';
-    src.textContent = source + ' · ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-    // Actualizar label fuente
+    src.textContent = source + ' · ' + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
     const lbl = document.getElementById('cer-fuente-lbl');
     if (lbl) lbl.textContent = source.split(' · ')[0];
   }
 
-  // ══ Estrategia 1: estadisticasbcra.com (BEARER token, fuente primaria) ══
+  // ══ 1. Netlify functions (fetch paralelo último + T10) ══
+  try {
+    const [resUlt, resT10] = await Promise.allSettled([
+      fetch(NETLIFY_CER_ULTIMO),
+      fetch(NETLIFY_CER_T10)
+    ]);
+
+    let cerVal = null, cerFecha = null, inflMensual = null;
+
+    if (resUlt.status === 'fulfilled' && resUlt.value.ok) {
+      const d = await resUlt.value.json();
+      if (d && d.cer) {
+        cerVal   = parseFloat(d.cer);
+        cerFecha = d.fecha ? new Date(d.fecha + 'T00:00:00').toLocaleDateString('es-AR') : null;
+      }
+    }
+
+    if (resT10.status === 'fulfilled' && resT10.value.ok) {
+      const d = await resT10.value.json();
+      if (d && d.cer) {
+        CER_T10 = parseFloat(d.cer);
+        const elT10 = document.getElementById('cer-t10-val');
+        if (elT10) elT10.textContent = CER_T10.toFixed(4);
+        // Inflación mensual implícita entre T-10 y hoy (aproximada)
+        if (cerVal && CER_T10) {
+          // delta en ~10 días hábiles ≈ 14 días calendario → mensualizar
+          const deltaFactor = cerVal / CER_T10;
+          inflMensual = (Math.pow(deltaFactor, 30 / 14) - 1) * 100;
+        }
+      }
+    }
+
+    if (cerVal) {
+      cerSetValues(cerVal, cerFecha, inflMensual, 'BCRA · Netlify');
+      return;
+    }
+  } catch (e) {
+    console.warn('[CER] Netlify function error:', e);
+  }
+
+  // ══ 2. estadisticasbcra.com con token (si hay) ══
   const token = localStorage.getItem('bcra_api_token') || '';
   if (token) {
     try {
       const headers = { 'Authorization': 'BEARER ' + token };
-
-      // Fetch CER e inflación mensual oficial en paralelo
       const [resCer, resInfl] = await Promise.allSettled([
-        fetch('https://api.estadisticasbcra.com/cer',                    { headers }),
+        fetch('https://api.estadisticasbcra.com/cer',                       { headers }),
         fetch('https://api.estadisticasbcra.com/inflacion_mensual_oficial', { headers })
       ]);
 
-      let cerVal = null, cerFecha = null, infl30 = null, inflMensualOficial = null;
+      let cerVal = null, cerFecha = null, inflFinal = null;
 
-      // Procesar CER
       if (resCer.status === 'fulfilled' && resCer.value.ok) {
-        const arrCer = await resCer.value.json();
-        if (Array.isArray(arrCer) && arrCer.length > 0) {
-          arrCer.sort((a,b) => a.d > b.d ? 1 : -1);
-          const last   = arrCer[arrCer.length - 1];
-          const hace30 = arrCer[Math.max(0, arrCer.length - 31)];
-          cerVal  = parseFloat(last.v);
-          infl30  = hace30 ? (cerVal / parseFloat(hace30.v) - 1) * 100 : null;
+        const arr = await resCer.value.json();
+        if (Array.isArray(arr) && arr.length > 0) {
+          arr.sort((a, b) => a.d > b.d ? 1 : -1);
+          const last   = arr[arr.length - 1];
+          const hace30 = arr[Math.max(0, arr.length - 31)];
+          cerVal   = parseFloat(last.v);
           cerFecha = new Date(last.d + 'T00:00:00').toLocaleDateString('es-AR');
+          inflFinal = hace30 ? (cerVal / parseFloat(hace30.v) - 1) * 100 : null;
         }
       }
-
-      // Procesar inflación mensual oficial (más precisa que el delta del CER)
       if (resInfl.status === 'fulfilled' && resInfl.value.ok) {
-        const arrInfl = await resInfl.value.json();
-        if (Array.isArray(arrInfl) && arrInfl.length > 0) {
-          arrInfl.sort((a,b) => a.d > b.d ? 1 : -1);
-          inflMensualOficial = parseFloat(arrInfl[arrInfl.length - 1].v);
+        const arr = await resInfl.value.json();
+        if (Array.isArray(arr) && arr.length > 0) {
+          arr.sort((a, b) => a.d > b.d ? 1 : -1);
+          inflFinal = parseFloat(arr[arr.length - 1].v);
         }
       }
 
       if (cerVal) {
-        // Preferimos la inflación oficial mensual; si no hay, usamos delta CER 30d
-        const inflFinal = inflMensualOficial !== null ? inflMensualOficial : infl30;
-        cerSetValues(cerVal, cerFecha, inflFinal, 'EstadísticasBCRA · CER oficial');
+        cerSetValues(cerVal, cerFecha, inflFinal, 'EstadísticasBCRA');
         return;
       }
-
-      // Token válido pero sin datos CER → igual puede haber inflación
-      if (inflMensualOficial !== null) {
-        cerSetValues(null, null, inflMensualOficial, 'EstadísticasBCRA · IPC mensual');
-        return;
-      }
-    } catch(e) {
-      console.warn('[CER] estadisticasbcra.com error:', e);
-    }
+    } catch (e) {}
   }
 
-  // ══ Estrategia 2 (fallback): argentinadatos · UVA ≈ CER ══
+  // ══ 3. argentinadatos · UVA ≈ CER ══
   try {
     const r = await fetch('https://api.argentinadatos.com/v1/finanzas/indices/uva');
     if (r.ok) {
       const arr = await r.json();
       if (arr && arr.length > 0) {
-        arr.sort((a,b) => a.fecha > b.fecha ? 1 : -1);
-        const last   = arr[arr.length-1];
-        const hace30 = arr[Math.max(0, arr.length-31)];
+        arr.sort((a, b) => a.fecha > b.fecha ? 1 : -1);
+        const last   = arr[arr.length - 1];
+        const hace30 = arr[Math.max(0, arr.length - 31)];
         const uvaHoy = parseFloat(last.valor);
         const infl30 = hace30 ? (uvaHoy / parseFloat(hace30.valor) - 1) * 100 : null;
-        const fecha  = new Date(last.fecha+'T00:00:00').toLocaleDateString('es-AR');
-        cerSetValues(uvaHoy, fecha, infl30, 'ArgentinaDatos · UVA≈CER');
+        cerSetValues(uvaHoy, new Date(last.fecha + 'T00:00:00').toLocaleDateString('es-AR'), infl30, 'ArgentinaDatos · UVA');
         return;
       }
     }
-  } catch(e) {}
+  } catch (e) {}
 
-  // ══ Estrategia 3 (fallback): argentinadatos · IPC mensual ══
+  // ══ 4. argentinadatos · IPC mensual ══
   try {
     const r = await fetch('https://api.argentinadatos.com/v1/finanzas/indices/inflacion');
     if (r.ok) {
       const arr = await r.json();
       if (arr && arr.length > 0) {
-        arr.sort((a,b) => a.fecha > b.fecha ? 1 : -1);
-        cerSetValues(null, null, parseFloat(arr[arr.length-1].valor), 'ArgentinaDatos · IPC mensual');
+        arr.sort((a, b) => a.fecha > b.fecha ? 1 : -1);
+        cerSetValues(null, null, parseFloat(arr[arr.length - 1].valor), 'ArgentinaDatos · IPC');
         return;
       }
     }
-  } catch(e) {}
+  } catch (e) {}
 
-  // ══ Estrategia 4 (fallback): BCRA API v4 via proxy (serie 3540) ══
+  // ══ 5. BCRA v4 via CORS proxy (serie 3540) ══
   try {
     const hoy   = new Date();
-    const desde = new Date(hoy); desde.setDate(desde.getDate()-65);
-    const fmt   = d => d.toISOString().slice(0,10);
+    const desde = new Date(hoy); desde.setDate(desde.getDate() - 65);
+    const fmt   = d => d.toISOString().slice(0, 10);
     const bcraUrl  = `https://api.bcra.gob.ar/estadisticas/v4/datosvariable/3540/${fmt(desde)}/${fmt(hoy)}?limit=65`;
     const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(bcraUrl);
     const r = await fetch(proxyUrl);
@@ -1458,20 +1472,20 @@ async function cerFetchCER() {
       const data    = JSON.parse(wrapper.contents || '{}');
       const arr     = data.results || [];
       if (arr.length > 0) {
-        arr.sort((a,b) => a.fecha > b.fecha ? 1 : -1);
-        const last   = arr[arr.length-1];
-        const hace30 = arr[Math.max(0, arr.length-31)];
+        arr.sort((a, b) => a.fecha > b.fecha ? 1 : -1);
+        const last   = arr[arr.length - 1];
+        const hace30 = arr[Math.max(0, arr.length - 31)];
         const cerVal = parseFloat(last.valor);
         const infl30 = hace30 ? (cerVal / parseFloat(hace30.valor) - 1) * 100 : null;
-        cerSetValues(cerVal, new Date(last.fecha+'T00:00:00').toLocaleDateString('es-AR'), infl30, 'BCRA · Serie 3540');
+        cerSetValues(cerVal, new Date(last.fecha + 'T00:00:00').toLocaleDateString('es-AR'), infl30, 'BCRA · Serie 3540');
         return;
       }
     }
-  } catch(e) {}
+  } catch (e) {}
 
-  // ══ Fallback estático ══
-  cerSetValues(null, null, 3.0, 'Referencia estática (sin conexión)');
-  dot.style.background='#ff4d6a'; dot.style.boxShadow='0 0 6px #ff4d6a';
+  // ══ 6. Fallback estático ══
+  cerSetValues(null, null, 3.0, 'Referencia estática');
+  dot.style.background = '#ff4d6a'; dot.style.boxShadow = '0 0 6px #ff4d6a';
 }
 
 // Marcar input como editado por el usuario para no sobreescribir
@@ -1539,45 +1553,69 @@ function cerDuration(flows, price) {
 }
 
 // ── Fetch precios de mercado ─────────────────────────────────
+// Jerarquía:
+//   1. /.netlify/functions/cer-prices  → {data:[...], count, timestamp}
+//   2. data912.com directo via pfetch  (fallback sin Netlify / local)
+//   3. CER_FALLBACK estático
 async function cerFetch() {
-  const btn = document.getElementById('cer-refresh-btn');
+  const btn  = document.getElementById('cer-refresh-btn');
   const pill = document.getElementById('cer-pill');
   btn.classList.add('loading'); btn.textContent = '↻ CARGANDO...';
   pill.className = 'lc-status-pill loading'; pill.textContent = 'CARGANDO...';
 
   let apiPrices = {}, src = '';
 
+  // ══ 1. Netlify function ══
   try {
-    const [rawBonds, rawNotes] = await Promise.all([
-      pfetch('https://data912.com/live/arg_bonds').catch(()=>null),
-      pfetch('https://data912.com/live/arg_notes').catch(()=>null),
-    ]);
-    const arr = [
-      ...((Array.isArray(rawBonds)?rawBonds:(rawBonds?.data||[]))||[]),
-      ...((Array.isArray(rawNotes)?rawNotes:(rawNotes?.data||[]))||[]),
-    ];
-    if (arr.length > 0) {
+    const r = await fetch(NETLIFY_CER_PRICES);
+    if (r.ok) {
+      const json = await r.json();
+      const arr  = json.data || json;
+      if (Array.isArray(arr) && arr.length > 0) {
+        arr.forEach(b => {
+          const tk    = (b.ticker || b.symbol || b.t || '').replace(/\s+/g, '').toUpperCase();
+          const price = parseFloat(b.c || b.ultimo || b.last || b.price || 0);
+          const varPct = parseFloat(b.pct_change || b.variacion_pct || b.var || 0);
+          if (tk && price > 0) apiPrices[tk] = { price, varPct };
+        });
+        if (Object.keys(apiPrices).length > 0) src = 'data912 · Netlify';
+      }
+    }
+  } catch (e) { console.warn('[cerFetch] Netlify cer-prices:', e); }
+
+  // ══ 2. data912 directo (fallback — funciona localmente o sin Netlify) ══
+  if (!Object.keys(apiPrices).length) {
+    try {
+      const [rawBonds, rawNotes] = await Promise.all([
+        pfetch('https://data912.com/live/arg_bonds').catch(() => null),
+        pfetch('https://data912.com/live/arg_notes').catch(() => null),
+      ]);
+      const arr = [
+        ...((Array.isArray(rawBonds) ? rawBonds : (rawBonds?.data || [])) || []),
+        ...((Array.isArray(rawNotes) ? rawNotes : (rawNotes?.data || [])) || []),
+      ];
       arr.forEach(b => {
-        const tk = (b.ticker||b.symbol||b.t||'').replace(/\s+/g,'').toUpperCase();
-        const price = parseFloat(b.c||b.ultimo||b.last||b.price||0);
-        const varPct = parseFloat(b.pct_change||b.variacion_pct||b.var||0);
+        const tk    = (b.ticker || b.symbol || b.t || '').replace(/\s+/g, '').toUpperCase();
+        const price = parseFloat(b.c || b.ultimo || b.last || b.price || 0);
+        const varPct = parseFloat(b.pct_change || b.variacion_pct || b.var || 0);
         if (tk && price > 0) apiPrices[tk] = { price, varPct };
       });
-      src = 'data912.com';
-    }
-  } catch(e) { console.warn('cerFetch:', e); }
+      if (Object.keys(apiPrices).length > 0) src = 'data912.com';
+    } catch (e) { console.warn('[cerFetch] data912 directo:', e); }
+  }
 
+  // ══ 3. Fallback estático ══
   if (!Object.keys(apiPrices).length) {
-    Object.entries(CER_FALLBACK).forEach(([tk,px]) => { apiPrices[tk] = {price:px,varPct:0}; });
+    Object.entries(CER_FALLBACK).forEach(([tk, px]) => { apiPrices[tk] = { price: px, varPct: 0 }; });
     src = 'referencia estática';
     pill.textContent = '⚠ OFFLINE (ref.)';
   }
 
   cerData = [];
   for (const ticker of Object.keys(CER_CONFIG)) {
-    const candidates = [ticker, ticker+'C', ticker+'D'];
+    const candidates = [ticker, ticker + 'C', ticker + 'D'];
     let found = null;
-    for (const c of candidates) { if (apiPrices[c]) { found = {...apiPrices[c]}; break; } }
+    for (const c of candidates) { if (apiPrices[c]) { found = { ...apiPrices[c] }; break; } }
     if (!found && CER_FALLBACK[ticker]) found = { price: CER_FALLBACK[ticker], varPct: 0 };
     if (!found) continue;
 
@@ -1586,8 +1624,8 @@ async function cerFetch() {
 
     const tirReal = cerSolveIRR(flows, found.price);
     const { macD, modD } = cerDuration(flows, found.price);
-    const today = new Date(); today.setHours(0,0,0,0);
-    const dias = Math.max(1, Math.round((new Date(CER_CONFIG[ticker].venc+'T00:00:00')-today)/86400000));
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const dias  = Math.max(1, Math.round((new Date(CER_CONFIG[ticker].venc + 'T00:00:00') - today) / 86400000));
 
     cerData.push({
       ticker, ...CER_CONFIG[ticker], price: found.price, varPct: found.varPct,
@@ -1601,7 +1639,7 @@ async function cerFetch() {
     pill.className = 'lc-status-pill err'; pill.textContent = '⚠ OFFLINE';
   }
   document.getElementById('cer-last-upd').textContent =
-    '✓ '+new Date().toLocaleTimeString('es-AR')+' · '+cerData.length+' bonos · '+src;
+    '✓ ' + new Date().toLocaleTimeString('es-AR') + ' · ' + cerData.length + ' bonos · ' + src;
   btn.classList.remove('loading'); btn.textContent = '↻ ACTUALIZAR';
   cerRender(); cerRenderCurve();
   setTimeout(cerFetch, 30000);
@@ -1732,6 +1770,10 @@ function cerOpenModal(ticker) {
     document.getElementById('cer-inp-infl').value = Math.max(1.5, CER_INFL_MENSUAL).toFixed(1);
   }
   document.getElementById('cer-m-cer').textContent = CER_HOY ? CER_HOY.toFixed(4) : 'N/D';
+  if (CER_T10) {
+    const elT10m = document.getElementById('cer-m-cer');
+    if (elT10m) elT10m.title = 'CER T-10 (settlement): ' + CER_T10.toFixed(6);
+  }
   cerCalcModal();
   document.getElementById('cer-modal-overlay').classList.add('open');
 }
