@@ -1019,7 +1019,7 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
         <span class="bnd-leg-dot" style="background:#f0b429"></span><span class="bnd-leg-lbl">Ley NY</span>
       </div>
     </div>
-    <div style="position:relative;height:50vh;max-width:900px;margin:0 auto;padding:12px 24px 12px">
+    <div style="position:relative;height:420px;width:100%;padding:16px 32px 16px">
       <canvas id="bnd-curve-canvas"></canvas>
     </div>
   </div>
@@ -1275,7 +1275,7 @@ async function bndFetch(){
 
   // Fallback estatico si API no responde
   if(Object.keys(apiPrices).length===0){
-    const fallback={AL29D:73.50,AL30D:60.80,AL35D:66.50,AL41D:62.00,GD29D:75.00,GD30D:62.00,GD35D:68.00,GD38D:64.50,GD41D:63.00,GD46D:60.50,AO27D:97.00,AO27:97.00,BPY26D:98.00,BPOA7D:96.00,BPD27D:95.00};
+    const fallback={AL29D:73.50,AL30D:60.80,AL35D:66.50,AL41D:62.00,GD29D:75.00,GD30D:62.00,GD35D:68.00,GD38D:64.50,GD41D:63.00,GD46D:60.50,AO27D:97.00,AO27:97.00,AN29D:98.50,AN29:98.50,AE38D:64.00,AE38:64.00,BPY26D:98.00,BPOA7D:96.00,BPD27D:95.00};
     for(const[tk,px]of Object.entries(fallback)) apiPrices[tk]={price:px,varPct:0};
     bndSrc='referencia estatica';
     pill.textContent='⚠ OFFLINE (ref.)';
