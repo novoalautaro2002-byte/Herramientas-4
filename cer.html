@@ -1046,11 +1046,23 @@ id="page-cer">
     <div style="display:flex;align-items:center;gap:20px">
       <div><div style="font-family:var(--mono);font-size:8px;color:rgba(122,153,196,.4);letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px">Inflación últimas 30 ruedas</div><div id="cer-infl30" style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--amber)">—</div></div>
       <div><div style="font-family:var(--mono);font-size:8px;color:rgba(122,153,196,.4);letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px">Inflación anualizada</div><div id="cer-inflA" style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--cyan)">—</div></div>
-      <div><div style="font-family:var(--mono);font-size:8px;color:rgba(122,153,196,.4);letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px">Fuente</div><div style="font-family:var(--mono);font-size:10px;color:rgba(74,106,154,.5)">BCRA · Serie 3540</div></div>
+      <div><div style="font-family:var(--mono);font-size:8px;color:rgba(122,153,196,.4);letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px">Fuente</div><div id="cer-fuente-lbl" style="font-family:var(--mono);font-size:10px;color:rgba(74,106,154,.5)">EstadísticasBCRA</div></div>
+    </div>
+    <!-- ── TOKEN input para estadisticasbcra.com ── -->
+    <div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.25);border:1px solid rgba(42,74,122,.4);border-radius:6px;padding:4px 10px">
+      <span style="font-family:var(--mono);font-size:8px;font-weight:700;color:rgba(240,180,41,.6);letter-spacing:.14em;text-transform:uppercase;white-space:nowrap">BCRA TOKEN</span>
+      <input id="cer-token-inp" type="password"
+        placeholder="Pegá tu Bearer token..."
+        style="background:transparent;border:none;outline:none;font-family:var(--mono);font-size:10px;color:var(--yellow);width:180px;letter-spacing:.03em;padding:0 4px"
+        autocomplete="off" spellcheck="false">
+      <button id="cer-token-btn" onclick="cerSaveToken()"
+        style="background:rgba(58,111,216,.2);border:1px solid rgba(58,111,216,.4);color:var(--blue3);font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 8px;cursor:pointer;border-radius:3px;white-space:nowrap;letter-spacing:.06em;transition:all .12s">
+        GUARDAR
+      </button>
     </div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
       <div id="cer-dot" style="width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 6px var(--amber);animation:arbpulse 2s infinite"></div>
-      <span id="cer-src" style="font-family:var(--mono);font-size:9px;color:var(--gray2);letter-spacing:.08em">CARGANDO BCRA...</span>
+      <span id="cer-src" style="font-family:var(--mono);font-size:9px;color:var(--gray2);letter-spacing:.08em">CARGANDO...</span>
     </div>
   </div>
 
@@ -1104,7 +1116,7 @@ id="page-cer">
 
   <div class="lc-statusbar">
     <span id="cer-last-upd" style="color:var(--gray)">—</span>
-    <span style="color:var(--blue3)">Precios: data912.com · CER: BCRA Serie 3540 · argentinadatos.com</span>
+    <span style="color:var(--blue3)">Precios: data912.com · CER: estadisticasbcra.com (BEARER token) · argentinadatos.com (fallback)</span>
   </div>
 </div>
 </div>
@@ -1292,12 +1304,39 @@ let CER_HOY = null, CER_INFL_MENSUAL = null;
 let cerData = [], cerFilter = 'all', cerSortCol = 'venc', cerSortDir = 'asc';
 let cerCurveChart = null, cerCurrentBond = null;
 
-// ── Fetch CER desde BCRA API (serie 3540) ───────────────────
+// ── Guardar / cargar TOKEN de estadisticasbcra.com ──────────
+function cerSaveToken() {
+  const inp = document.getElementById('cer-token-inp');
+  const val = inp ? inp.value.trim() : '';
+  if (val) {
+    localStorage.setItem('bcra_api_token', val);
+    const btn = document.getElementById('cer-token-btn');
+    if (btn) { btn.textContent = '✔ GUARDADO'; btn.style.color='var(--green)'; setTimeout(()=>{btn.textContent='GUARDAR';btn.style.color='';},1800); }
+    cerFetchCER(); // refetch inmediato con el nuevo token
+  } else {
+    localStorage.removeItem('bcra_api_token');
+    document.getElementById('cer-token-btn').textContent = 'BORRADO';
+    setTimeout(()=>document.getElementById('cer-token-btn').textContent='GUARDAR', 1600);
+  }
+}
+
+// Cargar token guardado al inicio (con default hardcodeado)
+(function() {
+  const DEFAULT_TOKEN = 'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4MDYyMzgwODgsInR5cGUiOiJleHRlcm5hbCIsInVzZXIiOiJub3ZvYS5sYXV0YXJvLjIwMDJAZ21haWwuY29tIn0.75_5_n_IWE3VD0nV8nvwmr2VCW8Q9HVx1IDv4DxwAABrYPRCsTIPyp0LttfnqFBtnV6FoLZscHbC4-eExJ12SA';
+  if (!localStorage.getItem('bcra_api_token')) {
+    localStorage.setItem('bcra_api_token', DEFAULT_TOKEN);
+  }
+  const t = localStorage.getItem('bcra_api_token');
+  const inp = document.getElementById('cer-token-inp');
+  if (inp && t) inp.value = t;
+})();
+
+// ── Fetch CER — fuente principal: estadisticasbcra.com ───────
 async function cerFetchCER() {
   const dot = document.getElementById('cer-dot');
   const src = document.getElementById('cer-src');
 
-  function cerSetValues(cerVal, cerFechaStr, infl30, source) {
+  function cerSetValues(cerVal, cerFechaStr, inflMensual, source) {
     if (cerVal) {
       CER_HOY = cerVal;
       document.getElementById('cer-valor').textContent = cerVal.toFixed(6);
@@ -1306,79 +1345,131 @@ async function cerFetchCER() {
       document.getElementById('cer-valor').textContent = 'N/D';
       document.getElementById('cer-fecha').textContent = 'estimado por inflación mensual';
     }
-    if (infl30 !== null) {
-      CER_INFL_MENSUAL = infl30;
-      document.getElementById('cer-infl30').textContent = infl30.toFixed(2)+'%';
-      document.getElementById('cer-inflA').textContent = ((Math.pow(1+infl30/100,12)-1)*100).toFixed(1)+'%';
+    if (inflMensual !== null && inflMensual !== undefined) {
+      CER_INFL_MENSUAL = inflMensual;
+      document.getElementById('cer-infl30').textContent = inflMensual.toFixed(2)+'%';
+      document.getElementById('cer-inflA').textContent = ((Math.pow(1+inflMensual/100,12)-1)*100).toFixed(1)+'%';
       const inp = document.getElementById('cer-inp-infl');
-      if (!inp.dataset.userEdited) inp.value = Math.max(1.5, infl30).toFixed(1);
+      if (inp && !inp.dataset.userEdited) inp.value = Math.max(1.5, inflMensual).toFixed(1);
     }
     const live = !!cerVal;
     dot.style.background = live ? '#22d68a' : '#f0b429';
     dot.style.boxShadow  = live ? '0 0 6px #22d68a' : '0 0 6px #f0b429';
     src.textContent = source + ' · ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    // Actualizar label fuente
+    const lbl = document.getElementById('cer-fuente-lbl');
+    if (lbl) lbl.textContent = source.split(' · ')[0];
   }
 
-  // ── Estrategia 1: argentinadatos UVA (tiene CORS nativo, similar a CER) ──
+  // ══ Estrategia 1: estadisticasbcra.com (BEARER token, fuente primaria) ══
+  const token = localStorage.getItem('bcra_api_token') || '';
+  if (token) {
+    try {
+      const headers = { 'Authorization': 'BEARER ' + token };
+
+      // Fetch CER e inflación mensual oficial en paralelo
+      const [resCer, resInfl] = await Promise.allSettled([
+        fetch('https://api.estadisticasbcra.com/cer',                    { headers }),
+        fetch('https://api.estadisticasbcra.com/inflacion_mensual_oficial', { headers })
+      ]);
+
+      let cerVal = null, cerFecha = null, infl30 = null, inflMensualOficial = null;
+
+      // Procesar CER
+      if (resCer.status === 'fulfilled' && resCer.value.ok) {
+        const arrCer = await resCer.value.json();
+        if (Array.isArray(arrCer) && arrCer.length > 0) {
+          arrCer.sort((a,b) => a.d > b.d ? 1 : -1);
+          const last   = arrCer[arrCer.length - 1];
+          const hace30 = arrCer[Math.max(0, arrCer.length - 31)];
+          cerVal  = parseFloat(last.v);
+          infl30  = hace30 ? (cerVal / parseFloat(hace30.v) - 1) * 100 : null;
+          cerFecha = new Date(last.d + 'T00:00:00').toLocaleDateString('es-AR');
+        }
+      }
+
+      // Procesar inflación mensual oficial (más precisa que el delta del CER)
+      if (resInfl.status === 'fulfilled' && resInfl.value.ok) {
+        const arrInfl = await resInfl.value.json();
+        if (Array.isArray(arrInfl) && arrInfl.length > 0) {
+          arrInfl.sort((a,b) => a.d > b.d ? 1 : -1);
+          inflMensualOficial = parseFloat(arrInfl[arrInfl.length - 1].v);
+        }
+      }
+
+      if (cerVal) {
+        // Preferimos la inflación oficial mensual; si no hay, usamos delta CER 30d
+        const inflFinal = inflMensualOficial !== null ? inflMensualOficial : infl30;
+        cerSetValues(cerVal, cerFecha, inflFinal, 'EstadísticasBCRA · CER oficial');
+        return;
+      }
+
+      // Token válido pero sin datos CER → igual puede haber inflación
+      if (inflMensualOficial !== null) {
+        cerSetValues(null, null, inflMensualOficial, 'EstadísticasBCRA · IPC mensual');
+        return;
+      }
+    } catch(e) {
+      console.warn('[CER] estadisticasbcra.com error:', e);
+    }
+  }
+
+  // ══ Estrategia 2 (fallback): argentinadatos · UVA ≈ CER ══
   try {
     const r = await fetch('https://api.argentinadatos.com/v1/finanzas/indices/uva');
     if (r.ok) {
       const arr = await r.json();
       if (arr && arr.length > 0) {
-        arr.sort((a,b)=>a.fecha>b.fecha?1:-1);
+        arr.sort((a,b) => a.fecha > b.fecha ? 1 : -1);
         const last   = arr[arr.length-1];
-        const hace30 = arr[Math.max(0,arr.length-31)];
+        const hace30 = arr[Math.max(0, arr.length-31)];
         const uvaHoy = parseFloat(last.valor);
-        const infl30 = hace30 ? (uvaHoy/parseFloat(hace30.valor)-1)*100 : null;
+        const infl30 = hace30 ? (uvaHoy / parseFloat(hace30.valor) - 1) * 100 : null;
         const fecha  = new Date(last.fecha+'T00:00:00').toLocaleDateString('es-AR');
-        // UVA ≈ CER (misma base inflacionaria); mostramos como CER estimado
         cerSetValues(uvaHoy, fecha, infl30, 'ArgentinaDatos · UVA≈CER');
         return;
       }
     }
   } catch(e) {}
 
-  // ── Estrategia 2: argentinadatos inflación mensual (directa, CORS) ──
+  // ══ Estrategia 3 (fallback): argentinadatos · IPC mensual ══
   try {
     const r = await fetch('https://api.argentinadatos.com/v1/finanzas/indices/inflacion');
     if (r.ok) {
       const arr = await r.json();
       if (arr && arr.length > 0) {
-        arr.sort((a,b)=>a.fecha>b.fecha?1:-1);
-        const infl30 = parseFloat(arr[arr.length-1].valor);
-        cerSetValues(null, null, infl30, 'ArgentinaDatos · IPC mensual');
+        arr.sort((a,b) => a.fecha > b.fecha ? 1 : -1);
+        cerSetValues(null, null, parseFloat(arr[arr.length-1].valor), 'ArgentinaDatos · IPC mensual');
         return;
       }
     }
   } catch(e) {}
 
-  // ── Estrategia 3: BCRA via proxy (serie 3540) ──
+  // ══ Estrategia 4 (fallback): BCRA API v4 via proxy (serie 3540) ══
   try {
     const hoy   = new Date();
     const desde = new Date(hoy); desde.setDate(desde.getDate()-65);
     const fmt   = d => d.toISOString().slice(0,10);
-    const bcraUrl = `https://api.bcra.gob.ar/estadisticas/v4/datosvariable/3540/${fmt(desde)}/${fmt(hoy)}?limit=65`;
-    const proxyUrl = 'https://api.allorigins.win/get?url='+encodeURIComponent(bcraUrl);
+    const bcraUrl  = `https://api.bcra.gob.ar/estadisticas/v4/datosvariable/3540/${fmt(desde)}/${fmt(hoy)}?limit=65`;
+    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(bcraUrl);
     const r = await fetch(proxyUrl);
     if (r.ok) {
       const wrapper = await r.json();
       const data    = JSON.parse(wrapper.contents || '{}');
       const arr     = data.results || [];
       if (arr.length > 0) {
-        arr.sort((a,b)=>a.fecha>b.fecha?1:-1);
+        arr.sort((a,b) => a.fecha > b.fecha ? 1 : -1);
         const last   = arr[arr.length-1];
-        const hace30 = arr[Math.max(0,arr.length-31)];
+        const hace30 = arr[Math.max(0, arr.length-31)];
         const cerVal = parseFloat(last.valor);
-        const infl30 = hace30 ? (cerVal/parseFloat(hace30.valor)-1)*100 : null;
-        const fecha  = new Date(last.fecha+'T00:00:00').toLocaleDateString('es-AR');
-        cerSetValues(cerVal, fecha, infl30, 'BCRA · Serie 3540');
+        const infl30 = hace30 ? (cerVal / parseFloat(hace30.valor) - 1) * 100 : null;
+        cerSetValues(cerVal, new Date(last.fecha+'T00:00:00').toLocaleDateString('es-AR'), infl30, 'BCRA · Serie 3540');
         return;
       }
     }
   } catch(e) {}
 
-  // ── Fallback estático: últimas lecturas conocidas ──────────────────────
-  // CER al 27/3/2026 ≈ 9732 (base 02/02/2002 = 1), inflación mensual ~3%
+  // ══ Fallback estático ══
   cerSetValues(null, null, 3.0, 'Referencia estática (sin conexión)');
   dot.style.background='#ff4d6a'; dot.style.boxShadow='0 0 6px #ff4d6a';
 }
