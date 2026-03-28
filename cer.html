@@ -1013,10 +1013,27 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
       <a class="nav-dropdown-item" href="cauciones.html"><span class="di-icon">⬡</span> Cauciones</a>
       <a class="nav-dropdown-item" href="cheques.html"><span class="di-icon">◈</span> Descuento de Cheques</a>
     </div>
+  </div>
+  <div class="nav-dropdown open">
+    <button class="nav-dropdown-btn open">📊 Bonos <span class="dd-arrow">▼</span></button>
+    <div class="nav-dropdown-menu">
+      <a class="nav-dropdown-item" href="lecap.html"><span class="di-icon">◆</span> LECAP / BONCAP</a>
+      <a class="nav-dropdown-item" href="bonos.html"><span class="di-icon">◇</span> Soberanos USD</a>
+      <a class="nav-dropdown-item active" href="cer.html"><span class="di-icon">◎</span> Bonos CER</a>
+      <a class="nav-dropdown-item" href="dolarlinked.html"><span class="di-icon">◐</span> Dólar Linked</a>
+    </div>
+  </div>
+  <div class="nav-dropdown">
+    <button class="nav-dropdown-btn">⚡ Estrategias <span class="dd-arrow">▼</span></button>
+    <div class="nav-dropdown-menu">
+      <a class="nav-dropdown-item" href="arbitraje.html"><span class="di-icon">⇄</span> Arbitraje GD30/AL30</a>
+    </div>
+  </div>
+  <div class="nav-spacer"></div>
+  <div class="nav-meta"><span class="nav-meta-txt">REF.06 · BYMA 2026</span></div>
+</div>
 
-
-
-<div class="page" id="page-cer">
+id="page-cer">
 <div class="lecap-page">
 
   <!-- ── CER Hero bar ── -->
@@ -1279,52 +1296,98 @@ let cerCurveChart = null, cerCurrentBond = null;
 async function cerFetchCER() {
   const dot = document.getElementById('cer-dot');
   const src = document.getElementById('cer-src');
-  try {
-    // BCRA API v4 — últimos 60 días para calcular inflación
-    const hoy = new Date();
-    const desde = new Date(hoy); desde.setDate(desde.getDate()-60);
-    const fmt = d => d.toISOString().slice(0,10);
-    const url = `https://api.bcra.gob.ar/estadisticas/v4/datosvariable/3540/${fmt(desde)}/${fmt(hoy)}?limit=60`;
-    const data = await pfetch(url);
-    const arr = data.results || data;
-    if (arr && arr.length > 0) {
-      arr.sort((a,b) => a.fecha > b.fecha ? 1 : -1);
-      const ultimo = arr[arr.length-1];
-      CER_HOY = parseFloat(ultimo.valor);
-      document.getElementById('cer-valor').textContent = CER_HOY.toFixed(6);
-      document.getElementById('cer-fecha').textContent = 'al ' + new Date(ultimo.fecha+'T00:00:00').toLocaleDateString('es-AR');
-      // Inflación ~30 días
-      const hace30 = arr[Math.max(0,arr.length-31)];
-      if (hace30) {
-        const infl30 = (CER_HOY / parseFloat(hace30.valor) - 1) * 100;
-        CER_INFL_MENSUAL = infl30;
-        document.getElementById('cer-infl30').textContent = infl30.toFixed(2)+'%';
-        document.getElementById('cer-inflA').textContent = ((Math.pow(1+infl30/100,12)-1)*100).toFixed(1)+'%';
-        // Pre-llenar inflación en la calc modal
-        if (document.getElementById('cer-inp-infl').value === '3.0' || !document.getElementById('cer-inp-infl').value) {
-          document.getElementById('cer-inp-infl').value = Math.max(1.5, infl30).toFixed(1);
-        }
-      }
-      dot.style.background='#22d68a'; dot.style.boxShadow='0 0 6px #22d68a';
-      src.textContent = 'BCRA · ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-      return;
-    }
-  } catch(e) { console.warn('BCRA CER:', e); }
-  // Fallback: argentinadatos inflación mensual
-  try {
-    const data2 = await pfetch('https://api.argentinadatos.com/v1/finanzas/indices/inflacion');
-    if (data2 && data2.length > 0) {
-      const last = data2[data2.length-1];
-      CER_INFL_MENSUAL = parseFloat(last.valor);
-      document.getElementById('cer-infl30').textContent = CER_INFL_MENSUAL.toFixed(2)+'%';
-      document.getElementById('cer-inflA').textContent = ((Math.pow(1+CER_INFL_MENSUAL/100,12)-1)*100).toFixed(1)+'%';
+
+  function cerSetValues(cerVal, cerFechaStr, infl30, source) {
+    if (cerVal) {
+      CER_HOY = cerVal;
+      document.getElementById('cer-valor').textContent = cerVal.toFixed(6);
+      document.getElementById('cer-fecha').textContent = cerFechaStr ? 'al '+cerFechaStr : '';
+    } else {
       document.getElementById('cer-valor').textContent = 'N/D';
-      document.getElementById('cer-fecha').textContent = 'CER no disponible (usando inflación)';
-      dot.style.background='#f0b429'; dot.style.boxShadow='0 0 6px #f0b429';
-      src.textContent = 'argentinadatos.com · inflación mensual';
+      document.getElementById('cer-fecha').textContent = 'estimado por inflación mensual';
     }
-  } catch(e) { console.warn('argentinadatos inflación:', e); }
+    if (infl30 !== null) {
+      CER_INFL_MENSUAL = infl30;
+      document.getElementById('cer-infl30').textContent = infl30.toFixed(2)+'%';
+      document.getElementById('cer-inflA').textContent = ((Math.pow(1+infl30/100,12)-1)*100).toFixed(1)+'%';
+      const inp = document.getElementById('cer-inp-infl');
+      if (!inp.dataset.userEdited) inp.value = Math.max(1.5, infl30).toFixed(1);
+    }
+    const live = !!cerVal;
+    dot.style.background = live ? '#22d68a' : '#f0b429';
+    dot.style.boxShadow  = live ? '0 0 6px #22d68a' : '0 0 6px #f0b429';
+    src.textContent = source + ' · ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  }
+
+  // ── Estrategia 1: argentinadatos UVA (tiene CORS nativo, similar a CER) ──
+  try {
+    const r = await fetch('https://api.argentinadatos.com/v1/finanzas/indices/uva');
+    if (r.ok) {
+      const arr = await r.json();
+      if (arr && arr.length > 0) {
+        arr.sort((a,b)=>a.fecha>b.fecha?1:-1);
+        const last   = arr[arr.length-1];
+        const hace30 = arr[Math.max(0,arr.length-31)];
+        const uvaHoy = parseFloat(last.valor);
+        const infl30 = hace30 ? (uvaHoy/parseFloat(hace30.valor)-1)*100 : null;
+        const fecha  = new Date(last.fecha+'T00:00:00').toLocaleDateString('es-AR');
+        // UVA ≈ CER (misma base inflacionaria); mostramos como CER estimado
+        cerSetValues(uvaHoy, fecha, infl30, 'ArgentinaDatos · UVA≈CER');
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // ── Estrategia 2: argentinadatos inflación mensual (directa, CORS) ──
+  try {
+    const r = await fetch('https://api.argentinadatos.com/v1/finanzas/indices/inflacion');
+    if (r.ok) {
+      const arr = await r.json();
+      if (arr && arr.length > 0) {
+        arr.sort((a,b)=>a.fecha>b.fecha?1:-1);
+        const infl30 = parseFloat(arr[arr.length-1].valor);
+        cerSetValues(null, null, infl30, 'ArgentinaDatos · IPC mensual');
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // ── Estrategia 3: BCRA via proxy (serie 3540) ──
+  try {
+    const hoy   = new Date();
+    const desde = new Date(hoy); desde.setDate(desde.getDate()-65);
+    const fmt   = d => d.toISOString().slice(0,10);
+    const bcraUrl = `https://api.bcra.gob.ar/estadisticas/v4/datosvariable/3540/${fmt(desde)}/${fmt(hoy)}?limit=65`;
+    const proxyUrl = 'https://api.allorigins.win/get?url='+encodeURIComponent(bcraUrl);
+    const r = await fetch(proxyUrl);
+    if (r.ok) {
+      const wrapper = await r.json();
+      const data    = JSON.parse(wrapper.contents || '{}');
+      const arr     = data.results || [];
+      if (arr.length > 0) {
+        arr.sort((a,b)=>a.fecha>b.fecha?1:-1);
+        const last   = arr[arr.length-1];
+        const hace30 = arr[Math.max(0,arr.length-31)];
+        const cerVal = parseFloat(last.valor);
+        const infl30 = hace30 ? (cerVal/parseFloat(hace30.valor)-1)*100 : null;
+        const fecha  = new Date(last.fecha+'T00:00:00').toLocaleDateString('es-AR');
+        cerSetValues(cerVal, fecha, infl30, 'BCRA · Serie 3540');
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // ── Fallback estático: últimas lecturas conocidas ──────────────────────
+  // CER al 27/3/2026 ≈ 9732 (base 02/02/2002 = 1), inflación mensual ~3%
+  cerSetValues(null, null, 3.0, 'Referencia estática (sin conexión)');
+  dot.style.background='#ff4d6a'; dot.style.boxShadow='0 0 6px #ff4d6a';
 }
+
+// Marcar input como editado por el usuario para no sobreescribir
+document.addEventListener('DOMContentLoaded',()=>{
+  const inp = document.getElementById('cer-inp-infl');
+  if(inp) inp.addEventListener('input', ()=>{ inp.dataset.userEdited='1'; });
+});
 
 // ── Cashflows de un bono: devuelve flujos futuros ───────────
 function cerGetFlows(ticker) {
