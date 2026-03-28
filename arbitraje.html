@@ -928,7 +928,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 .arb-notes strong{color:var(--white2)}
 .arb-notes .disc{color:#ff6080;font-weight:700}
 
-/* standalone mode — page always visible */
+/* standalone — page always visible */
 .page{display:block!important}
 
 </style>
@@ -936,16 +936,9 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 </head>
 <body>
-
-<!-- Oculta top-bar y nav cuando está dentro de un iframe -->
 <script>
-if (window !== window.top) {
-  document.addEventListener('DOMContentLoaded', function() {
-    var s = document.createElement('style');
-    s.textContent = '.top-bar,.nav-bar{display:none!important} .page{min-height:100vh!important}';
-    document.head.appendChild(s);
-  });
-}
+Chart.register(ChartDataLabels);
+if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){var s=document.createElement('style');s.textContent='.top-bar,.nav-bar{display:none!important}.page{min-height:100vh!important}';document.head.appendChild(s);});}
 </script>
 
 <div class="top-bar">
@@ -985,9 +978,6 @@ if (window !== window.top) {
   <div class="nav-meta"><span class="nav-meta-txt">REF.06 · BYMA 2026</span></div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════ -->
-<!--  PAGE: ARBITRAJE GD30 / AL30                          -->
-<!-- ══════════════════════════════════════════════════════ -->
 <div class="page" id="page-arb">
 <div class="arb-outer">
 
@@ -1145,7 +1135,6 @@ if (window !== window.top) {
 </div>
 </div>
 
-
 <script>
 // ════════════════════════════════════════
 //  GLOBAL
@@ -1158,7 +1147,6 @@ function showPage(id){
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   document.getElementById('nav-'+id).classList.add('active');
-  history.replaceState(null,'','#'+id);
 }
 
 const fmtN=n=>n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -1170,6 +1158,47 @@ const $$=id=>document.getElementById(id);
 // ========================================
 //  RESUMEN — DASHBOARD
 //  APIs: dolarapi.com + data912.com + Yahoo Finance
+// ========================================
+const df=n=>Number(n).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const dfK=n=>{const v=Number(n);return v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':df(v);};
+const dfN=n=>Math.round(Number(n)).toLocaleString('es-AR');
+
+// Fetch with CORS proxy fallback chain (for data912 etc.)
+async function pfetch(url){
+  try{const r=await fetch(url);if(r.ok)return r.json();}catch(e){}
+  try{
+    const r2=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url));
+    if(!r2.ok)throw new Error('proxy HTTP '+r2.status);
+    const d=await r2.json();return JSON.parse(d.contents);
+  }catch(e){}
+  try{
+    const r3=await fetch('https://corsproxy.io/?'+encodeURIComponent(url));
+    if(r3.ok)return r3.json();
+  }catch(e){}
+  throw new Error('unreachable: '+url);
+}
+
+// Simple fetch — for APIs with native CORS headers (dolarapi)
+async function sfetch(url){
+  const r=await fetch(url);
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  return r.json();
+}
+
+function rSetVal(id,txt){
+  const e=document.getElementById(id);if(!e)return;
+  e.textContent=txt;e.classList.remove('blank');e.classList.add('r-num-in');
+  setTimeout(()=>e.classList.remove('r-num-in'),300);
+}
+function rSetChg(id,pct,label){
+  const e=document.getElementById(id);if(!e)return;
+  const cls=pct>0.05?'up':pct<-0.05?'dn':'neu';
+  e.className=e.className.replace(/\b(up|dn|neu)\b/g,'').trim()+' '+cls;
+  e.textContent=label!=null?label:(pct>=0?'+':'')+pct.toFixed(2)+'%';
+}
+
+let _dashTimer=null;
+
 // ══════════════════════════════════════════════════════
 //  ARBITRAJE GD30 / AL30 — BOLLINGER BANDS
 // ══════════════════════════════════════════════════════
@@ -1619,8 +1648,10 @@ function arbInit(){
   setInterval(arbFetch, 10000);
 }
 
-// Init directo
 arbInit();
+
+</script>
+
 </script>
 </body>
 </html>
