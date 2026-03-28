@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portfolio Investment — Bonos Soberanos</title>
+<title>Portfolio Investment</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -928,20 +928,29 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 .arb-notes strong{color:var(--white2)}
 .arb-notes .disc{color:#ff6080;font-weight:700}
 
-/* standalone — page always visible */
-.page{display:block!important}
 
+/* ── Dropdown nav ── */
+.nav-dropdown{position:relative;display:flex;align-items:stretch}
+.nav-dropdown-btn{display:flex;align-items:center;gap:7px;padding:0 18px;height:42px;font-family:var(--font);font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--gray);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;user-select:none;}
+.nav-dropdown-btn:hover{color:var(--blue3);background:rgba(58,111,216,.08)}
+.nav-dropdown-btn.open{color:var(--white);background:rgba(58,111,216,.08)}
+.nav-dropdown-btn .dd-arrow{font-size:8px;opacity:.6;transition:transform .15s}
+.nav-dropdown-btn.open .dd-arrow{transform:rotate(180deg);opacity:1}
+.nav-dropdown-menu{display:none;position:absolute;top:42px;left:0;z-index:500;background:var(--navy3);border:1px solid var(--border);border-top:2px solid var(--blue);min-width:200px;padding:4px 0;box-shadow:0 8px 24px rgba(0,0,0,.5);}
+.nav-dropdown.open .nav-dropdown-menu{display:block}
+.nav-dropdown-item{display:flex;align-items:center;gap:9px;padding:8px 16px;font-family:var(--font);font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--gray2);cursor:pointer;border:none;background:none;width:100%;text-align:left;text-decoration:none;transition:all .12s;border-left:2px solid transparent;}
+.nav-dropdown-item:hover{color:var(--white);background:rgba(58,111,216,.12);border-left-color:var(--blue);}
+.nav-dropdown-item.active{color:var(--blue3);background:rgba(58,111,216,.1);border-left-color:var(--blue2);}
+.nav-dropdown-item .di-icon{font-size:13px;width:16px;text-align:center}
+
+/* ── iframe shell ── */
+html,body{height:100%;overflow:hidden}
+.iframe-container{position:fixed;top:98px;left:0;right:0;bottom:0}
+.page-frame{display:none;width:100%;height:100%;border:none;background:var(--navy)}
+.page-frame.active{display:block}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 </head>
 <body>
-<script>
-Chart.register(ChartDataLabels);
-if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){var s=document.createElement('style');s.textContent='.top-bar,.nav-bar{display:none!important}.page{min-height:100vh!important}';document.head.appendChild(s);});}
-</script>
 
 <div class="top-bar">
   <div class="logo-area">
@@ -969,770 +978,101 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
 </div>
 
 
+<!-- NAV BAR con dropdowns -->
 <div class="nav-bar">
-  <button class="nav-tab" id="nav-resumen" onclick="location.href='resumen.html'"><span class="tab-icon">◉</span> Resumen</button>
-  <button class="nav-tab" id="nav-cauc" onclick="location.href='cauciones.html'"><span class="tab-icon">⬡</span> Cauciones</button>
-  <button class="nav-tab" id="nav-dcto" onclick="location.href='cheques.html'"><span class="tab-icon">◈</span> Descuento de Cheques</button>
-  <button class="nav-tab" id="nav-lecap" onclick="location.href='lecap.html'"><span class="tab-icon">◆</span> LECAP / BONCAP</button>
-  <button class="nav-tab active" id="nav-bonos"><span class="tab-icon">◇</span> Bonos Soberanos</button>
-  <button class="nav-tab" id="nav-arb" onclick="location.href='arbitraje.html'"><span class="tab-icon">⇄</span> Arbitraje</button>
+  <button class="nav-tab active" id="nav-resumen" onclick="showPage('resumen')"><span class="tab-icon">◉</span> Resumen</button>
+
+  <div class="nav-dropdown" id="dd-calc">
+    <button class="nav-dropdown-btn" id="ddbtn-calc">🧮 Calculadoras <span class="dd-arrow">▼</span></button>
+    <div class="nav-dropdown-menu">
+      <button class="nav-dropdown-item" onclick="showPage('cauc')">  <span class="di-icon">⬡</span> Cauciones</button>
+      <button class="nav-dropdown-item" onclick="showPage('dcto')">  <span class="di-icon">◈</span> Descuento de Cheques</button>
+    </div>
+  </div>
+
+  <div class="nav-dropdown" id="dd-bonos">
+    <button class="nav-dropdown-btn" id="ddbtn-bonos">📊 Bonos <span class="dd-arrow">▼</span></button>
+    <div class="nav-dropdown-menu">
+      <button class="nav-dropdown-item" onclick="showPage('lecap')">      <span class="di-icon">◆</span> LECAP / BONCAP</button>
+      <button class="nav-dropdown-item" onclick="showPage('bonos')">      <span class="di-icon">◇</span> Soberanos USD</button>
+      <button class="nav-dropdown-item" onclick="showPage('cer')">        <span class="di-icon">◎</span> Bonos CER</button>
+      <button class="nav-dropdown-item" onclick="showPage('dolarlinked')"><span class="di-icon">◐</span> Dólar Linked</button>
+    </div>
+  </div>
+
+  <div class="nav-dropdown" id="dd-estrat">
+    <button class="nav-dropdown-btn" id="ddbtn-estrat">⚡ Estrategias <span class="dd-arrow">▼</span></button>
+    <div class="nav-dropdown-menu">
+      <button class="nav-dropdown-item" onclick="showPage('arb')"><span class="di-icon">⇄</span> Arbitraje GD30/AL30</button>
+    </div>
+  </div>
+
   <div class="nav-spacer"></div>
   <div class="nav-meta"><span class="nav-meta-txt">REF.06 · BYMA 2026</span></div>
 </div>
 
-<div class="page" id="page-bonos">
-<div class="bonos-page">
-  <div class="bnd-toolbar">
-    <div><div class="bnd-title">BONOS SOBERANOS — USD MEP</div><div class="bnd-sub">Bonares · Globales · Bopreales · Precios en dólar MEP</div></div>
-    <div class="bnd-filters">
-      <button class="bnd-ftab on" id="bf-all" onclick="bndFilter('all')">TODOS</button>
-      <button class="bnd-ftab" id="bf-bonar" onclick="bndFilter('AR')">BONARES</button>
-      <button class="bnd-ftab" id="bf-global" onclick="bndFilter('NY')">GLOBALES</button>
-      <button class="bnd-ftab" id="bf-bopreal" onclick="bndFilter('BCRA')">BOPREALES</button>
-    </div>
-    <div class="bnd-spacer"></div>
-    <span class="bnd-status loading" id="bnd-pill">CARGANDO...</span>
-    <button class="lc-refresh-btn" onclick="bndFetch()">↻ ACTUALIZAR</button>
-    <button class="pdf-btn" onclick="bndPanelPDF()">⬇ PDF PANEL</button>
-  </div>
-  <div class="bnd-table-wrap">
-    <table class="bnd-table" id="bnd-table">
-      <thead><tr>
-        <th data-col="ticker" onclick="bndSort('ticker')">TICKER <span class="bnd-sarr" id="bsa-ticker"></span></th>
-        <th data-col="dirty" onclick="bndSort('dirty')">DIRTY (USD) <span class="bnd-sarr" id="bsa-dirty"></span></th>
-        <th data-col="varPct" onclick="bndSort('varPct')">VAR % <span class="bnd-sarr" id="bsa-varPct"></span></th>
-        <th data-col="tna" onclick="bndSort('tna')">TNA [180/360] <span class="bnd-sarr" id="bsa-tna"></span></th>
-        <th data-col="modD" onclick="bndSort('modD')">DUR.MOD <span class="bnd-sarr" id="bsa-modD"></span></th>
-      </tr></thead>
-      <tbody id="bnd-tbody"><tr><td colspan="5" style="text-align:center;padding:30px;color:var(--gray)">Cargando datos...</td></tr></tbody>
-    </table>
-  </div>
-  <div class="bnd-statusbar">
-    <span id="bnd-last-upd" style="color:var(--gray)">—</span>
-    <span style="color:var(--blue3)">data912.com · Precios USD MEP · Flujos de fondos propios</span>
-  </div>
-  <div class="bnd-curve-wrap">
-    <div class="bnd-curve-hdr">
-      <span class="bnd-curve-title">CURVA DE RENDIMIENTOS — TIR vs DURACIÓN MODIFICADA</span>
-      <div class="bnd-curve-legend">
-        <span class="bnd-leg-dot" style="background:#22d4f0"></span><span class="bnd-leg-lbl">Ley Argentina</span>
-        <span class="bnd-leg-dot" style="background:#f0b429"></span><span class="bnd-leg-lbl">Ley NY</span>
-      </div>
-    </div>
-    <div style="position:relative;height:420px;width:100%;padding:16px 32px 16px">
-      <canvas id="bnd-curve-canvas"></canvas>
-    </div>
-  </div>
-</div>
-</div>
-
-<!-- BOND CALCULATOR MODAL -->
-<div class="bnd-modal-overlay" id="bnd-modal-overlay" onclick="if(event.target===this)this.classList.remove('open')">
-<div class="bnd-modal" onclick="event.stopPropagation()">
-  <div class="bnd-modal-hdr">
-    <div><div class="bnd-modal-title" id="bnd-m-title">AL30 — Calculadora</div><div class="bnd-modal-sub" id="bnd-m-sub">—</div></div>
-    <div style="display:flex;align-items:center;gap:8px"><button class="pdf-btn" onclick="bndModalPDF()">⬇ PDF</button><button class="bnd-modal-close" onclick="$$('bnd-modal-overlay').classList.remove('open')">✕</button></div>
-  </div>
-  <div class="bnd-modal-body">
-    <div class="bnd-calc-row">
-      <div class="bnd-calc-field"><div class="bnd-calc-lbl">Precio Dirty (USD)</div><input class="bnd-calc-inp" type="number" id="bnd-inp-price" oninput="bndCalcModal()" step="0.01"></div>
-      <div class="bnd-calc-field"><div class="bnd-calc-lbl">Invertir (USD)</div><input class="bnd-calc-inp" type="number" id="bnd-inp-usd" value="10000" oninput="bndCalcMode='usd';bndCalcModal()" step="100"></div>
-      <div class="bnd-calc-field"><div class="bnd-calc-lbl">ó Nominales (VN)</div><input class="bnd-calc-inp" type="number" id="bnd-inp-vn" placeholder="—" oninput="bndCalcMode='vn';bndCalcModal()" step="1"></div>
-    </div>
-    <div class="bnd-metrics-strip" id="bnd-m-metrics">
-      <div class="bnd-met"><div class="bnd-met-k">TIR (anual)</div><div class="bnd-met-v green" id="bm-tir">—</div></div>
-      <div class="bnd-met"><div class="bnd-met-k">Dur.Mac</div><div class="bnd-met-v" id="bm-mac">—</div></div>
-      <div class="bnd-met"><div class="bnd-met-k">Dur.Mod</div><div class="bnd-met-v cyan" id="bm-dm">—</div></div>
-      <div class="bnd-met"><div class="bnd-met-k">Flujos restantes</div><div class="bnd-met-v amber" id="bm-nflows">—</div></div>
-    </div>
-    <div class="bnd-cf-title">FLUJO DE FONDOS — POR POSICIÓN</div>
-    <div class="bnd-cf-wrap"><table class="bnd-cf-table"><thead><tr>
-      <th>Fecha</th><th>Cupón</th><th>Amort.</th><th>Flujo Total</th><th>Saldo VN</th>
-    </tr></thead><tbody id="bnd-cf-tbody"></tbody></table></div>
-    <div class="bnd-sum-card" id="bnd-sum-card">
-      <div class="bnd-sum-row"><span class="bnd-sum-k">Nominales (VN residual)</span><span class="bnd-sum-v" id="bm-s-vn">—</span></div>
-      <div class="bnd-sum-row"><span class="bnd-sum-k">Inversión (dirty)</span><span class="bnd-sum-v" id="bm-s-inv">—</span></div>
-      <div class="bnd-sum-row"><span class="bnd-sum-k">Total cupones a cobrar</span><span class="bnd-sum-v" id="bm-s-cpn">—</span></div>
-      <div class="bnd-sum-row"><span class="bnd-sum-k">Total amortizaciones</span><span class="bnd-sum-v" id="bm-s-amort">—</span></div>
-      <div class="bnd-sum-row"><span class="bnd-sum-k">Total a cobrar</span><span class="bnd-sum-v" id="bm-s-total">—</span></div>
-      <div class="bnd-sum-row profit"><span class="bnd-sum-k">Ganancia neta</span><span class="bnd-sum-v" id="bm-s-gain">—</span></div>
-    </div>
-  </div>
-</div>
+<!-- IFRAMES -->
+<div class="iframe-container">
+  <iframe class="page-frame active" id="frame-resumen"     src="resumen.html"      title="Resumen"></iframe>
+  <iframe class="page-frame"        id="frame-cauc"        src="cauciones.html"    title="Cauciones"></iframe>
+  <iframe class="page-frame"        id="frame-dcto"        src="cheques.html"      title="Descuento de Cheques"></iframe>
+  <iframe class="page-frame"        id="frame-lecap"       src="lecap.html"        title="LECAP / BONCAP"></iframe>
+  <iframe class="page-frame"        id="frame-bonos"       src="bonos.html"        title="Soberanos USD"></iframe>
+  <iframe class="page-frame"        id="frame-cer"         src="cer.html"          title="Bonos CER"></iframe>
+  <iframe class="page-frame"        id="frame-dolarlinked" src="dolarlinked.html"  title="Dólar Linked"></iframe>
+  <iframe class="page-frame"        id="frame-arb"         src="arbitraje.html"    title="Arbitraje"></iframe>
 </div>
 
 <script>
-// ════════════════════════════════════════
-//  GLOBAL
-// ════════════════════════════════════════
+const PAGE_IDS = ["resumen", "cauc", "dcto", "lecap", "bonos", "cer", "dolarlinked", "arb"];
+const CALC_GROUP  = ['cauc','dcto'];
+const BONOS_GROUP = ['lecap','bonos','cer','dolarlinked'];
+const ESTRAT_GROUP= ['arb'];
+
+// Clock
 function tick(){const n=new Date(),p=v=>String(v).padStart(2,'0');document.getElementById('clock').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;}
 tick();setInterval(tick,1000);
 
 function showPage(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  document.getElementById('nav-'+id).classList.add('active');
-}
-
-const fmtN=n=>n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
-const fmtP=n=>n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:4})+'%';
-const fmtP2=n=>n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
-const $$=id=>document.getElementById(id);
-
-
-// ========================================
-//  RESUMEN — DASHBOARD
-//  APIs: dolarapi.com + data912.com + Yahoo Finance
-// ========================================
-const df=n=>Number(n).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
-const dfK=n=>{const v=Number(n);return v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':df(v);};
-const dfN=n=>Math.round(Number(n)).toLocaleString('es-AR');
-
-// Fetch with CORS proxy fallback chain (for data912 etc.)
-async function pfetch(url){
-  try{const r=await fetch(url);if(r.ok)return r.json();}catch(e){}
-  try{
-    const r2=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url));
-    if(!r2.ok)throw new Error('proxy HTTP '+r2.status);
-    const d=await r2.json();return JSON.parse(d.contents);
-  }catch(e){}
-  try{
-    const r3=await fetch('https://corsproxy.io/?'+encodeURIComponent(url));
-    if(r3.ok)return r3.json();
-  }catch(e){}
-  throw new Error('unreachable: '+url);
-}
-
-// Simple fetch — for APIs with native CORS headers (dolarapi)
-async function sfetch(url){
-  const r=await fetch(url);
-  if(!r.ok)throw new Error('HTTP '+r.status);
-  return r.json();
-}
-
-function rSetVal(id,txt){
-  const e=document.getElementById(id);if(!e)return;
-  e.textContent=txt;e.classList.remove('blank');e.classList.add('r-num-in');
-  setTimeout(()=>e.classList.remove('r-num-in'),300);
-}
-function rSetChg(id,pct,label){
-  const e=document.getElementById(id);if(!e)return;
-  const cls=pct>0.05?'up':pct<-0.05?'dn':'neu';
-  e.className=e.className.replace(/\b(up|dn|neu)\b/g,'').trim()+' '+cls;
-  e.textContent=label!=null?label:(pct>=0?'+':'')+pct.toFixed(2)+'%';
-}
-
-let _dashTimer=null;
-
-// ════════════════════════════════════════════════════════
-//  BONOS SOBERANOS — MÓDULO COMPLETO
-//  Cashflows reales · Matemática financiera · Calculadora
-// ════════════════════════════════════════════════════════
-
-const BOND_DEFS = {
-  'AL29':{name:'Bonar 2029',law:'AR',payM:[1,7],payD:9,
-    couponSteps:[['2025-07-09',0.035],['2026-07-09',0.03875]],
-    amort:{start:'2027-07-09',n:6,pct:16.6667},outst:1.0},
-  'AL30':{name:'Bonar 2030',law:'AR',payM:[1,7],payD:9,
-    couponSteps:[['2024-07-09',0.03625],['2026-07-09',0.0425],['2027-07-09',0.0475],['2028-07-09',0.05]],
-    amort:{start:'2025-07-09',n:10,pct:10},outst:0.8},
-  'AL35':{name:'Bonar 2035',law:'AR',payM:[1,7],payD:9,
-    couponSteps:[['2025-07-09',0.03625],['2026-07-09',0.0475],['2027-07-09',0.05],['2029-07-09',0.055]],
-    amort:{start:'2031-07-09',n:10,pct:10},outst:1.0},
-  'AL41':{name:'Bonar 2041',law:'AR',payM:[1,7],payD:9,
-    couponSteps:[['2025-07-09',0.035],['2027-07-09',0.0475],['2029-07-09',0.05],['2033-07-09',0.055]],
-    amort:{start:'2036-07-09',n:12,pct:8.3333},outst:1.0},
-  'GD29':{name:'Global 2029',law:'NY',payM:[1,7],payD:9,
-    couponSteps:[['2025-07-09',0.035],['2026-07-09',0.03875]],
-    amort:{start:'2027-07-09',n:6,pct:16.6667},outst:1.0},
-  'GD30':{name:'Global 2030',law:'NY',payM:[1,7],payD:9,
-    couponSteps:[['2024-07-09',0.03625],['2026-07-09',0.0425],['2027-07-09',0.0475],['2028-07-09',0.05]],
-    amort:{start:'2025-07-09',n:10,pct:10},outst:0.8},
-  'GD35':{name:'Global 2035',law:'NY',payM:[1,7],payD:9,
-    couponSteps:[['2025-07-09',0.03625],['2026-07-09',0.0475],['2027-07-09',0.05],['2029-07-09',0.055]],
-    amort:{start:'2031-07-09',n:10,pct:10},outst:1.0},
-  'GD38':{name:'Global 2038',law:'NY',payM:[1,7],payD:9,
-    couponSteps:[['2025-07-09',0.035],['2027-07-09',0.0475],['2029-07-09',0.05],['2033-07-09',0.055]],
-    amort:{start:'2033-01-09',n:12,pct:8.3333},outst:1.0},
-  'GD41':{name:'Global 2041',law:'NY',payM:[1,7],payD:9,
-    couponSteps:[['2025-07-09',0.035],['2027-07-09',0.0475],['2029-07-09',0.05],['2033-07-09',0.055]],
-    amort:{start:'2036-07-09',n:12,pct:8.3333},outst:1.0},
-  'AO27':{name:'Obligacion 2027',law:'AR',payM:[1,2,3,4,5,6,7,8,9,10,11,12],payD:30,couponSteps:[['2026-01-01',0.06]],amort:{start:'2027-10-30',n:1,pct:100},outst:1.0},
-  'AN29':{name:'Argentina 2029 EUR',law:'AR',payM:[6,12],payD:1,couponSteps:[['2026-01-01',0.065]],amort:{start:'2029-11-30',n:1,pct:100},outst:1.0},
-  'AE38':{name:'Argentina 2038',law:'AR',payM:[1,7],payD:9,couponSteps:[['2025-07-09',0.035],['2027-07-09',0.0475],['2029-07-09',0.05],['2033-07-09',0.055]],amort:{start:'2033-01-09',n:12,pct:8.3333},outst:1.0},
-  'GD46':{name:'Global 2046',law:'NY',payM:[1,7],payD:9,
-    couponSteps:[['2025-07-09',0.035],['2027-07-09',0.0475],['2029-07-09',0.05],['2033-07-09',0.055]],
-    amort:{start:'2041-07-09',n:12,pct:8.3333},outst:1.0},
-  'BPY26':{name:'Bopreal S2',law:'BCRA',payM:[3,6,9,12],payD:30,
-    couponSteps:[['2024-01-01',0.0]],
-    amort:{start:'2025-06-30',n:5,pct:20},outst:0.6},
-  'BPOA7':{name:'Bopreal S1A',law:'BCRA',payM:[1,4,7,10],payD:31,
-    couponSteps:[['2024-01-01',0.05]],
-    amort:{start:'2025-04-30',n:12,pct:8.3333},outst:0.75},
-  'BPD27':{name:'Bopreal S1B',law:'BCRA',payM:[3,6,9,12],payD:31,
-    couponSteps:[['2024-01-01',0.05]],
-    amort:{start:'2025-06-30',n:12,pct:8.3333},outst:0.75},
-};
-
-// ── CASHFLOW DATABASE (por 100 VN, futuros flujos del Excel) ─────────────────
-const CASHFLOW_DB = {
-  'AO27':[{date:'2026-03-31',total:0.57},{date:'2026-04-30',total:0.5},{date:'2026-05-29',total:0.48},{date:'2026-06-30',total:0.52},{date:'2026-07-31',total:0.5},{date:'2026-08-31',total:0.5},{date:'2026-09-30',total:0.5},{date:'2026-10-30',total:0.5},{date:'2026-11-30',total:0.5},{date:'2026-12-31',total:0.5},{date:'2027-01-29',total:0.5},{date:'2027-02-26',total:0.5},{date:'2027-03-31',total:0.5},{date:'2027-04-30',total:0.5},{date:'2027-05-31',total:0.5},{date:'2027-06-30',total:0.5},{date:'2027-07-30',total:0.5},{date:'2027-08-31',total:0.5},{date:'2027-09-30',total:0.5},{date:'2027-10-30',total:100.5}],
-  'AL29':[{date:'2026-07-09',total:10.35},{date:'2027-01-09',total:10.3},{date:'2027-07-09',total:10.25},{date:'2028-01-09',total:10.2},{date:'2028-07-09',total:10.15},{date:'2029-01-09',total:10.1},{date:'2029-07-09',total:10.05}],
-  'GD29':[{date:'2026-07-09',total:10.35},{date:'2027-01-09',total:10.3},{date:'2027-07-09',total:10.25},{date:'2028-01-09',total:10.2},{date:'2028-07-09',total:10.15},{date:'2029-01-09',total:10.1},{date:'2029-07-09',total:10.05}],
-  'AL30':[{date:'2026-07-09',total:8.27},{date:'2027-01-09',total:8.24},{date:'2027-07-09',total:8.21},{date:'2028-01-09',total:8.42},{date:'2028-07-09',total:8.35},{date:'2029-01-09',total:8.28},{date:'2029-07-09',total:8.21},{date:'2030-01-09',total:8.14},{date:'2030-07-09',total:8.07}],
-  'GD30':[{date:'2026-07-09',total:8.27},{date:'2027-01-09',total:8.24},{date:'2027-07-09',total:8.21},{date:'2028-01-09',total:8.42},{date:'2028-07-09',total:8.35},{date:'2029-01-09',total:8.28},{date:'2029-07-09',total:8.21},{date:'2030-01-09',total:8.14},{date:'2030-07-09',total:8.07}],
-  'AN29':[{date:'2026-06-01',total:3.03},{date:'2026-11-30',total:3.25},{date:'2027-05-31',total:3.25},{date:'2027-11-30',total:3.25},{date:'2028-05-30',total:3.25},{date:'2028-11-30',total:3.25},{date:'2029-05-30',total:3.25},{date:'2029-11-30',total:103.25}],
-  'AE38':[{date:'2026-07-09',total:2.5},{date:'2027-01-09',total:2.5},{date:'2027-07-09',total:7.05},{date:'2028-01-09',total:6.93},{date:'2028-07-09',total:6.82},{date:'2029-01-09',total:6.7},{date:'2029-07-09',total:6.59},{date:'2030-01-09',total:6.48},{date:'2030-07-09',total:6.36},{date:'2031-01-09',total:6.25},{date:'2031-07-09',total:6.14},{date:'2032-01-09',total:6.02},{date:'2032-07-09',total:5.91},{date:'2033-01-09',total:5.8},{date:'2033-07-09',total:5.68},{date:'2034-01-09',total:5.57},{date:'2034-07-09',total:5.45},{date:'2035-01-09',total:5.34},{date:'2035-07-09',total:5.23},{date:'2036-01-09',total:5.11},{date:'2036-07-09',total:5.0},{date:'2037-01-09',total:4.89},{date:'2037-07-09',total:4.77},{date:'2038-01-09',total:4.66}],
-  'GD38':[{date:'2026-07-09',total:2.5},{date:'2027-01-09',total:2.5},{date:'2027-07-09',total:7.05},{date:'2028-01-09',total:6.93},{date:'2028-07-09',total:6.82},{date:'2029-01-09',total:6.7},{date:'2029-07-09',total:6.59},{date:'2030-01-09',total:6.48},{date:'2030-07-09',total:6.36},{date:'2031-01-09',total:6.25},{date:'2031-07-09',total:6.14},{date:'2032-01-09',total:6.02},{date:'2032-07-09',total:5.91},{date:'2033-01-09',total:5.8},{date:'2033-07-09',total:5.68},{date:'2034-01-09',total:5.57},{date:'2034-07-09',total:5.45},{date:'2035-01-09',total:5.34},{date:'2035-07-09',total:5.23},{date:'2036-01-09',total:5.11},{date:'2036-07-09',total:5.0},{date:'2037-01-09',total:4.89},{date:'2037-07-09',total:4.77},{date:'2038-01-09',total:4.66}],
-  'AL35':[{date:'2026-07-09',total:2.06},{date:'2027-01-09',total:2.06},{date:'2027-07-09',total:2.06},{date:'2028-01-09',total:2.38},{date:'2028-07-09',total:2.38},{date:'2029-01-09',total:2.5},{date:'2029-07-09',total:2.5},{date:'2030-01-09',total:2.5},{date:'2030-07-09',total:2.5},{date:'2031-01-09',total:12.5},{date:'2031-07-09',total:12.25},{date:'2032-01-09',total:12.0},{date:'2032-07-09',total:11.75},{date:'2033-01-09',total:11.5},{date:'2033-07-09',total:11.25},{date:'2034-01-09',total:11.0},{date:'2034-07-09',total:10.75},{date:'2035-01-09',total:10.5},{date:'2035-07-09',total:10.25}],
-  'GD35':[{date:'2026-07-09',total:2.06},{date:'2027-01-09',total:2.06},{date:'2027-07-09',total:2.06},{date:'2028-01-09',total:2.38},{date:'2028-07-09',total:2.38},{date:'2029-01-09',total:2.5},{date:'2029-07-09',total:2.5},{date:'2030-01-09',total:2.5},{date:'2030-07-09',total:2.5},{date:'2031-01-09',total:12.5},{date:'2031-07-09',total:12.25},{date:'2032-01-09',total:12.0},{date:'2032-07-09',total:11.75},{date:'2033-01-09',total:11.5},{date:'2033-07-09',total:11.25},{date:'2034-01-09',total:11.0},{date:'2034-07-09',total:10.75},{date:'2035-01-09',total:10.5},{date:'2035-07-09',total:10.25}],
-  'AL41':[{date:'2026-07-09',total:1.56},{date:'2027-01-09',total:1.56},{date:'2027-07-09',total:1.56},{date:'2028-01-09',total:5.13},{date:'2028-07-09',total:5.07},{date:'2029-01-09',total:5.01},{date:'2029-07-09',total:4.95},{date:'2030-01-09',total:5.4},{date:'2030-07-09',total:5.31},{date:'2031-01-09',total:5.23},{date:'2031-07-09',total:5.14},{date:'2032-01-09',total:5.05},{date:'2032-07-09',total:4.96},{date:'2033-01-09',total:4.88},{date:'2033-07-09',total:4.79},{date:'2034-01-09',total:4.7},{date:'2034-07-09',total:4.62},{date:'2035-01-09',total:4.53},{date:'2035-07-09',total:4.44},{date:'2036-01-09',total:4.35},{date:'2036-07-09',total:4.27},{date:'2037-01-09',total:4.18},{date:'2037-07-09',total:4.09},{date:'2038-01-09',total:4.01},{date:'2038-07-09',total:3.92},{date:'2039-01-09',total:3.83},{date:'2039-07-09',total:3.75},{date:'2040-01-09',total:3.66},{date:'2040-07-09',total:3.75},{date:'2041-01-09',total:3.83},{date:'2041-07-09',total:3.92}],
-  'GD41':[{date:'2026-07-09',total:1.56},{date:'2027-01-09',total:1.56},{date:'2027-07-09',total:1.56},{date:'2028-01-09',total:5.13},{date:'2028-07-09',total:5.07},{date:'2029-01-09',total:5.01},{date:'2029-07-09',total:4.95},{date:'2030-01-09',total:5.4},{date:'2030-07-09',total:5.31},{date:'2031-01-09',total:5.23},{date:'2031-07-09',total:5.14},{date:'2032-01-09',total:5.05},{date:'2032-07-09',total:4.96},{date:'2033-01-09',total:4.88},{date:'2033-07-09',total:4.79},{date:'2034-01-09',total:4.7},{date:'2034-07-09',total:4.62},{date:'2035-01-09',total:4.53},{date:'2035-07-09',total:4.44},{date:'2036-01-09',total:4.35},{date:'2036-07-09',total:4.27},{date:'2037-01-09',total:4.18},{date:'2037-07-09',total:4.09},{date:'2038-01-09',total:4.01},{date:'2038-07-09',total:3.92},{date:'2039-01-09',total:3.83},{date:'2039-07-09',total:3.75},{date:'2040-01-09',total:3.66},{date:'2040-07-09',total:3.75},{date:'2041-01-09',total:3.83},{date:'2041-07-09',total:3.92}],
-};
-
-// TNA [180/360]: convención semi-anual estándar bonos USD
-// price = Σ CF_i / (1+r_semi)^(2 × t_i)  donde t_i = días_i/360
-// TNA = 2 × r_semi   (tasa nominal anual base semi-anual)
-function bndSolveIRR(flows, dirty){
-  const today=new Date();today.setHours(0,0,0,0);
-  const futs=flows.filter(f=>new Date(f.date+'T00:00:00')>today);
-  if(!futs.length||dirty<=0)return 0;
-  const dt=futs.map(f=>Math.max(1,(new Date(f.date+'T00:00:00')-today)/86400000));
-  // r = semi-annual yield; exponent = 2 * (days/360)
-  const pv=r=>dt.reduce((s,t,i)=>s+futs[i].total/Math.pow(1+r,2*t/360),0);
-  const dpv=r=>dt.reduce((s,t,i)=>s-(2*t/360)*futs[i].total/Math.pow(1+r,2*t/360+1),0);
-  let r=0.04;
-  for(let i=0;i<200;i++){
-    const err=pv(r)-dirty,d=dpv(r);
-    if(Math.abs(d)<1e-14)break;
-    const step=err/d;r-=step;
-    if(r<-0.5)r=0.001;if(r>5)r=0.5;
-    if(Math.abs(step)<1e-10)break;
-  }
-  return Math.max(0,r);
-}
-
-// Duration [180/360]: MacD con t_i=días/360, ModD = MacD/(1+r_semi)
-function bndCalcDuration(flows, rSemi){
-  const today=new Date();today.setHours(0,0,0,0);
-  const futs=flows.filter(f=>new Date(f.date+'T00:00:00')>today);
-  let sPV=0,sTPV=0;
-  for(const f of futs){
-    const t=Math.max(1,(new Date(f.date+'T00:00:00')-today)/86400000)/360;
-    const pvcf=f.total/Math.pow(1+rSemi,2*t);
-    sPV+=pvcf;sTPV+=t*pvcf;
-  }
-  const macD=sPV>0?sTPV/sPV:0;
-  const modD=rSemi>-1?macD/(1+rSemi):macD;
-  return{macD,modD};
-}
-
-// Analytics principal — usa dirty price de API y cashflows del Excel
-function bndAnalytics(ticker, dirtyPrice){
-  const def=BOND_DEFS[ticker];
-  if(!def||!dirtyPrice||dirtyPrice<=0)return null;
-  const flows=CASHFLOW_DB[ticker];
-  const today=new Date();today.setHours(0,0,0,0);
-  const futureFlows=flows?flows.filter(f=>new Date(f.date+'T00:00:00')>today):[];
-  if(!futureFlows.length)return null;
-  const rSemi=bndSolveIRR(flows,dirtyPrice);
-  const tna=rSemi*2*100; // TNA [180/360]
-  const tir=(Math.pow(1+rSemi,2)-1)*100; // TEA [base 360]
-  const{macD,modD}=bndCalcDuration(flows,rSemi);
-  return{ticker,name:def.name,law:def.law,dirty:dirtyPrice,tna,tir,macD,modD,flows:futureFlows};
-}
-
-let dLastCalc=null;
-let bndData=[],bndFilterLaw='all',bndCurrentTicker=null,bndCalcMode='usd';
-
-// Store raw bond API data globally so bonos page can reuse it
-let _rawBondData = null;
-
-async function bndFetch(){
-  const pill=$$('bnd-pill');
-  pill.className='bnd-status loading';pill.textContent='CARGANDO...';
-
-  let apiPrices={};
-  let bndSrc='';
-
-  // Fetch directo a data912.com/live/arg_bonds (siempre fresco, con CORS proxy fallback)
-  try{
-    const raw=await pfetch('https://data912.com/live/arg_bonds');
-    const arr=Array.isArray(raw)?raw:(raw.data||raw.items||[]);
-    if(arr.length>0){
-      _rawBondData=arr;
-      arr.forEach(b=>{
-        const tk=(b.ticker||b.symbol||b.t||'').replace(/\s+/g,'').toUpperCase();
-        const price=parseFloat(b.c||b.ultimo||b.last||b.price||0);
-        const varPct=parseFloat(b.pct_change||b.variacion_pct||b.var||0);
-        if(tk&&price>0) apiPrices[tk]={price,varPct};
-      });
-      bndSrc='data912.com';
-      console.log('[BONOS] tickers disponibles:',Object.keys(apiPrices).filter(t=>t.length<=8).sort().join(', '));
-    }
-  }catch(e){console.warn('bndFetch data912:',e);}
-
-  // Fallback estatico si API no responde
-  if(Object.keys(apiPrices).length===0){
-    const fallback={AL29D:73.50,AL30D:60.80,AL35D:66.50,AL41D:62.00,GD29D:75.00,GD30D:62.00,GD35D:68.00,GD38D:64.50,GD41D:63.00,GD46D:60.50,AO27D:97.00,AO27:97.00,AN29D:98.50,AN29:98.50,AE38D:64.00,AE38:64.00,BPY26D:98.00,BPOA7D:96.00,BPD27D:95.00};
-    for(const[tk,px]of Object.entries(fallback)) apiPrices[tk]={price:px,varPct:0};
-    bndSrc='referencia estatica';
-    pill.textContent='⚠ OFFLINE (ref.)';
-  }
-
-  // Cruzar BOND_DEFS con precios API
-  // Para cada bono busca: 1) ticker+D  2) ticker+C  3) ticker directo
-  // data912 cotiza dirty en pesos para 'D' (MEP) y 'C' (cable)
-  bndData=[];
-  for(const tk of Object.keys(BOND_DEFS)){
-    const candidates=[tk+'D',tk+'C',tk];
-    let found=null;
-    for(const c of candidates){if(apiPrices[c]){found={...apiPrices[c],apiTk:c};break;}}
-    if(!found)continue;
-    const analytics=bndAnalytics(tk,found.price);
-    if(analytics){analytics.varPct=found.varPct;analytics.apiTk=found.apiTk;bndData.push(analytics);}
-  }
-
-  if(bndData.length>0){
-    pill.className='bnd-status ok';
-    pill.textContent='LIVE · '+bndData.length+' bonos';
-  }else{
-    pill.className='bnd-status err';
-    pill.textContent='⚠ SIN DATOS';
-  }
-  $$('bnd-last-upd').textContent='✓ '+new Date().toLocaleTimeString('es-AR')+
-    ' · '+bndData.length+'/'+Object.keys(BOND_DEFS).length+' bonos · '+bndSrc;
-  bndRender();
-  bndRenderCurve();
-}
-
-function bndFilter(law){
-  bndFilterLaw=law;
-  document.querySelectorAll('.bnd-ftab').forEach(b=>b.className='bnd-ftab');
-  const m={all:'all',AR:'bonar',NY:'global',BCRA:'bopreal'};
-  const c={all:'on',AR:'on-cyan',NY:'on-amber',BCRA:'on-green'};
-  $$('bf-'+m[law]).className='bnd-ftab '+(c[law]||'on');
-  bndRender();
-}
-
-let bndSortCol='modD',bndSortDir='asc';
-function bndSort(col){
-  if(bndSortCol===col)bndSortDir=bndSortDir==='asc'?'desc':'asc';
-  else{bndSortCol=col;bndSortDir=col==='ticker'?'asc':'asc';}
-  document.querySelectorAll('.bnd-sarr').forEach(el=>el.textContent='');
-  const el=$$('bsa-'+col);if(el)el.textContent=bndSortDir==='asc'?' ↑':' ↓';
-  bndRender();
-}
-
-function bndRender(){
-  const tbody=$$('bnd-tbody');
-  let rows=bndData.filter(b=>bndFilterLaw==='all'||b.law===bndFilterLaw);
-  rows.sort((a,b)=>{
-    let va=a[bndSortCol],vb=b[bndSortCol];
-    if(typeof va==='string')return bndSortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
-    return bndSortDir==='asc'?va-vb:vb-va;
+  // iframes
+  PAGE_IDS.forEach(p=>{
+    document.getElementById('frame-'+p).classList.toggle('active',p===id);
   });
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--gray)">Sin datos</td></tr>';return;}
-  const f2=n=>n.toFixed(2),f3=n=>n.toFixed(3);
-  const lc={AR:'ar',NY:'ny',BCRA:'bcra'};
-  const vc=v=>v>0.05?'bnd-green':v<-0.05?'bnd-red':'';
-  tbody.innerHTML=rows.map(b=>`<tr onclick="bndOpenModal('${b.ticker}')">
-    <td><span class="bnd-tk">${b.ticker}</span><span class="bnd-law ${lc[b.law]}">${b.law}</span></td>
-    <td style="font-weight:600;color:var(--amber)">u$s ${f2(b.dirty)}</td>
-    <td class="${vc(b.varPct)}">${b.varPct>=0?'+':''}${f2(b.varPct)}%</td>
-    <td class="bnd-green">${f2(b.tna)}%</td>
-    <td class="bnd-cyan">${f3(b.modD)}</td>
-  </tr>`).join('');
+  // top-level tab
+  document.querySelectorAll('.nav-bar > .nav-tab').forEach(t=>t.classList.remove('active'));
+  const topBtn=document.getElementById('nav-'+id);
+  if(topBtn)topBtn.classList.add('active');
+  // dropdown items highlight
+  document.querySelectorAll('.nav-dropdown-item').forEach(item=>item.classList.remove('active'));
+  // close all dropdowns
+  document.querySelectorAll('.nav-dropdown').forEach(d=>d.classList.remove('open'));
+  document.querySelectorAll('.nav-dropdown-btn').forEach(b=>b.classList.remove('open'));
+  // URL hash
+  history.replaceState(null,'','#'+id);
 }
 
-function bndOpenModal(ticker){
-  const b=bndData.find(x=>x.ticker===ticker);if(!b)return;
-  bndCurrentTicker=ticker;
-  $$('bnd-m-title').textContent=ticker+' — '+b.name;
-  $$('bnd-m-sub').textContent='Ley '+b.law+' · DurMod '+b.modD.toFixed(3)+'y · TNA '+b.tna.toFixed(2)+'% · '+b.flows.length+' flujos';
-  $$('bnd-inp-price').value=b.dirty.toFixed(2);
-  $$('bnd-inp-usd').value=10000;$$('bnd-inp-vn').value='';
-  bndCalcMode='usd';bndCalcModal();
-  $$('bnd-modal-overlay').classList.add('open');
-}
+// Hash-based routing on load
+(function(){
+  const hash=location.hash.replace('#','');
+  if(PAGE_IDS.includes(hash))showPage(hash);
+})();
 
-function bndCalcModal(){
-  const ticker=bndCurrentTicker;if(!ticker)return;
-  const dirtyPrice=parseFloat($$('bnd-inp-price').value)||0;
-  if(dirtyPrice<=0)return;
-  const a=bndAnalytics(ticker,dirtyPrice);if(!a)return;
-  const{dirty,tir,macD,modD,flows}=a;
-  $$('bm-tir').textContent=tir.toFixed(2)+'%';
-  $$('bm-mac').textContent=macD.toFixed(3)+'y';
-  $$('bm-dm').textContent=modD.toFixed(3)+'y';
-  $$('bm-nflows').textContent=flows.length+' pagos';
-  let vn=0;
-  if(bndCalcMode==='usd'){
-    const usd=parseFloat($$('bnd-inp-usd').value)||0;
-    vn=dirty>0?(usd/dirty)*100:0;
-    $$('bnd-inp-vn').value=vn>0?Math.round(vn):'';
-  }else{
-    vn=parseFloat($$('bnd-inp-vn').value)||0;
-    const usd=vn*dirty/100;
-    $$('bnd-inp-usd').value=usd>0?usd.toFixed(2):'';
-  }
-  const scale=vn/100,invest=vn*dirty/100;
-  const tbody=$$('bnd-cf-tbody');
-  let tFlow=0,balVN=vn,cfHtml='';
-  for(const f of flows){
-    const tot=f.total*scale;
-    tFlow+=tot;
-    const ds=new Date(f.date+'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'});
-    cfHtml+=`<tr><td>${ds}</td><td style="color:var(--white);font-weight:600" colspan="3">u$s ${tot.toFixed(2)}</td><td>${Math.max(0,balVN).toFixed(0)}</td></tr>`;
-  }
-  cfHtml+=`<tr class="bnd-cf-total"><td>TOTAL</td><td style="color:var(--white)" colspan="3">u$s ${tFlow.toFixed(2)}</td><td>0</td></tr>`;
-  tbody.innerHTML=cfHtml;
-  const gain=tFlow-invest;
-  const fm=n=>n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
-  $$('bm-s-vn').textContent=Math.round(vn).toLocaleString('es-AR')+' VN';
-  $$('bm-s-inv').textContent='u$s '+fm(invest);
-  $$('bm-s-cpn').textContent='u$s '+fm(tFlow);
-  $$('bm-s-amort').textContent='—';
-  $$('bm-s-total').textContent='u$s '+fm(tFlow);
-  $$('bm-s-gain').textContent=(gain>=0?'+':'')+' u$s '+fm(gain);
-  $$('bm-s-gain').style.color=gain>=0?'var(--green)':'var(--red)';
-  const pk=document.querySelector('#bnd-sum-card .bnd-sum-row.profit .bnd-sum-k');
-  if(pk)pk.style.color=gain>=0?'var(--green)':'var(--red)';
-}
 
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){const o=$$('bnd-modal-overlay');if(o&&o.classList.contains('open'))o.classList.remove('open');}});
-
-let bndCurveChart=null;
-function bndRenderCurve(){
-  const canvas=$$('bnd-curve-canvas');if(!canvas)return;
-  // Build per-series arrays with TIR on Y
-  const arPts=[],nyPts=[];
-  for(const b of bndData){
-    if(b.law==='AR') arPts.push({x:b.modD,y:b.tir,tna:b.tna,ticker:b.ticker});
-    else if(b.law==='NY') nyPts.push({x:b.modD,y:b.tir,tna:b.tna,ticker:b.ticker});
-  }
-  arPts.sort((a,b)=>a.x-b.x);
-  nyPts.sort((a,b)=>a.x-b.x);
-  if(!arPts.length&&!nyPts.length)return;
-
-  // Polynomial degree-2 least-squares (reuse soberanos inline)
-  const mkFit=(data)=>{
-    if(data.length<2)return null;
-    const n=data.length;
-    let sx=0,sx2=0,sx3=0,sx4=0,sy=0,sxy=0,sx2y=0;
-    for(const p of data){sx+=p.x;sx2+=p.x*p.x;sx3+=p.x**3;sx4+=p.x**4;sy+=p.y;sxy+=p.x*p.y;sx2y+=p.x*p.x*p.y;}
-    const A=[[n,sx,sx2],[sx,sx2,sx3],[sx2,sx3,sx4]];const B=[sy,sxy,sx2y];
-    const a=A[0],b=A[1],c=A[2];
-    const det=a[0]*(b[1]*c[2]-b[2]*c[1])-a[1]*(b[0]*c[2]-b[2]*c[0])+a[2]*(b[0]*c[1]-b[1]*c[0]);
-    if(Math.abs(det)<1e-12)return null;
-    const c0=(B[0]*(b[1]*c[2]-b[2]*c[1])-a[1]*(B[1]*c[2]-b[2]*B[2])+a[2]*(B[1]*c[1]-b[1]*B[2]))/det;
-    const c1=(a[0]*(B[1]*c[2]-b[2]*B[2])-B[0]*(b[0]*c[2]-b[2]*c[0])+a[2]*(b[0]*B[2]-B[1]*c[0]))/det;
-    const c2=(a[0]*(b[1]*B[2]-B[1]*c[1])-a[1]*(b[0]*B[2]-B[1]*c[0])+B[0]*(b[0]*c[1]-b[1]*c[0]))/det;
-    return x=>c0+c1*x+c2*x*x;
-  };
-
-  const allPts=[...arPts,...nyPts];
-  const xMax=Math.max(...allPts.map(p=>p.x));
-
-  // Extend curve from x=0 (so it "comes from below")
-  const buildCurve=(data,fitFn)=>{
-    if(!fitFn||data.length<2)return[];
-    const steps=120;
-    return Array.from({length:steps+1},(_,i)=>{
-      const x=(xMax+(xMax*0.05))*i/steps;
-      return{x,y:fitFn(x)};
-    });
-  };
-
-  const arFit=mkFit(arPts),nyFit=mkFit(nyPts);
-  const arCurve=buildCurve(arPts,arFit),nyCurve=buildCurve(nyPts,nyFit);
-
-  // Bloomberg-like colors: Bonares=crimson, Globales=gold
-  const AR_LINE='#e05060',AR_DOT='rgba(210,70,90,.9)',AR_LBL='#e87080';
-  const NY_LINE='#d4a020',NY_DOT='rgba(220,165,30,.9)',NY_LBL='#f0c040';
-
-  const dlabels={display:true,align:'top',anchor:'end',offset:5,
-    font:{family:"'JetBrains Mono',monospace",size:9,weight:'700'},
-    textStrokeColor:'#030a14',textStrokeWidth:3,clip:false};
-
-  const datasets=[
-    // Fit curves (order 3 & 4 = behind)
-    {type:'line',label:'fit-AR',data:arCurve,borderColor:AR_LINE,borderWidth:2.5,
-     backgroundColor:'transparent',pointRadius:0,tension:0.3,fill:false,order:3,datalabels:{display:false}},
-    {type:'line',label:'fit-NY',data:nyCurve,borderColor:NY_LINE,borderWidth:2.5,
-     backgroundColor:'transparent',pointRadius:0,tension:0.3,fill:false,order:4,datalabels:{display:false}},
-    // Scatter — Bonares AR
-    {type:'scatter',label:'SOB USD BONAR',data:arPts,
-     backgroundColor:AR_DOT,borderColor:AR_LINE,borderWidth:1.5,
-     pointRadius:8,pointHoverRadius:11,pointStyle:'rectRot',
-     order:1,datalabels:{...dlabels,color:AR_LBL,formatter:(v,c)=>arPts[c.dataIndex].ticker}},
-    // Scatter — Globales NY
-    {type:'scatter',label:'SOB USD GLOB',data:nyPts,
-     backgroundColor:NY_DOT,borderColor:NY_LINE,borderWidth:1.5,
-     pointRadius:8,pointHoverRadius:11,pointStyle:'rectRot',
-     order:2,datalabels:{...dlabels,color:NY_LBL,formatter:(v,c)=>nyPts[c.dataIndex].ticker}},
-  ];
-
-  const allY=[...arPts,...nyPts].map(p=>p.y);
-  const yMin=Math.max(0,Math.min(...allY)-1.5);
-  const yMax=Math.max(...allY)+0.8;
-
-  if(bndCurveChart){bndCurveChart.destroy();bndCurveChart=null;}
-  const ctx=canvas.getContext('2d');
-
-  bndCurveChart=new Chart(ctx,{
-    type:'scatter',data:{datasets},
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      animation:{duration:320},
-      layout:{padding:{top:28,right:44,left:6,bottom:6}},
-      plugins:{
-        legend:{
-          display:true,
-          position:'top',
-          align:'start',
-          labels:{
-            color:'#7a99c4',
-            font:{family:"'JetBrains Mono',monospace",size:9,weight:'700'},
-            padding:16,
-            usePointStyle:true,pointStyle:'rectRot',pointStyleWidth:10,
-            filter:item=>item.datasetIndex>=2  // only scatter labels
-          }
-        },
-        datalabels:{},
-        tooltip:{
-          filter:i=>i.datasetIndex>=2,
-          backgroundColor:'#060f1e',borderColor:'#2a4a7a',borderWidth:1,
-          titleColor:'#7aa3f0',bodyColor:'#c8d8f0',padding:12,
-          titleFont:{family:"'JetBrains Mono',monospace",size:11,weight:'700'},
-          bodyFont:{family:"'JetBrains Mono',monospace",size:11},
-          callbacks:{
-            title:items=>{const s=items[0].datasetIndex===2?arPts:nyPts;const p=s[items[0].dataIndex];return p.ticker+' · '+(items[0].datasetIndex===2?'Ley AR':'Ley NY');},
-            label:item=>{const s=item.datasetIndex===2?arPts:nyPts;const p=s[item.dataIndex];return[
-              '  TIR (TEA): '+p.y.toFixed(2)+'%',
-              '  TNA [180/360]: '+p.tna.toFixed(2)+'%',
-              '  DurMod [180/360]: '+p.x.toFixed(3)+'y'
-            ];}
-          }
-        }
-      },
-      scales:{
-        x:{
-          type:'linear',min:0,max:xMax+(xMax*0.06),
-          grid:{color:'rgba(30,58,98,.5)',lineWidth:1},
-          ticks:{color:'#4a6a8a',font:{family:"'JetBrains Mono',monospace",size:9},callback:v=>v.toFixed(1)},
-          border:{color:'rgba(30,58,98,.8)'},
-          title:{display:true,text:'DurM [180/360]',color:'#4a6a8a',
-            font:{family:"'JetBrains Mono',monospace",size:9,weight:'600'},padding:{top:5}}
-        },
-        y:{
-          min:yMin,max:yMax,
-          grid:{color:'rgba(30,58,98,.5)',lineWidth:1},
-          ticks:{color:'#4a6a8a',font:{family:"'JetBrains Mono',monospace",size:9},callback:v=>v.toFixed(1)+'%'},
-          border:{color:'rgba(30,58,98,.8)'},
-          title:{display:true,text:'TIR (TEA) %',color:'#e87080',
-            font:{family:"'JetBrains Mono',monospace",size:9,weight:'700'},padding:{bottom:5}}
-        }
-      }
-    }
+// ── Dropdown nav logic (index shell) ──
+document.querySelectorAll('.nav-dropdown-btn').forEach(btn=>{
+  btn.addEventListener('click',function(e){
+    e.stopPropagation();
+    const dd=this.closest('.nav-dropdown');
+    const isOpen=dd.classList.contains('open');
+    document.querySelectorAll('.nav-dropdown').forEach(d=>d.classList.remove('open'));
+    document.querySelectorAll('.nav-dropdown-btn').forEach(b=>b.classList.remove('open'));
+    if(!isOpen){dd.classList.add('open');this.classList.add('open');}
   });
-}
-
-
-// ════════════════════════════════════════
-//  PDF UTILITIES
-// ════════════════════════════════════════
-function piPdfHeader(doc,title,sub){
-  const M=15,W=210,BG=[13,27,46],HDR=[30,58,98],BLU=[91,141,239],GRY=[122,153,196];
-  doc.setFillColor(...BG);doc.rect(0,0,W,297,'F');
-  doc.setFillColor(...HDR);doc.rect(0,0,W,22,'F');
-  doc.setTextColor(...BLU);doc.setFontSize(13);doc.setFont('helvetica','bold');
-  doc.text('PORTFOLIO INVESTMENT',M,9);
-  doc.setFontSize(9);doc.setTextColor(...GRY);doc.setFont('helvetica','normal');
-  doc.text(title,M,15);
-  if(sub)doc.text(sub,M,20);
-}
-function piPdfFooter(doc){
-  const M=15,W=210,HDR=[30,58,98],GRY=[122,153,196];
-  doc.setFillColor(...HDR);doc.rect(0,285,W,12,'F');
-  doc.setFontSize(7);doc.setTextColor(...GRY);doc.setFont('helvetica','normal');
-  doc.text('Portfolio Investment · '+new Date().toLocaleDateString('es-AR'),M,291);
-  doc.text('Generado: '+new Date().toLocaleTimeString('es-AR'),W-M,291,'right');
-}
-
-function bndModalPDF(){
-  const ticker=bndCurrentTicker;if(!ticker){alert('Abrí un bono primero.');return;}
-  const b=bndData.find(x=>x.ticker===ticker);if(!b){return;}
-  if(!window.jspdf){alert('Librería PDF no cargada aún.');return;}
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const M=15,CW=180,BG=[13,27,46],BG2=[18,37,64],HDR=[30,58,98],BLU=[91,141,239],AMB=[240,180,41],GRN=[34,214,138],RED=[255,77,106],WHT=[240,244,255],GRY=[122,153,196],CYN=[34,212,240];
-  const lc={AR:CYN,NY:AMB,BCRA:[160,122,239]};
-  const lawC=lc[b.law]||WHT;
-  const dirty=parseFloat($$('bnd-inp-price').value)||b.dirty;
-  const a=bndAnalytics(ticker,dirty);if(!a)return;
-  const usd=parseFloat($$('bnd-inp-usd').value)||0;
-  const vn=dirty>0?(usd/dirty)*100:0;
-  const invest=vn*dirty/100;
-  const flows=a.flows;
-  const tFlow=flows.reduce((s,f)=>s+f.total*(vn/100),0);
-  const gain=tFlow-invest;
-  const fmtM=n=>n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const fmtP=n=>n.toFixed(2)+'%';
-  piPdfHeader(doc,'CALCULADORA BONO — '+ticker+' ('+b.name+')','Ley '+b.law+' · TNA [180/360] '+fmtP(a.tna)+' · DurMod '+a.modD.toFixed(3)+'y');
-  let y=30;
-  const row=(k,v,vc)=>{
-    doc.setFillColor(...BG2);doc.rect(M,y-4,CW,7,'F');
-    doc.setFontSize(9);doc.setTextColor(...GRY);doc.setFont('helvetica','normal');
-    doc.text(k,M+2,y);
-    doc.setTextColor(...(vc||WHT));doc.setFont('helvetica','bold');
-    doc.text(v,M+CW-2,y,'right');y+=8;
-  };
-  const sec=(t)=>{y+=2;doc.setFillColor(...HDR);doc.rect(M,y-4,CW,7,'F');doc.setFontSize(8);doc.setTextColor(...BLU);doc.setFont('helvetica','bold');doc.text(t,M+2,y);y+=9;};
-  sec('INSTRUMENTO');
-  row('Ticker',ticker,lawC);row('Nombre',b.name,WHT);row('Legislación',b.law,lawC);
-  y+=3;sec('PRECIO Y ANALÍTICA');
-  row('Precio Dirty','u$s '+dirty.toFixed(2),AMB);
-  row('TNA [180/360]',fmtP(a.tna),GRN);
-  row('Duration Macaulay',a.macD.toFixed(3)+' años',CYN);
-  row('Duration Modificada',a.modD.toFixed(3)+' años',CYN);
-  row('Flujos futuros',flows.length+' pagos',GRY);
-  y+=3;sec('SIMULACIÓN DE COMPRA');
-  row('Inversión (USD)','u$s '+fmtM(usd),BLU);
-  row('Nominales a comprar',Math.round(vn).toLocaleString('es-AR')+' VN',WHT);
-  row('Precio dirty aplicado','u$s '+dirty.toFixed(2),AMB);
-  y+=3;
-  // Cashflow table (first 8 flows)
-  sec('FLUJO DE FONDOS (primeros pagos)');
-  doc.setFontSize(8);
-  const cfY=y;
-  doc.setFillColor(...HDR);doc.rect(M,cfY-4,CW,6,'F');
-  doc.setTextColor(...BLU);doc.setFont('helvetica','bold');
-  doc.text('Fecha',M+2,cfY-0.5);doc.text('Pago por VN',M+CW/2,cfY-0.5);doc.text('Pago total',M+CW-2,cfY-0.5,'right');
-  y+=7;
-  const maxFlows=Math.min(flows.length,10);
-  for(let i=0;i<maxFlows;i++){
-    const f=flows[i];const tot=f.total*(vn/100);
-    doc.setFillColor(...(i%2===0?BG2:BG));doc.rect(M,y-3.5,CW,6,'F');
-    doc.setTextColor(...GRY);doc.setFont('helvetica','normal');
-    doc.text(f.date,M+2,y);
-    doc.setTextColor(...WHT);doc.text(''+f.total.toFixed(3),M+CW/2,y);
-    doc.setTextColor(...GRN);doc.text('u$s '+fmtM(tot),M+CW-2,y,'right');
-    y+=6;
-  }
-  if(flows.length>10){doc.setFontSize(7);doc.setTextColor(...GRY);doc.text('... y '+(flows.length-10)+' pagos más',M+2,y);y+=6;}
-  y+=4;
-  doc.setFillColor(10,40,22);doc.rect(M,y-4,CW,11,'F');
-  doc.setFontSize(12);doc.setTextColor(...WHT);doc.setFont('helvetica','bold');
-  doc.text('TOTAL A COBRAR',M+2,y+2);
-  doc.setTextColor(...GRN);doc.text('u$s '+fmtM(tFlow),M+CW-2,y+2,'right');
-  y+=13;
-  doc.setFillColor(...(gain>=0?[10,40,22]:[40,10,15]));doc.rect(M,y-4,CW,11,'F');
-  doc.setFontSize(12);doc.setTextColor(...WHT);doc.setFont('helvetica','bold');
-  doc.text('GANANCIA NETA',M+2,y+2);
-  const gc=gain>=0?GRN:RED;
-  doc.setTextColor(...gc);doc.text((gain>=0?'+ ':'')+'u$s '+fmtM(gain),M+CW-2,y+2,'right');
-  piPdfFooter(doc);
-  doc.save('BONO_'+ticker+'_'+new Date().toISOString().slice(0,10)+'.pdf');
-}
-
-// ── LECAP Panel PDF (tabla + curva via html2canvas) ──────────────────────────
-async function lcPanelPDF(){
-  if(!window.jspdf||!window.html2canvas){alert('Librerías PDF no cargadas aún.');return;}
-  const {jsPDF}=window.jspdf;
-  const btn=document.querySelector('[onclick="lcPanelPDF()"]');
-  if(btn){btn.textContent='⏳ generando...';btn.disabled=true;}
-  try{
-    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-    const W=210,M=10,CW=W-M*2;
-    const BG=[13,27,46],HDR=[30,58,98],BLU=[91,141,239],GRY=[122,153,196];
-    doc.setFillColor(...BG);doc.rect(0,0,W,297,'F');
-    doc.setFillColor(...HDR);doc.rect(0,0,W,20,'F');
-    doc.setTextColor(...BLU);doc.setFontSize(13);doc.setFont('helvetica','bold');
-    doc.text('PORTFOLIO INVESTMENT',M,8);
-    doc.setFontSize(9);doc.setTextColor(...GRY);doc.setFont('helvetica','normal');
-    doc.text('LECAP / BONCAP — Tabla de precios y rendimientos · '+new Date().toLocaleDateString('es-AR'),M,14);
-    doc.text(lcData.length+' instrumentos · '+new Date().toLocaleTimeString('es-AR'),M,19);
-    // Tabla como imagen
-    const tableEl=document.querySelector('#lc-tbody').closest('table');
-    if(tableEl){
-      const tCanvas=await html2canvas(tableEl,{backgroundColor:'#0a1525',scale:2,logging:false,useCORS:true});
-      const tImg=tCanvas.toDataURL('image/png');
-      const tRatio=tCanvas.height/tCanvas.width;
-      const tW=CW,tH=Math.min(tW*tRatio,100);
-      doc.addImage(tImg,'PNG',M,23,tW,tH);
-      let y=23+tH+6;
-      // Curva como imagen
-      const chartEl=$$('lc-curve-chart');
-      if(chartEl){
-        const cCanvas=await html2canvas(chartEl,{backgroundColor:'#060f1c',scale:2,logging:false,useCORS:true});
-        const cImg=cCanvas.toDataURL('image/png');
-        const cRatio=cCanvas.height/cCanvas.width;
-        const cW=CW,cH=Math.min(cW*cRatio,110);
-        if(y+cH>275){doc.addPage();doc.setFillColor(...BG);doc.rect(0,0,W,297,'F');y=15;}
-        doc.setFontSize(8);doc.setTextColor(...BLU);doc.text('CURVA DE RENDIMIENTOS',M,y);y+=4;
-        doc.addImage(cImg,'PNG',M,y,cW,cH);
-        y+=cH;
-      }
-    }
-    doc.setFillColor(...HDR);doc.rect(0,285,W,12,'F');
-    doc.setFontSize(7);doc.setTextColor(...GRY);
-    doc.text('Portfolio Investment · LECAP/BONCAP · '+new Date().toLocaleDateString('es-AR'),M,291);
-    doc.save('LECAPS_'+new Date().toISOString().slice(0,10)+'.pdf');
-  }finally{
-    if(btn){btn.textContent='⬇ PDF PANEL';btn.disabled=false;}
-  }
-}
-
-// ── Soberanos Panel PDF (tabla + curva via html2canvas) ──────────────────────
-async function bndPanelPDF(){
-  if(!window.jspdf||!window.html2canvas){alert('Librerías PDF no cargadas aún.');return;}
-  const {jsPDF}=window.jspdf;
-  const btn=document.querySelector('[onclick="bndPanelPDF()"]');
-  if(btn){btn.textContent='⏳ generando...';btn.disabled=true;}
-  try{
-    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-    const W=210,M=10,CW=W-M*2;
-    const BG=[13,27,46],HDR=[30,58,98],BLU=[91,141,239],GRY=[122,153,196];
-    doc.setFillColor(...BG);doc.rect(0,0,W,297,'F');
-    doc.setFillColor(...HDR);doc.rect(0,0,W,20,'F');
-    doc.setTextColor(...BLU);doc.setFontSize(13);doc.setFont('helvetica','bold');
-    doc.text('PORTFOLIO INVESTMENT',M,8);
-    doc.setFontSize(9);doc.setTextColor(...GRY);doc.setFont('helvetica','normal');
-    doc.text('BONOS SOBERANOS — Tabla de precios y rendimientos · '+new Date().toLocaleDateString('es-AR'),M,14);
-    doc.text(bndData.length+' bonos · data912.com · '+new Date().toLocaleTimeString('es-AR'),M,19);
-    const tableEl=document.querySelector('#bnd-tbody').closest('table');
-    if(tableEl){
-      const tCanvas=await html2canvas(tableEl,{backgroundColor:'#0a1525',scale:2,logging:false,useCORS:true});
-      const tImg=tCanvas.toDataURL('image/png');
-      const tRatio=tCanvas.height/tCanvas.width;
-      const tW=CW,tH=Math.min(tW*tRatio,90);
-      doc.addImage(tImg,'PNG',M,23,tW,tH);
-      let y=23+tH+8;
-      const chartEl=$$('bnd-curve-canvas');
-      if(chartEl){
-        const cCanvas=await html2canvas(chartEl.closest('div'),{backgroundColor:'#060f1c',scale:2,logging:false,useCORS:true});
-        const cImg=cCanvas.toDataURL('image/png');
-        const cRatio=cCanvas.height/cCanvas.width;
-        const cW=CW,cH=Math.min(cW*cRatio,120);
-        if(y+cH>275){doc.addPage();doc.setFillColor(...BG);doc.rect(0,0,W,297,'F');y=15;}
-        doc.setFontSize(8);doc.setTextColor(...BLU);doc.text('CURVA DE RENDIMIENTOS — TIR (TEA) vs DURACIÓN MODIFICADA',M,y);y+=5;
-        doc.addImage(cImg,'PNG',M,y,cW,cH);
-      }
-    }
-    doc.setFillColor(...HDR);doc.rect(0,285,W,12,'F');
-    doc.setFontSize(7);doc.setTextColor(...GRY);
-    doc.text('Portfolio Investment · Bonos Soberanos · '+new Date().toLocaleDateString('es-AR'),M,291);
-    doc.save('SOBERANOS_'+new Date().toISOString().slice(0,10)+'.pdf');
-  }finally{
-    if(btn){btn.textContent='⬇ PDF PANEL';btn.disabled=false;}
-  }
-}
-// Delay bonos fetch 3s so LECAP has time to cache _rawBondData
-setTimeout(bndFetch, 3000);
-setInterval(bndFetch, 30000);
-
+});
+document.addEventListener('click',()=>{
+  document.querySelectorAll('.nav-dropdown').forEach(d=>d.classList.remove('open'));
+  document.querySelectorAll('.nav-dropdown-btn').forEach(b=>b.classList.remove('open'));
+});
 
 </script>
 </body>
