@@ -272,7 +272,7 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
   <div class="lc-toolbar">
     <div>
       <div class="lc-title">BONOS CER — Ajuste por Inflación (Liquidación T+2)</div>
-      <div class="lc-sub">TIR calculada sobre Paridad Real · data912.com</div>
+      <div class="lc-sub">TIR calculada desinflactando Precio Real · data912.com</div>
     </div>
     <div class="lc-filters">
       <button class="lc-ftab on"  id="cer-f-all"   onclick="cerSetFilter('all')">TODOS</button>
@@ -316,7 +316,7 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
 
   <div class="lc-statusbar">
     <span id="cer-last-upd" style="color:var(--gray)">—</span>
-    <span style="color:var(--blue3)">Precios: data912.com · CER: BCRA Serie 3540</span>
+    <span style="color:var(--blue3)">Precios: data912.com · CER referencial proyectado T+2</span>
   </div>
 </div>
 </div>
@@ -328,7 +328,6 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
 function tick(){const n=new Date(),p=v=>String(v).padStart(2,'0');document.getElementById('clock').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;}
 tick();setInterval(tick,1000);
 
-// Función utilitaria para calcular T+2 hábil
 function getBusinessDaysAdd(date, days) {
     let result = new Date(date);
     let added = 0;
@@ -341,7 +340,6 @@ function getBusinessDaysAdd(date, days) {
     return result;
 }
 
-// Fetch with CORS proxy fallback chain
 async function pfetch(url){
   try{const r=await fetch(url);if(r.ok)return r.json();}catch(e){}
   try{
@@ -357,43 +355,40 @@ async function pfetch(url){
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  BONOS CER — MATRIZ ACTUALIZADA CON VNR Y CER BASE
+//  BONOS CER — MATRIZ ACTUALIZADA CON TUS DATOS EXACTOS
 // ═══════════════════════════════════════════════════════════════
 Chart.register(ChartDataLabels);
 
-// CER_emision calculado como 100 / VN_REF de tu script original o datos históricos.
-// VNR actualizado para los que amortizan.
 const CER_CONFIG = {
-  // ── Series TZXY (zero-coupon CER, bullet, VNR 100) ──
-  'X15Y6':  {name:'TZXY May-26A', tipo:'corto', venc:'2026-05-15', vnr: 100, cerBase: 9389.67, coupon:0,   amorts:[{d:'2026-05-15',pct:100}]},
-  'X29Y6':  {name:'TZXY May-26B', tipo:'corto', venc:'2026-05-29', vnr: 100, cerBase: 8756.56, coupon:0,   amorts:[{d:'2026-05-29',pct:100}]},
-  'TZX26':  {name:'TZXY Jun-26',  tipo:'corto', venc:'2026-06-30', vnr: 100, cerBase: 2692.11, coupon:0,   amorts:[{d:'2026-06-30',pct:100}]},
-  'X31L6':  {name:'TZXY Jul-26',  tipo:'corto', venc:'2026-07-31', vnr: 100, cerBase: 9149.13, coupon:0,   amorts:[{d:'2026-07-31',pct:100}]},
-  'X30S6':  {name:'TZXY Sep-26',  tipo:'corto', venc:'2026-09-30', vnr: 100, cerBase: 9578.54, coupon:0,   amorts:[{d:'2026-09-30',pct:100}]},
-  'TZXO6':  {name:'TZXY Oct-26',  tipo:'corto', venc:'2026-10-30', vnr: 100, cerBase: 6422.60, coupon:0,   amorts:[{d:'2026-10-30',pct:100}]},
-  'X30N6':  {name:'TZXY Nov-26',  tipo:'corto', venc:'2026-11-30', vnr: 100, cerBase: 8826.12, coupon:0,   amorts:[{d:'2026-11-30',pct:100}]},
-  'TZXD6':  {name:'TZXY Dic-26',  tipo:'corto', venc:'2026-12-15', vnr: 100, cerBase: 3631.08, coupon:0,   amorts:[{d:'2026-12-15',pct:100}]},
-  'TZXM7':  {name:'TZXY Mar-27',  tipo:'corto', venc:'2027-03-31', vnr: 100, cerBase: 4835.58, coupon:0,   amorts:[{d:'2027-03-31',pct:100}]},
-  'TZXA7':  {name:'TZXY Abr-27',  tipo:'corto', venc:'2027-04-30', vnr: 100, cerBase: 4545.45, coupon:0,   amorts:[{d:'2027-04-30',pct:100}]},
-  'TZXY7':  {name:'TZXY May-27',  tipo:'corto', venc:'2027-05-31', vnr: 100, cerBase: 4166.66, coupon:0,   amorts:[{d:'2027-05-31',pct:100}]},
-  'TZX27':  {name:'TZXY Jun-27',  tipo:'corto', venc:'2027-06-30', vnr: 100, cerBase: 2683.12, coupon:0,   amorts:[{d:'2027-06-30',pct:100}]},
-  'TZXD7':  {name:'TZXY Dic-27',  tipo:'largo', venc:'2027-12-15', vnr: 100, cerBase: 3639.01, coupon:0,   amorts:[{d:'2027-12-15',pct:100}]},
-  'TZX28':  {name:'TZXY Jun-28',  tipo:'largo', venc:'2028-06-30', vnr: 100, cerBase: 2675.22, coupon:0,   amorts:[{d:'2028-06-30',pct:100}]},
+  // ── Zero-Coupon Bullet ──
+  'X15Y6':  {name:'TZXY May-26A', tipo:'corto', venc:'2026-05-15', vnr: 100, cerBase: 701.614, coupon:0,   amorts:[{d:'2026-05-15',pct:100}]},
+  'X29Y6':  {name:'TZXY May-26B', tipo:'corto', venc:'2026-05-29', vnr: 100, cerBase: 651.8981, coupon:0,  amorts:[{d:'2026-05-29',pct:100}]},
+  'TZX26':  {name:'TZXY Jun-26',  tipo:'corto', venc:'2026-06-30', vnr: 100, cerBase: 200.388, coupon:0,   amorts:[{d:'2026-06-30',pct:100}]},
+  'X31L6':  {name:'TZXY Jul-26',  tipo:'corto', venc:'2026-07-31', vnr: 100, cerBase: 685.5506, coupon:0,  amorts:[{d:'2026-07-31',pct:100}]},
+  'X30S6':  {name:'TZXY Sep-26',  tipo:'corto', venc:'2026-09-30', vnr: 100, cerBase: 714.9849, coupon:0,  amorts:[{d:'2026-09-30',pct:100}]},
+  'TZXO6':  {name:'TZXY Oct-26',  tipo:'corto', venc:'2026-10-30', vnr: 100, cerBase: 480.1526, coupon:0,  amorts:[{d:'2026-10-30',pct:100}]},
+  'X30N6':  {name:'TZXY Nov-26',  tipo:'corto', venc:'2026-11-30', vnr: 100, cerBase: 659.6789, coupon:0,  amorts:[{d:'2026-11-30',pct:100}]},
+  'TZXD6':  {name:'TZXY Dic-26',  tipo:'corto', venc:'2026-12-15', vnr: 100, cerBase: 271.0476, coupon:0,  amorts:[{d:'2026-12-15',pct:100}]},
+  'TZXM7':  {name:'TZXY Mar-27',  tipo:'corto', venc:'2027-03-31', vnr: 100, cerBase: 361.3176, coupon:0,  amorts:[{d:'2027-03-31',pct:100}]},
+  'TZXA7':  {name:'TZXY Abr-27',  tipo:'corto', venc:'2027-04-30', vnr: 100, cerBase: 651.8981, coupon:0,  amorts:[{d:'2027-04-30',pct:100}]},
+  'TZXY7':  {name:'TZXY May-27',  tipo:'corto', venc:'2027-05-31', vnr: 100, cerBase: 659.6789, coupon:0,  amorts:[{d:'2027-05-31',pct:100}]},
+  'TZX27':  {name:'TZXY Jun-27',  tipo:'corto', venc:'2027-06-30', vnr: 100, cerBase: 200.388, coupon:0,   amorts:[{d:'2027-06-30',pct:100}]},
+  'TZXD7':  {name:'TZXY Dic-27',  tipo:'largo', venc:'2027-12-15', vnr: 100, cerBase: 271.0476, coupon:0,  amorts:[{d:'2027-12-15',pct:100}]},
+  'TZX28':  {name:'TZXY Jun-28',  tipo:'largo', venc:'2028-06-30', vnr: 100, cerBase: 200.388, coupon:0,   amorts:[{d:'2028-06-30',pct:100}]},
   
-  // ── TX con cupón semestral (Base 365, VNR 100) ──
-  'TX26':   {name:'Boncer Nov-26', tipo:'corto', venc:'2026-11-09', vnr: 100, cerBase: 769.94, coupon:2.0, ultPago: '2025-11-09',
+  // ── TX con cupón semestral (Base 365) ──
+  'TX26':   {name:'Boncer Nov-26', tipo:'corto', venc:'2026-11-09', vnr: 100, cerBase: 22.544, coupon:2.0, ultPago: '2025-11-09',
              pagos:[{d:'2026-05-09',c:1.0,a:0},{d:'2026-11-09',c:1.0,a:100}]},
-  'TX28':   {name:'Boncer Nov-28', tipo:'largo', venc:'2028-11-09', vnr: 100, cerBase: 491.18, coupon:2.0, ultPago: '2025-11-09',
+  'TX28':   {name:'Boncer Nov-28', tipo:'largo', venc:'2028-11-09', vnr: 100, cerBase: 22.544, coupon:2.0, ultPago: '2025-11-09',
              pagos:[{d:'2026-05-09',c:1.0,a:0},{d:'2026-11-09',c:1.0,a:0},{d:'2027-05-09',c:1.0,a:0},{d:'2027-11-09',c:1.0,a:0},{d:'2028-05-09',c:1.0,a:0},{d:'2028-11-09',c:1.0,a:100}]},
-  'TX31':   {name:'Boncer Nov-31', tipo:'largo', venc:'2031-11-30', vnr: 100, cerBase: 487.80, coupon:2.5, ultPago: '2025-11-30', // Ajustado a los valores estándar de emisión
+  'TX31':   {name:'Boncer Nov-31', tipo:'largo', venc:'2031-11-30', vnr: 100, cerBase: 46.913, coupon:2.5, ultPago: '2025-11-30',
              pagos:[{d:'2026-05-30',c:1.25,a:0},{d:'2026-11-30',c:1.25,a:0},{d:'2027-05-30',c:1.25,a:0},{d:'2027-11-30',c:1.25,a:0},{d:'2028-05-30',c:1.25,a:0},{d:'2028-11-30',c:1.25,a:0},{d:'2029-05-30',c:1.25,a:0},{d:'2029-11-30',c:1.25,a:0},{d:'2030-05-30',c:1.25,a:0},{d:'2030-11-30',c:1.25,a:0},{d:'2031-05-30',c:1.25,a:0},{d:'2031-11-30',c:1.25,a:100}]},
   
-  // ── Discount / Par (canje 2005, CER_emision histórico = 1.4397 aprox) ──
-  'DICP':   {name:'Discount Pesos', tipo:'largo', venc:'2033-12-31', vnr: 55.48, cerBase: 1.4397, coupon:5.83, ultPago: '2025-12-31',
+  // ── Discount / Par (canje 2005) ──
+  'DICP':   {name:'Discount Pesos', tipo:'largo', venc:'2033-12-31', vnr: 55.48, cerBase: 1.4551, coupon:5.83, ultPago: '2025-12-31',
              pagos:[{d:'2026-06-30',c:2.915,a:2.5},{d:'2026-12-31',c:2.85,a:2.5},{d:'2027-06-30',c:2.785,a:2.5},{d:'2027-12-31',c:2.72,a:2.5},{d:'2028-06-30',c:2.655,a:2.5},{d:'2028-12-31',c:2.59,a:2.5},{d:'2029-06-30',c:2.525,a:2.5},{d:'2029-12-31',c:2.46,a:2.5},{d:'2030-06-30',c:2.395,a:2.5},{d:'2030-12-31',c:2.33,a:2.5},{d:'2031-06-30',c:2.265,a:2.5},{d:'2031-12-31',c:2.2,a:2.5},{d:'2032-06-30',c:2.135,a:2.5},{d:'2032-12-31',c:2.07,a:2.5},{d:'2033-06-30',c:2.005,a:2.5},{d:'2033-12-31',c:1.94,a:2.5}]},
-  'PARP':   {name:'Par Pesos', tipo:'largo', venc:'2038-12-31', vnr: 100, cerBase: 1.4397, coupon:3.74, ultPago: '2025-12-31', // PARP amortiza a partir de 2029
-             pagos:[{d:'2026-06-30',c:1.87,a:0},{d:'2026-12-31',c:1.87,a:0},{d:'2027-06-30',c:1.87,a:0},{d:'2027-12-31',c:1.87,a:0},{d:'2028-06-30',c:1.87,a:0},{d:'2028-12-31',c:1.87,a:0},{d:'2029-06-30',c:1.87,a:0},{d:'2029-12-31',c:1.87,a:5.0},{d:'2030-06-30',c:1.77,a:0},{d:'2030-12-31',c:1.77,a:5.0}]} 
-             // Simplificado para la demostración, idealmente poner todos hasta 2038.
+  'PARP':   {name:'Par Pesos', tipo:'largo', venc:'2038-12-31', vnr: 100, cerBase: 1.4551, coupon:3.74, ultPago: '2025-12-31',
+             pagos:[{d:'2026-06-30',c:1.87,a:0},{d:'2026-12-31',c:1.87,a:0},{d:'2027-06-30',c:1.87,a:0},{d:'2027-12-31',c:1.87,a:0},{d:'2028-06-30',c:1.87,a:0},{d:'2028-12-31',c:1.87,a:0},{d:'2029-06-30',c:1.87,a:0},{d:'2029-12-31',c:1.87,a:5.0},{d:'2030-06-30',c:1.77,a:0},{d:'2030-12-31',c:1.77,a:5.0}]}
 };
 
 const CER_FALLBACK = {
@@ -403,7 +398,7 @@ const CER_FALLBACK = {
   'TX26':1314.00,'TX28':1915.00,'TX31':1359.00,'DICP':48570.00,'PARP':32690.00,
 };
 
-let CER_HOY = 9700; // Será pisado por el fetch
+let CER_HOY = 9700; 
 let cerData = [], cerFilter = 'all', cerSortCol = 'venc', cerSortDir = 'asc';
 let cerCurveChart = null;
 
@@ -429,58 +424,57 @@ function cerGetFlows(ticker) {
 // NUEVO MOTOR DE CÁLCULO DE PARIDAD Y TIR REAL A T+2 (ACT/365)
 // ════════════════════════════════════════════════════════════════
 
-function cerCalcularParidad(ticker, pricePesos, fechaLiquidacion) {
+function cerCalcularParidadYPrecioReal(ticker, pricePesos, fechaLiquidacion) {
   const cfg = CER_CONFIG[ticker];
-  if (!cfg) return 0;
+  if (!cfg) return { paridad: 0, precioReal: 0 };
   
-  // 1. Intereses Corridos (Act/365)
+  // 1. Intereses Corridos (Act/365) calculados sobre el VNR
   let intCorr = 0;
   if (cfg.coupon > 0 && cfg.ultPago) {
       const fechaUltPago = new Date(cfg.ultPago + 'T00:00:00');
       const diasCorridos = (fechaLiquidacion - fechaUltPago) / (1000 * 60 * 60 * 24);
-      // Intereses devengados como porcentaje del VNR
       intCorr = cfg.vnr * (cfg.coupon / 100) * (diasCorridos / 365);
   }
 
-  // 2. Valor Técnico a T+2
-  // VT = (VNR_residual / 100) * (CER_liq / CER_base) * 100 + IntCorr
-  // Simplificado: VT = VNR_residual * (CER_liq / CER_base) + IntCorr_Ajustado
-  
+  // 2. Precio Real (Desinflactado de mercado)
   const ajusteCER = CER_HOY / cfg.cerBase;
-  const valorTecnico = (cfg.vnr * ajusteCER) + (intCorr * ajusteCER);
+  const precioReal = pricePesos / ajusteCER;
   
-  if (valorTecnico <= 0) return 0;
+  // 3. Valor Técnico Real (sin inflación incluida)
+  const valorTecnicoReal = cfg.vnr + intCorr;
   
-  // 3. Paridad
-  return (pricePesos / valorTecnico) * 100; // Devuelve en formato 100%
+  if (valorTecnicoReal <= 0) return { paridad: 0, precioReal: 0 };
+  
+  // 4. Paridad
+  const paridad = (precioReal / valorTecnicoReal) * 100;
+
+  return { paridad, precioReal };
 }
 
-function cerSolveReal(ticker, paridad, flows, fechaLiquidacion) {
-  if (paridad <= 0 || !flows.length) return 0;
-  const pRatio = paridad / 100;
+function cerSolveReal(precioReal, flows, fechaLiquidacion) {
+  if (precioReal <= 0 || !flows.length) return 0;
 
   const futs = flows.map(f => ({
     t: (new Date(f.date+'T00:00:00') - fechaLiquidacion) / (1000 * 60 * 60 * 24 * 365),
     cf: f.coupon + f.amort
   })).filter(f => f.t > 0);
 
-  // Fórmula exacta para ZC
+  // Fórmula exacta para Zero Coupon
   if (futs.length === 1 && futs[0].cf >= 99) {
-    return (Math.pow(1 / pRatio, 1 / futs[0].t) - 1) * 100;
+    return (Math.pow(futs[0].cf / precioReal, 1 / futs[0].t) - 1) * 100;
   }
 
-  // Newton-Raphson para cupones sobre Paridad
+  // Newton-Raphson iterando sobre el Precio Real
   let r = 0.05; 
   for (let i = 0; i < 300; i++) {
     let pv = 0;
     let dpv = 0;
     for (const f of futs) {
       const df = Math.pow(1 + r, f.t);
-      // El flujo aquí es un porcentaje del Residual
       pv += f.cf / df;
       dpv -= (f.t * f.cf) / (df * (1 + r));
     }
-    const diff = pv - (pRatio * 100); 
+    const diff = pv - precioReal; 
     if (Math.abs(diff) < 1e-12) break;
     const step = diff / dpv;
     r -= step;
@@ -490,7 +484,7 @@ function cerSolveReal(ticker, paridad, flows, fechaLiquidacion) {
   return r * 100;
 }
 
-function cerMacDuration(ticker, tirReal, flows, fechaLiquidacion) {
+function cerMacDuration(tirReal, flows, fechaLiquidacion) {
   const futs = flows.map(f => ({
     t: (new Date(f.date+'T00:00:00') - fechaLiquidacion) / (1000 * 60 * 60 * 24 * 365),
     cf: f.coupon + f.amort
@@ -514,7 +508,6 @@ async function cerFetch() {
   btn.classList.add('loading'); btn.textContent = '↻ CARGANDO...';
   pill.className = 'lc-status-pill loading'; pill.textContent = 'CARGANDO...';
 
-  // Fecha de liquidación estándar T+2
   const hoy = new Date();
   hoy.setHours(0,0,0,0);
   const fechaLiquidacion = getBusinessDaysAdd(hoy, 2);
@@ -554,10 +547,10 @@ async function cerFetch() {
 
     const dias    = Math.max(1, Math.round((new Date(CER_CONFIG[ticker].venc+'T00:00:00')-fechaLiquidacion)/86400000));
     
-    // Cálculo central
-    const paridad = cerCalcularParidad(ticker, found.price, fechaLiquidacion);
-    const tirReal = cerSolveReal(ticker, paridad, flows, fechaLiquidacion);
-    const macD    = cerMacDuration(ticker, tirReal, flows, fechaLiquidacion);
+    // El motor recalibrado
+    const { paridad, precioReal } = cerCalcularParidadYPrecioReal(ticker, found.price, fechaLiquidacion);
+    const tirReal = cerSolveReal(precioReal, flows, fechaLiquidacion);
+    const macD    = cerMacDuration(tirReal, flows, fechaLiquidacion);
 
     cerData.push({
       ticker, ...CER_CONFIG[ticker], price: found.price, varPct: found.varPct,
@@ -622,7 +615,7 @@ function cerRender() {
   </tr>`).join('');
 }
 
-// ── Curva (simplificado) ─────────────────────────────────────────
+// ── Curva (simplificada) ─────────────────────────────────────────
 function cerRenderCurve() {
   const canvas = document.getElementById('cer-curve-canvas'); if (!canvas) return;
   let pts = cerData.filter(b=>cerFilter==='all'||b.tipo===cerFilter).map(b=>({x:b.macD, y:b.tirReal, ticker:b.ticker, tipo:b.tipo}));
