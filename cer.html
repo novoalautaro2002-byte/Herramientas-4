@@ -1062,8 +1062,8 @@ id="page-cer">
         <th onclick="cerSort('varPct')" data-col="varPct">VAR % <span class="sort-arrow"></span></th>
         <th onclick="cerSort('venc')"   data-col="venc">VENCIMIENTO <span class="sort-arrow"></span></th>
         <th onclick="cerSort('dias')"   data-col="dias">DÍAS <span class="sort-arrow"></span></th>
-        <th onclick="cerSort('tea')"    data-col="tea" style="color:var(--green)">TIR TEA % <span class="sort-arrow"></span></th>
-        <th onclick="cerSort('tem')"    data-col="tem">TEM % <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('macD')"   data-col="macD">DURATION <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('tirReal')"data-col="tirReal" style="color:var(--green)">TIR REAL % <span class="sort-arrow"></span></th>
         <th style="width:60px">CALC</th>
       </tr></thead>
       <tbody id="cer-tbody">
@@ -1116,9 +1116,9 @@ id="page-cer">
     </div>
     <!-- Métricas -->
     <div class="lc-metrics-row" style="grid-template-columns:repeat(4,1fr)">
-      <div class="lc-met"><div class="lc-met-k">TIR TEA</div><div class="lc-met-v tir" id="cer-m-tea">—</div></div>
+      <div class="lc-met"><div class="lc-met-k">TIR Real</div><div class="lc-met-v tir" id="cer-m-tea">—</div></div>
       <div class="lc-met"><div class="lc-met-k">TEM</div><div class="lc-met-v" style="color:var(--amber)" id="cer-m-tem">—</div></div>
-      <div class="lc-met"><div class="lc-met-k">TNA</div><div class="lc-met-v" style="color:var(--cyan)" id="cer-m-tna">—</div></div>
+      <div class="lc-met"><div class="lc-met-k">P. Técnico %</div><div class="lc-met-v" style="color:var(--cyan)" id="cer-m-tna">—</div></div>
       <div class="lc-met"><div class="lc-met-k">Días</div><div class="lc-met-v dias" id="cer-m-dias">—</div></div>
     </div>
     <!-- Resumen -->
@@ -1244,113 +1244,92 @@ const CER_CONFIG = {
 
 // Fallback precios
 const CER_FALLBACK = {
-  'X15Y6':110.2,'X29Y6':112.5,'TZX26':115.8,'X31L6':120.3,'X30S6':126.0,
-  'TZXO6':128.5,'X30N6':131.2,'TZXD6':132.8,'TZXM7':138.0,'TZXA7':139.5,
-  'TZXY7':141.0,'TZX27':143.5,'TZXD7':155.0,'TZX28':168.0,
-  'TX26':130.5,'TX28':155.0,'TX31':175.0,'DICP':350.0,'PARP':180.0,
+  'X15Y6':110.2,'X29Y6':112.5,'TZX26':368.4,'X31L6':108.1,'X30S6':102.7,
+  'TZXO6':151.7,'X30N6':110.2,'TZXD6':267.3,'TZXM7':196.3,'TZXA7':160.0,
+  'TZXY7':240.0,'TZX27':348.5,'TZXD7':246.2,'TZX28':308.4,
+  'TX26':1314.0,'TX28':1915.0,'TX31':2100.0,'DICP':48570.0,'PARP':32690.0,
 };
 
-// CER global
-let CER_HOY = null, CER_INFL_MENSUAL = null;
+// ── VN_REF = VN_nominal / CER_emision (constante por bono) ──────────────
+// Derivado de datos de mercado (rendimientos.co + BYMA). Permite normalizar
+// el precio de mercado (pesos) al "precio técnico" (% del VN ajustado CER):
+//   precio_técnico = precio_pesos / (VN_REF[ticker] × CER_hoy) × 100
+// TIR_real: precio_técnico = Σ flujos / (1+r)^t
+// Fuente de referencia: prospecto BYMA / licitación original por ticker.
+const VN_REF = {
+  // ── TZXY zero-coupon ──
+  'X15Y6': 0.01065,   // emitido ~2025, CER_em ≈ 9390
+  'X29Y6': 0.01142,   // emitido ~2025, CER_em ≈ 8757
+  'TZX26': 0.03714,   // emitido ~2021-22, CER_em ≈ 2692
+  'X31L6': 0.01093,   // emitido ~2025, CER_em ≈ 9151
+  'X30S6': 0.01044,   // emitido ~2025, CER_em ≈ 9579
+  'TZXO6': 0.01557,   // emitido ~2024, CER_em ≈ 6423
+  'X30N6': 0.01133,   // emitido ~2025, CER_em ≈ 8826
+  'TZXD6': 0.02754,   // emitido ~2022, CER_em ≈ 3631
+  'TZXM7': 0.02068,   // emitido ~2022-23, CER_em ≈ 4836
+  'TZXA7': 0.02200,   // estimado
+  'TZXY7': 0.02400,   // estimado
+  'TZX27': 0.03727,   // emitido ~2021, CER_em ≈ 2683
+  'TZXD7': 0.02748,   // emitido ~2022, CER_em ≈ 3639
+  'TZX28': 0.03738,   // emitido ~2021, CER_em ≈ 2675
+  // ── Boncer con cupón ──
+  'TX26':  0.12988,   // Boncer Nov-26, emitido ~2022
+  'TX28':  0.20359,   // Boncer Nov-28, emitido ~2021
+  'TX31':  0.20500,   // Boncer Nov-31, estimado similar TX28
+  // ── Discount / Par (canje 2005, CER_em muy bajo) ──
+  'DICP':  6.4780,    // Discount Pesos — CER_em ≈ 1.54
+  'PARP':  5.9490,    // Par Pesos     — CER_em ≈ 1.68
+};
+
+// CER global — fallback al último valor conocido para poder renderizar sin esperar fetch
+let CER_HOY = 9730;
 let cerData = [], cerFilter = 'all', cerSortCol = 'venc', cerSortDir = 'asc';
 let cerCurveChart = null, cerCurrentBond = null;
 
-// ── Fetch CER desde BCRA API (serie 3540) ───────────────────
+// ── Fetch CER silencioso — sólo actualiza CER_HOY y re-renderiza ──────
+// Jerarquía: CriptoYa → argentinadatos UVA → EstadísticasBCRA → fallback 9730
 async function cerFetchCER() {
-  const dot = document.getElementById('cer-dot');
-  const src = document.getElementById('cer-src');
-
-  function cerSetValues(cerVal, cerFechaStr, infl30, source) {
-    if (cerVal) {
-      CER_HOY = cerVal;
-      document.getElementById('cer-valor').textContent = cerVal.toFixed(6);
-      document.getElementById('cer-fecha').textContent = cerFechaStr ? 'al '+cerFechaStr : '';
-    } else {
-      document.getElementById('cer-valor').textContent = 'N/D';
-      document.getElementById('cer-fecha').textContent = 'estimado por inflación mensual';
+  function set(val) {
+    if (val && val > 0) {
+      CER_HOY = val;
+      // Re-renderizar con CER actualizado si ya hay datos de precios
+      if (cerData.length) { cerRender(); cerRenderCurve(); }
     }
-    if (infl30 !== null) {
-      CER_INFL_MENSUAL = infl30;
-      document.getElementById('cer-infl30').textContent = infl30.toFixed(2)+'%';
-      document.getElementById('cer-inflA').textContent = ((Math.pow(1+infl30/100,12)-1)*100).toFixed(1)+'%';
-      const inp = document.getElementById('cer-inp-infl');
-      if (!inp.dataset.userEdited) inp.value = Math.max(1.5, infl30).toFixed(1);
-    }
-    const live = !!cerVal;
-    dot.style.background = live ? '#22d68a' : '#f0b429';
-    dot.style.boxShadow  = live ? '0 0 6px #22d68a' : '0 0 6px #f0b429';
-    src.textContent = source + ' · ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
   }
 
-  // ── Estrategia 1: argentinadatos UVA (tiene CORS nativo, similar a CER) ──
+  // 1. CriptoYa — GET /api/cer → {"time":unix,"value":float}
+  try {
+    const r = await fetch('https://criptoya.com/api/cer');
+    if (r.ok) { const d = await r.json(); if (d?.value) { set(parseFloat(d.value)); return; } }
+  } catch(e) {}
+
+  // 2. ArgentinaDatos UVA ≈ CER
   try {
     const r = await fetch('https://api.argentinadatos.com/v1/finanzas/indices/uva');
     if (r.ok) {
       const arr = await r.json();
-      if (arr && arr.length > 0) {
+      if (arr?.length) {
         arr.sort((a,b)=>a.fecha>b.fecha?1:-1);
-        const last   = arr[arr.length-1];
-        const hace30 = arr[Math.max(0,arr.length-31)];
-        const uvaHoy = parseFloat(last.valor);
-        const infl30 = hace30 ? (uvaHoy/parseFloat(hace30.valor)-1)*100 : null;
-        const fecha  = new Date(last.fecha+'T00:00:00').toLocaleDateString('es-AR');
-        // UVA ≈ CER (misma base inflacionaria); mostramos como CER estimado
-        cerSetValues(uvaHoy, fecha, infl30, 'ArgentinaDatos · UVA≈CER');
+        set(parseFloat(arr[arr.length-1].valor));
         return;
       }
     }
   } catch(e) {}
 
-  // ── Estrategia 2: argentinadatos inflación mensual (directa, CORS) ──
+  // 3. EstadísticasBCRA con token guardado
+  const tk = localStorage.getItem('bcra_api_token') || 'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4MDYyMzgwODgsInR5cGUiOiJleHRlcm5hbCIsInVzZXIiOiJub3ZvYS5sYXV0YXJvLjIwMDJAZ21haWwuY29tIn0.75_5_n_IWE3VD0nV8nvwmr2VCW8Q9HVx1IDv4DxwAABrYPRCsTIPyp0LttfnqFBtnV6FoLZscHbC4-eExJ12SA';
   try {
-    const r = await fetch('https://api.argentinadatos.com/v1/finanzas/indices/inflacion');
+    const r = await fetch('https://api.estadisticasbcra.com/cer', {headers:{'Authorization':'BEARER '+tk}});
     if (r.ok) {
       const arr = await r.json();
-      if (arr && arr.length > 0) {
-        arr.sort((a,b)=>a.fecha>b.fecha?1:-1);
-        const infl30 = parseFloat(arr[arr.length-1].valor);
-        cerSetValues(null, null, infl30, 'ArgentinaDatos · IPC mensual');
-        return;
+      if (Array.isArray(arr)&&arr.length) {
+        arr.sort((a,b)=>a.d>b.d?1:-1);
+        set(parseFloat(arr[arr.length-1].v));
       }
     }
   } catch(e) {}
-
-  // ── Estrategia 3: BCRA via proxy (serie 3540) ──
-  try {
-    const hoy   = new Date();
-    const desde = new Date(hoy); desde.setDate(desde.getDate()-65);
-    const fmt   = d => d.toISOString().slice(0,10);
-    const bcraUrl = `https://api.bcra.gob.ar/estadisticas/v4/datosvariable/3540/${fmt(desde)}/${fmt(hoy)}?limit=65`;
-    const proxyUrl = 'https://api.allorigins.win/get?url='+encodeURIComponent(bcraUrl);
-    const r = await fetch(proxyUrl);
-    if (r.ok) {
-      const wrapper = await r.json();
-      const data    = JSON.parse(wrapper.contents || '{}');
-      const arr     = data.results || [];
-      if (arr.length > 0) {
-        arr.sort((a,b)=>a.fecha>b.fecha?1:-1);
-        const last   = arr[arr.length-1];
-        const hace30 = arr[Math.max(0,arr.length-31)];
-        const cerVal = parseFloat(last.valor);
-        const infl30 = hace30 ? (cerVal/parseFloat(hace30.valor)-1)*100 : null;
-        const fecha  = new Date(last.fecha+'T00:00:00').toLocaleDateString('es-AR');
-        cerSetValues(cerVal, fecha, infl30, 'BCRA · Serie 3540');
-        return;
-      }
-    }
-  } catch(e) {}
-
-  // ── Fallback estático: últimas lecturas conocidas ──────────────────────
-  // CER al 27/3/2026 ≈ 9732 (base 02/02/2002 = 1), inflación mensual ~3%
-  cerSetValues(null, null, 3.0, 'Referencia estática (sin conexión)');
-  dot.style.background='#ff4d6a'; dot.style.boxShadow='0 0 6px #ff4d6a';
+  // Si todo falla, CER_HOY mantiene el fallback 9730
 }
-
-// Marcar input como editado por el usuario para no sobreescribir
-document.addEventListener('DOMContentLoaded',()=>{
-  const inp = document.getElementById('cer-inp-infl');
-  if(inp) inp.addEventListener('input', ()=>{ inp.dataset.userEdited='1'; });
-});
 
 // ── Cashflows de un bono: devuelve flujos futuros ───────────
 function cerGetFlows(ticker) {
@@ -1371,20 +1350,71 @@ function cerGetFlows(ticker) {
   return flows;
 }
 
-// ── TIR estilo LECAP ────────────────────────────────────────
-// Para bonos CER tratamos el precio como si fuera un descuento puro:
-//   TEA = (100 / precio)^(365 / dias) − 1
-//   TEM = (1 + TEA)^(1/12) − 1
-//   TNA = TEM × 12
-function cerTEA(price, dias) {
-  if (price <= 0 || dias <= 0) return 0;
-  return (Math.pow(100 / price, 365 / dias) - 1) * 100;
+// ════════════════════════════════════════════════════════════════
+//  TIR REAL — replicando rendimientos.co
+//
+//  Fórmula:  precio_técnico = precio_pesos / (VN_REF[ticker] × CER_hoy) × 100
+//  VN_REF = VN_nominal / CER_emision  (constante por bono, ver tabla arriba)
+//
+//  Para ZC (TZXY): TIR = (100/P_tech)^(365/días) − 1   [fórmula directa]
+//  Para bonos con cupón: Newton-Raphson  P_tech = Σ CF_i/(1+r)^t_i
+//
+//  El CER se cancela en la ecuación → r es el spread real sobre inflación.
+// ════════════════════════════════════════════════════════════════
+
+function cerPriceTecnico(ticker, pricePesos) {
+  const vnRef = VN_REF[ticker];
+  if (!vnRef || !CER_HOY || CER_HOY <= 0) return pricePesos; // fallback sin CER
+  return pricePesos / (vnRef * CER_HOY) * 100;
 }
-function cerTEM(tea) {
-  return (Math.pow(1 + tea / 100, 1 / 12) - 1) * 100;
+
+// TIR real — ZC: fórmula directa | Cupón: Newton-Raphson
+function cerSolveReal(ticker, pricePesos, flows) {
+  const pTech = cerPriceTecnico(ticker, pricePesos);
+  if (pTech <= 0 || !flows.length) return 0;
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const futs  = flows.map(f => ({
+    t:  Math.max(1, (new Date(f.date+'T00:00:00') - today) / 86400000) / 365,
+    cf: f.coupon + f.amort,
+  }));
+
+  // ZC con un solo flujo → fórmula exacta
+  if (futs.length === 1 && futs[0].cf >= 99) {
+    return (Math.pow(futs[0].cf / pTech, 1 / futs[0].t) - 1) * 100;
+  }
+
+  // Cupón → Newton-Raphson sobre P_tech
+  let r = 0.03;
+  for (let i = 0; i < 300; i++) {
+    const pv  = futs.reduce((s,f) => s + f.cf / Math.pow(1+r, f.t), 0);
+    const dpv = futs.reduce((s,f) => s - f.t * f.cf / Math.pow(1+r, f.t+1), 0);
+    if (Math.abs(dpv) < 1e-14) break;
+    const step = (pv - pTech) / dpv;
+    r -= step;
+    if (r < -0.98) r = -0.5; if (r > 10) r = 2;
+    if (Math.abs(step) < 1e-12) break;
+  }
+  return r * 100;
 }
-function cerTNA(tea) {
-  return cerTEM(tea) * 12;
+
+// Duration Macaulay [años] — ZC: = t | Cupón: media ponderada
+function cerMacDuration(ticker, pricePesos, flows) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const futs  = flows.map(f => ({
+    t:  Math.max(1, (new Date(f.date+'T00:00:00') - today) / 86400000) / 365,
+    cf: f.coupon + f.amort,
+  }));
+  if (!futs.length) return 0;
+  if (futs.length === 1) return futs[0].t; // ZC exacto
+
+  const r = cerSolveReal(ticker, pricePesos, flows) / 100;
+  let sPV = 0, sTPV = 0;
+  for (const f of futs) {
+    const pv = f.cf / Math.pow(1 + r, f.t);
+    sPV += pv; sTPV += f.t * pv;
+  }
+  return sPV > 0 ? sTPV / sPV : 0;
 }
 
 // ── Fetch precios de mercado ─────────────────────────────────
@@ -1433,14 +1463,14 @@ async function cerFetch() {
     const flows = cerGetFlows(ticker);
     if (!flows.length) continue;
 
-    const today = new Date(); today.setHours(0,0,0,0);
-    const dias  = Math.max(1, Math.round((new Date(CER_CONFIG[ticker].venc+'T00:00:00')-today)/86400000));
-    const tea   = cerTEA(found.price, dias);
-    const tem   = cerTEM(tea);
+    const today   = new Date(); today.setHours(0,0,0,0);
+    const dias    = Math.max(1, Math.round((new Date(CER_CONFIG[ticker].venc+'T00:00:00')-today)/86400000));
+    const tirReal = cerSolveReal(ticker, found.price, flows);
+    const macD    = cerMacDuration(ticker, found.price, flows);
 
     cerData.push({
       ticker, ...CER_CONFIG[ticker], price: found.price, varPct: found.varPct,
-      tea, tem, dias
+      tirReal, macD, dias, flows
     });
   }
 
@@ -1486,9 +1516,13 @@ function cerRender() {
     tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--gray)">Sin datos</td></tr>';
     return;
   }
-  const fmtV = v => v>=0?`<span style="color:var(--green)">+${v.toFixed(2)}%</span>`:`<span style="color:var(--red)">${v.toFixed(2)}%</span>`;
+  const fmtV = v => v>=0
+    ?`<span style="color:var(--green)">+${v.toFixed(2)}%</span>`
+    :`<span style="color:var(--red)">${v.toFixed(2)}%</span>`;
   const fmtD = d => new Date(d+'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'});
-  const teaColor = v => v > 80 ? 'color:var(--green);font-weight:700' : v > 50 ? 'color:var(--amber);font-weight:700' : 'color:var(--red);font-weight:700';
+  const tirColor = v => v > 4 ? 'color:var(--green);font-weight:700'
+                       : v > 0 ? 'color:var(--amber);font-weight:700'
+                       : 'color:var(--red);font-weight:700';
   tbody.innerHTML = rows.map(b=>`<tr onclick="cerOpenModal('${b.ticker}')" style="cursor:pointer">
     <td><div class="lc-ticker-wrap">
       <span class="lc-ticker">${b.ticker}</span>
@@ -1499,8 +1533,8 @@ function cerRender() {
     <td>${fmtV(b.varPct)}</td>
     <td style="color:var(--blue3)">${fmtD(b.venc)}</td>
     <td style="color:var(--gray);font-family:var(--mono)">${b.dias}d</td>
-    <td style="${teaColor(b.tea)};font-size:13px;font-family:var(--mono)">${b.tea.toFixed(2)}%</td>
-    <td style="color:var(--cyan);font-family:var(--mono)">${b.tem.toFixed(2)}%</td>
+    <td style="color:var(--cyan);font-family:var(--mono)">${b.macD.toFixed(1)}y</td>
+    <td style="${tirColor(b.tirReal)};font-size:13px;font-family:var(--mono)">${b.tirReal.toFixed(2)}%</td>
     <td><button onclick="event.stopPropagation();cerOpenModal('${b.ticker}')" style="background:rgba(58,111,216,.15);border:1px solid var(--blue2);color:var(--blue3);font-family:var(--mono);font-size:9px;font-weight:700;padding:3px 8px;cursor:pointer;border-radius:3px;height:22px;transition:all .12s" onmouseover="this.style.background='rgba(58,111,216,.3)'" onmouseout="this.style.background='rgba(58,111,216,.15)'">CALC</button></td>
   </tr>`).join('');
 }
@@ -1509,7 +1543,7 @@ function cerRender() {
 function cerRenderCurve() {
   const canvas = document.getElementById('cer-curve-canvas'); if (!canvas) return;
   let pts = cerData.filter(b=>cerFilter==='all'||b.tipo===cerFilter)
-    .map(b=>({x:b.dias, y:b.tea, ticker:b.ticker, tipo:b.tipo}));
+    .map(b=>({x:b.macD, y:b.tirReal, ticker:b.ticker, tipo:b.tipo}));
   if (!pts.length) return;
   pts.sort((a,b)=>a.x-b.x);
 
@@ -1552,17 +1586,17 @@ function cerRenderCurve() {
       tooltip:{filter:i=>i.datasetIndex===1,backgroundColor:'#060f1e',borderColor:'#2a4a7a',borderWidth:1,titleColor:'#7aa3f0',bodyColor:'#c8d8f0',padding:10,
         titleFont:{family:"'JetBrains Mono',monospace",size:11,weight:'700'},bodyFont:{family:"'JetBrains Mono',monospace",size:11},
         callbacks:{title:items=>{const p=pts[items[0].dataIndex];return p.ticker+' · '+CER_CONFIG[p.ticker].name;},
-          label:item=>{const p=pts[item.dataIndex];return['  TIR TEA: '+p.y.toFixed(2)+'%','  Días: '+p.x+'d'];}
+          label:item=>{const p=pts[item.dataIndex];return['  TIR Real: '+p.y.toFixed(2)+'%','  Duration: '+p.x.toFixed(1)+'y'];}
         }
       }
     },
     scales:{
-      x:{type:'linear',min:0,max:Math.max(...pts.map(p=>p.x))*1.08,grid:{color:'rgba(30,58,98,.5)'},
-        ticks:{color:'#4a6a8a',font:{family:"'JetBrains Mono',monospace",size:9},callback:v=>v+'d'},
-        title:{display:true,text:'Días al vencimiento',color:'#4a6a8a',font:{family:"'JetBrains Mono',monospace",size:9,weight:'600'},padding:{top:5}}},
+      x:{type:'linear',min:0,max:Math.max(...pts.map(p=>p.x))*1.1,grid:{color:'rgba(30,58,98,.5)'},
+        ticks:{color:'#4a6a8a',font:{family:"'JetBrains Mono',monospace",size:9},callback:v=>v.toFixed(1)+'y'},
+        title:{display:true,text:'Duration Modificada [años]',color:'#4a6a8a',font:{family:"'JetBrains Mono',monospace",size:9,weight:'600'},padding:{top:5}}},
       y:{min:yMin,max:yMax,grid:{color:'rgba(30,58,98,.5)'},
         ticks:{color:'#4a6a8a',font:{family:"'JetBrains Mono',monospace",size:9},callback:v=>v.toFixed(1)+'%'},
-        title:{display:true,text:'TIR TEA %',color:'#22d68a',font:{family:"'JetBrains Mono',monospace",size:9,weight:'700'},padding:{bottom:5}}}
+        title:{display:true,text:'TIR Real % (vs CER)',color:'#22d68a',font:{family:"'JetBrains Mono',monospace",size:9,weight:'700'},padding:{bottom:5}}}
     }
   }});
 }
@@ -1574,7 +1608,9 @@ function cerOpenModal(ticker) {
   document.getElementById('cer-modal-title').textContent = ticker + ' — Calculadora CER';
   document.getElementById('cer-modal-sub').textContent =
     b.name+' · Vence: '+new Date(b.venc+'T00:00:00').toLocaleDateString('es-AR')+
-    ' · TIR TEA: '+b.tea.toFixed(2)+'%  TEM: '+b.tem.toFixed(2)+'%';
+    ' · TIR Real: '+b.tirReal.toFixed(2)+'%'+
+    ' · Duration: '+b.macD.toFixed(1)+'y'+
+    ' · CER: '+(CER_HOY||9730).toFixed(0);
   document.getElementById('cer-inp-price').value = b.price.toFixed(2);
   document.getElementById('cer-inp-invest').value = 1000000;
   cerCalcModal();
@@ -1586,26 +1622,28 @@ function cerCalcModal() {
   const price  = parseFloat(document.getElementById('cer-inp-price').value) || b.price;
   const invest = parseFloat(document.getElementById('cer-inp-invest').value) || 1000000;
 
-  const tea = cerTEA(price, b.dias);
-  const tem = cerTEM(tea);
-  const tna = cerTNA(tea);
+  const tirReal = cerSolveReal(b.ticker, price, cerGetFlows(b.ticker));
+  const macD    = cerMacDuration(b.ticker, price, cerGetFlows(b.ticker));
+  const pTech   = cerPriceTecnico(b.ticker, price);
+  const vnAdj   = (VN_REF[b.ticker]||1) * (CER_HOY||9730);
 
-  document.getElementById('cer-m-tea').textContent = tea.toFixed(2)+'%';
-  document.getElementById('cer-m-tem').textContent = tem.toFixed(2)+'%';
-  document.getElementById('cer-m-tna').textContent = tna.toFixed(2)+'%';
+  document.getElementById('cer-m-tea').textContent  = tirReal.toFixed(2)+'%';
+  document.getElementById('cer-m-tem').textContent  = ((Math.pow(1+tirReal/100,1/12)-1)*100).toFixed(2)+'%';
+  document.getElementById('cer-m-tna').textContent  = pTech.toFixed(2)+'%';   // mostramos P_tech como referencia
   document.getElementById('cer-m-dias').textContent = b.dias+'d';
 
-  // Resumen de inversión: VN = unidades de bono (% del VN ajustado)
-  const vnInt  = Math.floor(invest / price);
+  // Monto — VN a comprar (en términos del VN ajustado CER)
+  const vnInt   = Math.floor(invest / price);
   const invReal = vnInt * price;
-  // Lo que cobrás al venc = VN × 100 (precio de rescate en % del VN ajustado CER)
-  const cobra  = vnInt * 100;
-  const gan    = cobra - invReal;
+  // Al vencimiento cobran: vnInt unidades × VN ajustado (en ese momento)
+  // Lo que ya está implícito en el precio: cobra 100% del VN ajustado por unidad
+  const cobra   = vnInt * vnAdj;   // $pesos al vencer si CER no cambia
+  const gan     = cobra - invReal;
 
   const fmt2 = n => n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
   document.getElementById('cer-sum-vn').textContent    = vnInt.toLocaleString('es-AR')+' VN @ $'+price.toFixed(2);
   document.getElementById('cer-sum-inv').textContent   = '$ '+fmt2(invReal);
-  document.getElementById('cer-sum-cobra').textContent = '$ '+fmt2(cobra)+' (en VN ajustado CER)';
+  document.getElementById('cer-sum-cobra').textContent = '$ '+fmt2(cobra)+' (CER constante)';
   document.getElementById('cer-sum-gan').textContent   = (gan>=0?'+':'')+'$ '+fmt2(gan);
   document.getElementById('cer-sum-gan').style.color   = gan>=0?'var(--green)':'var(--red)';
   const pk = document.querySelector('#cer-modal-overlay .lc-sum-row.profit .lc-sum-k');
@@ -1616,6 +1654,7 @@ function cerModalClose(e){if(e===null||e.target===document.getElementById('cer-m
 document.addEventListener('keydown',e=>{if(e.key==='Escape')cerModalClose(null);});
 
 // Init
+cerFetchCER();   // fetch CER silencioso (actualiza CER_HOY y re-renderiza al llegar)
 cerFetch();
 
 
