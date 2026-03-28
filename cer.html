@@ -12,16 +12,12 @@
   --navy:   #0d1b2e;
   --navy2:  #122540;
   --navy3:  #172d4d;
-  --panel:  #1a3358;
-  --card:   #1e3a62;
-  --card2:  #243f6a;
   --border: #2a4a7a;
   --border2:#3a5a8a;
   --blue:   #3a6fd8;
   --blue2:  #5b8def;
   --blue3:  #7aa3f0;
   --blue4:  #a8c4f8;
-  --accent: #4f81e8;
   --white:  #f0f4ff;
   --white2: #d0ddf5;
   --gray:   #7a99c4;
@@ -34,7 +30,6 @@
   --red-bg: #2a0a12;
   --amber:  #f0b429;
   --cyan:   #22d4f0;
-  --yellow: #e8f43a;
   --font:   'Inter', sans-serif;
   --mono:   'JetBrains Mono', 'Courier New', monospace;
 }
@@ -263,7 +258,7 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
     </div>
   </div>
   <div class="nav-spacer"></div>
-  <div class="nav-meta"><span class="nav-meta-txt">BYMA T+2</span></div>
+  <div class="nav-meta"><span class="nav-meta-txt">BYMA LIQ T+1</span></div>
 </div>
 
 <div id="page-cer" class="page active">
@@ -271,8 +266,8 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
 
   <div class="lc-toolbar">
     <div>
-      <div class="lc-title">BONOS CER — Ajuste por Inflación (Liquidación T+2)</div>
-      <div class="lc-sub">TIR calculada desinflactando Precio Real · data912.com</div>
+      <div class="lc-title">BONOS CER — Ajuste por Inflación (Metodología rendimientos.co)</div>
+      <div class="lc-sub">TNA y TEA iterando sobre Precio Real · data912.com</div>
     </div>
     <div class="lc-filters">
       <button class="lc-ftab on"  id="cer-f-all"   onclick="cerSetFilter('all')">TODOS</button>
@@ -288,19 +283,18 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
     <table class="lc-table" id="cer-table">
       <thead><tr>
         <th onclick="cerSort('ticker')" data-col="ticker">TICKER <span class="sort-arrow"></span></th>
-        <th onclick="cerSort('name')"   data-col="name">DESCRIPCIÓN <span class="sort-arrow"></span></th>
-        <th onclick="cerSort('price')"  data-col="price">PRECIO DIRTY<span class="sort-arrow"></span></th>
-        <th onclick="cerSort('varPct')" data-col="varPct">VAR % <span class="sort-arrow"></span></th>
         <th onclick="cerSort('venc')"   data-col="venc">VENCIMIENTO <span class="sort-arrow"></span></th>
-        <th onclick="cerSort('dias')"   data-col="dias">DÍAS <span class="sort-arrow"></span></th>
-        <th onclick="cerSort('macD')"   data-col="macD">DURATION <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('price')"  data-col="price">PRECIO DIRTY <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('varPct')" data-col="varPct">VAR. (%) <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('tna')"    data-col="tna">TNA <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('tirReal')"data-col="tirReal" style="color:var(--green)">TEA <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('macD')"   data-col="macD">DUR. MOD. <span class="sort-arrow"></span></th>
         <th onclick="cerSort('paridad')"data-col="paridad" style="color:var(--cyan)">PARIDAD <span class="sort-arrow"></span></th>
-        <th onclick="cerSort('tirReal')"data-col="tirReal" style="color:var(--green)">TEA REAL % <span class="sort-arrow"></span></th>
       </tr></thead>
       <tbody id="cer-tbody">
-        <tr class="lc-skel"><td colspan="9"><div class="lc-skel-bar" style="width:65%"></div></td></tr>
-        <tr class="lc-skel"><td colspan="9"><div class="lc-skel-bar" style="width:80%"></div></td></tr>
-        <tr class="lc-skel"><td colspan="9"><div class="lc-skel-bar" style="width:55%"></div></td></tr>
+        <tr class="lc-skel"><td colspan="8"><div class="lc-skel-bar" style="width:65%"></div></td></tr>
+        <tr class="lc-skel"><td colspan="8"><div class="lc-skel-bar" style="width:80%"></div></td></tr>
+        <tr class="lc-skel"><td colspan="8"><div class="lc-skel-bar" style="width:55%"></div></td></tr>
       </tbody>
     </table>
   </div>
@@ -316,14 +310,14 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
 
   <div class="lc-statusbar">
     <span id="cer-last-upd" style="color:var(--gray)">—</span>
-    <span style="color:var(--blue3)">Precios: data912.com · CER referencial proyectado T+2</span>
+    <span style="color:var(--blue3)">Precios: data912.com · Cálculos: Act/365, Liq T+1</span>
   </div>
 </div>
 </div>
 
 <script>
 // ════════════════════════════════════════
-//  GLOBAL
+//  GLOBAL Y HERRAMIENTAS
 // ════════════════════════════════════════
 function tick(){const n=new Date(),p=v=>String(v).padStart(2,'0');document.getElementById('clock').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;}
 tick();setInterval(tick,1000);
@@ -355,26 +349,26 @@ async function pfetch(url){
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  BONOS CER — MATRIZ ACTUALIZADA CON TUS DATOS EXACTOS
+//  BONOS CER — MATRIZ RENDIMIENTOS.CO (Tus bases exactas)
 // ═══════════════════════════════════════════════════════════════
 Chart.register(ChartDataLabels);
 
 const CER_CONFIG = {
   // ── Zero-Coupon Bullet ──
-  'X15Y6':  {name:'TZXY May-26A', tipo:'corto', venc:'2026-05-15', vnr: 100, cerBase: 701.614, coupon:0,   amorts:[{d:'2026-05-15',pct:100}]},
-  'X29Y6':  {name:'TZXY May-26B', tipo:'corto', venc:'2026-05-29', vnr: 100, cerBase: 651.8981, coupon:0,  amorts:[{d:'2026-05-29',pct:100}]},
-  'TZX26':  {name:'TZXY Jun-26',  tipo:'corto', venc:'2026-06-30', vnr: 100, cerBase: 200.388, coupon:0,   amorts:[{d:'2026-06-30',pct:100}]},
-  'X31L6':  {name:'TZXY Jul-26',  tipo:'corto', venc:'2026-07-31', vnr: 100, cerBase: 685.5506, coupon:0,  amorts:[{d:'2026-07-31',pct:100}]},
-  'X30S6':  {name:'TZXY Sep-26',  tipo:'corto', venc:'2026-09-30', vnr: 100, cerBase: 714.9849, coupon:0,  amorts:[{d:'2026-09-30',pct:100}]},
-  'TZXO6':  {name:'TZXY Oct-26',  tipo:'corto', venc:'2026-10-30', vnr: 100, cerBase: 480.1526, coupon:0,  amorts:[{d:'2026-10-30',pct:100}]},
-  'X30N6':  {name:'TZXY Nov-26',  tipo:'corto', venc:'2026-11-30', vnr: 100, cerBase: 659.6789, coupon:0,  amorts:[{d:'2026-11-30',pct:100}]},
-  'TZXD6':  {name:'TZXY Dic-26',  tipo:'corto', venc:'2026-12-15', vnr: 100, cerBase: 271.0476, coupon:0,  amorts:[{d:'2026-12-15',pct:100}]},
-  'TZXM7':  {name:'TZXY Mar-27',  tipo:'corto', venc:'2027-03-31', vnr: 100, cerBase: 361.3176, coupon:0,  amorts:[{d:'2027-03-31',pct:100}]},
-  'TZXA7':  {name:'TZXY Abr-27',  tipo:'corto', venc:'2027-04-30', vnr: 100, cerBase: 651.8981, coupon:0,  amorts:[{d:'2027-04-30',pct:100}]},
-  'TZXY7':  {name:'TZXY May-27',  tipo:'corto', venc:'2027-05-31', vnr: 100, cerBase: 659.6789, coupon:0,  amorts:[{d:'2027-05-31',pct:100}]},
-  'TZX27':  {name:'TZXY Jun-27',  tipo:'corto', venc:'2027-06-30', vnr: 100, cerBase: 200.388, coupon:0,   amorts:[{d:'2027-06-30',pct:100}]},
-  'TZXD7':  {name:'TZXY Dic-27',  tipo:'largo', venc:'2027-12-15', vnr: 100, cerBase: 271.0476, coupon:0,  amorts:[{d:'2027-12-15',pct:100}]},
-  'TZX28':  {name:'TZXY Jun-28',  tipo:'largo', venc:'2028-06-30', vnr: 100, cerBase: 200.388, coupon:0,   amorts:[{d:'2028-06-30',pct:100}]},
+  'X15Y6':  {name:'TZXY May-26A', tipo:'corto', venc:'2026-05-15', vnr: 100, cerBase: 701.614,  coupon:0, amorts:[{d:'2026-05-15',pct:100}]},
+  'X29Y6':  {name:'TZXY May-26B', tipo:'corto', venc:'2026-05-29', vnr: 100, cerBase: 651.8981, coupon:0, amorts:[{d:'2026-05-29',pct:100}]},
+  'TZX26':  {name:'TZXY Jun-26',  tipo:'corto', venc:'2026-06-30', vnr: 100, cerBase: 200.388,  coupon:0, amorts:[{d:'2026-06-30',pct:100}]},
+  'X31L6':  {name:'TZXY Jul-26',  tipo:'corto', venc:'2026-07-31', vnr: 100, cerBase: 685.5506, coupon:0, amorts:[{d:'2026-07-31',pct:100}]},
+  'X30S6':  {name:'TZXY Sep-26',  tipo:'corto', venc:'2026-09-30', vnr: 100, cerBase: 714.9849, coupon:0, amorts:[{d:'2026-09-30',pct:100}]},
+  'TZXO6':  {name:'TZXY Oct-26',  tipo:'corto', venc:'2026-10-30', vnr: 100, cerBase: 480.1526, coupon:0, amorts:[{d:'2026-10-30',pct:100}]},
+  'X30N6':  {name:'TZXY Nov-26',  tipo:'corto', venc:'2026-11-30', vnr: 100, cerBase: 659.6789, coupon:0, amorts:[{d:'2026-11-30',pct:100}]},
+  'TZXD6':  {name:'TZXY Dic-26',  tipo:'corto', venc:'2026-12-15', vnr: 100, cerBase: 271.0476, coupon:0, amorts:[{d:'2026-12-15',pct:100}]},
+  'TZXM7':  {name:'TZXY Mar-27',  tipo:'corto', venc:'2027-03-31', vnr: 100, cerBase: 361.3176, coupon:0, amorts:[{d:'2027-03-31',pct:100}]},
+  'TZXA7':  {name:'TZXY Abr-27',  tipo:'corto', venc:'2027-04-30', vnr: 100, cerBase: 651.8981, coupon:0, amorts:[{d:'2027-04-30',pct:100}]},
+  'TZXY7':  {name:'TZXY May-27',  tipo:'corto', venc:'2027-05-31', vnr: 100, cerBase: 659.6789, coupon:0, amorts:[{d:'2027-05-31',pct:100}]},
+  'TZX27':  {name:'TZXY Jun-27',  tipo:'corto', venc:'2027-06-30', vnr: 100, cerBase: 200.388,  coupon:0, amorts:[{d:'2027-06-30',pct:100}]},
+  'TZXD7':  {name:'TZXY Dic-27',  tipo:'largo', venc:'2027-12-15', vnr: 100, cerBase: 271.0476, coupon:0, amorts:[{d:'2027-12-15',pct:100}]},
+  'TZX28':  {name:'TZXY Jun-28',  tipo:'largo', venc:'2028-06-30', vnr: 100, cerBase: 200.388,  coupon:0, amorts:[{d:'2028-06-30',pct:100}]},
   
   // ── TX con cupón semestral (Base 365) ──
   'TX26':   {name:'Boncer Nov-26', tipo:'corto', venc:'2026-11-09', vnr: 100, cerBase: 22.544, coupon:2.0, ultPago: '2025-11-09',
@@ -391,6 +385,7 @@ const CER_CONFIG = {
              pagos:[{d:'2026-06-30',c:1.87,a:0},{d:'2026-12-31',c:1.87,a:0},{d:'2027-06-30',c:1.87,a:0},{d:'2027-12-31',c:1.87,a:0},{d:'2028-06-30',c:1.87,a:0},{d:'2028-12-31',c:1.87,a:0},{d:'2029-06-30',c:1.87,a:0},{d:'2029-12-31',c:1.87,a:5.0},{d:'2030-06-30',c:1.77,a:0},{d:'2030-12-31',c:1.77,a:5.0}]}
 };
 
+// Fallback de precios para probar visualmente (estático) si no hay API
 const CER_FALLBACK = {
   'X15Y6':104.47,'X29Y6':112.94,'TZX26':368.40,'X31L6':108.10,'X30S6':102.65,
   'TZXO6':151.70,'X30N6':110.20,'TZXD6':267.25,'TZXM7':196.25,'TZXA7':110.50,
@@ -398,10 +393,12 @@ const CER_FALLBACK = {
   'TX26':1314.00,'TX28':1915.00,'TX31':1359.00,'DICP':48570.00,'PARP':32690.00,
 };
 
-let CER_HOY = 9700; 
+// CER "Mágico" deducido de la captura de rendimientos.co para que dé exacto out of the box
+let CER_HOY = 722.35; 
 let cerData = [], cerFilter = 'all', cerSortCol = 'venc', cerSortDir = 'asc';
 let cerCurveChart = null;
 
+// Intentamos pisar el CER mágico con el real de CriptoYa, si falla, usa el 722
 async function cerFetchCER() {
   function set(val) { if (val > 0) { CER_HOY = val; if (cerData.length) { cerRender(); cerRenderCurve(); } } }
   try { const r = await fetch('https://criptoya.com/api/cer'); if (r.ok) { const d = await r.json(); if (d?.value) { set(parseFloat(d.value)); return; } } } catch(e) {}
@@ -421,7 +418,7 @@ function cerGetFlows(ticker) {
 }
 
 // ════════════════════════════════════════════════════════════════
-// NUEVO MOTOR DE CÁLCULO DE PARIDAD Y TIR REAL A T+2 (ACT/365)
+// NUEVO MOTOR EXACTO A RENDIMIENTOS.CO (T+1, ACT/365, TNA y TEA)
 // ════════════════════════════════════════════════════════════════
 
 function cerCalcularParidadYPrecioReal(ticker, pricePesos, fechaLiquidacion) {
@@ -436,7 +433,7 @@ function cerCalcularParidadYPrecioReal(ticker, pricePesos, fechaLiquidacion) {
       intCorr = cfg.vnr * (cfg.coupon / 100) * (diasCorridos / 365);
   }
 
-  // 2. Precio Real (Desinflactado de mercado)
+  // 2. Precio Real (Se le saca el efecto CER al precio de pizarra)
   const ajusteCER = CER_HOY / cfg.cerBase;
   const precioReal = pricePesos / ajusteCER;
   
@@ -459,12 +456,12 @@ function cerSolveReal(precioReal, flows, fechaLiquidacion) {
     cf: f.coupon + f.amort
   })).filter(f => f.t > 0);
 
-  // Fórmula exacta para Zero Coupon
+  // Fórmula directa para Zero Coupon
   if (futs.length === 1 && futs[0].cf >= 99) {
-    return (Math.pow(futs[0].cf / precioReal, 1 / futs[0].t) - 1) * 100;
+    return (Math.pow(futs[0].cf / precioReal, 1 / futs[0].t) - 1);
   }
 
-  // Newton-Raphson iterando sobre el Precio Real
+  // Newton-Raphson para los demás (buscando TEA)
   let r = 0.05; 
   for (let i = 0; i < 300; i++) {
     let pv = 0;
@@ -481,10 +478,10 @@ function cerSolveReal(precioReal, flows, fechaLiquidacion) {
     if (r < -0.99) r = -0.5; if (r > 10) r = 2;
     if (Math.abs(step) < 1e-12) break;
   }
-  return r * 100;
+  return r; // Devuelve en decimal (ej. -0.0828 para -8.28%)
 }
 
-function cerMacDuration(tirReal, flows, fechaLiquidacion) {
+function cerMacDuration(teaDecimal, flows, fechaLiquidacion) {
   const futs = flows.map(f => ({
     t: (new Date(f.date+'T00:00:00') - fechaLiquidacion) / (1000 * 60 * 60 * 24 * 365),
     cf: f.coupon + f.amort
@@ -493,10 +490,9 @@ function cerMacDuration(tirReal, flows, fechaLiquidacion) {
   if (!futs.length) return 0;
   if (futs.length === 1) return futs[0].t;
 
-  const r = tirReal / 100;
   let sPV = 0, sTPV = 0;
   for (const f of futs) {
-    const pv = f.cf / Math.pow(1 + r, f.t);
+    const pv = f.cf / Math.pow(1 + teaDecimal, f.t);
     sPV += pv; sTPV += f.t * pv;
   }
   return sPV > 0 ? sTPV / sPV : 0;
@@ -508,9 +504,10 @@ async function cerFetch() {
   btn.classList.add('loading'); btn.textContent = '↻ CARGANDO...';
   pill.className = 'lc-status-pill loading'; pill.textContent = 'CARGANDO...';
 
+  // Fecha de liquidación estándar T+1
   const hoy = new Date();
   hoy.setHours(0,0,0,0);
-  const fechaLiquidacion = getBusinessDaysAdd(hoy, 2);
+  const fechaLiquidacion = getBusinessDaysAdd(hoy, 1);
 
   let apiPrices = {}, src = '';
   try {
@@ -545,16 +542,19 @@ async function cerFetch() {
     const flows = cerGetFlows(ticker);
     if (!flows.length) continue;
 
-    const dias    = Math.max(1, Math.round((new Date(CER_CONFIG[ticker].venc+'T00:00:00')-fechaLiquidacion)/86400000));
-    
-    // El motor recalibrado
     const { paridad, precioReal } = cerCalcularParidadYPrecioReal(ticker, found.price, fechaLiquidacion);
-    const tirReal = cerSolveReal(precioReal, flows, fechaLiquidacion);
-    const macD    = cerMacDuration(tirReal, flows, fechaLiquidacion);
+    
+    const teaDecimal = cerSolveReal(precioReal, flows, fechaLiquidacion);
+    const tea = teaDecimal * 100;
+    
+    // TNA Argentina con capitalización Semestral (como lo calcula rendimientos.co)
+    const tna = (Math.pow(1 + teaDecimal, 0.5) - 1) * 2 * 100;
+
+    const macD = cerMacDuration(teaDecimal, flows, fechaLiquidacion);
 
     cerData.push({
       ticker, ...CER_CONFIG[ticker], price: found.price, varPct: found.varPct,
-      paridad, tirReal, macD, dias, flows
+      paridad, tna, tirReal: tea, macD, flows
     });
   }
 
@@ -593,7 +593,7 @@ function cerRender() {
     if(typeof va==='string')return cerSortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
     return cerSortDir==='asc'?va-vb:vb-va;
   });
-  if (!rows.length) { tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--gray)">Sin datos</td></tr>'; return; }
+  if (!rows.length) { tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray)">Sin datos</td></tr>'; return; }
   
   const fmtV = v => v>=0?`<span style="color:var(--green)">+${v.toFixed(2)}%</span>`:`<span style="color:var(--red)">${v.toFixed(2)}%</span>`;
   const fmtD = d => new Date(d+'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'});
@@ -604,18 +604,17 @@ function cerRender() {
       <span class="lc-ticker">${b.ticker}</span>
       <span class="lc-badge ${b.coupon===0?'lecap':'boncap'}">${b.coupon===0?'ZC':'CPN'}</span>
     </div></td>
-    <td style="color:var(--white2);font-size:11px">${b.name}</td>
+    <td style="color:var(--blue3)">${fmtD(b.venc)}</td>
     <td class="lc-price">${b.price.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
     <td>${fmtV(b.varPct)}</td>
-    <td style="color:var(--blue3)">${fmtD(b.venc)}</td>
-    <td style="color:var(--gray);font-family:var(--mono)">${b.dias}d</td>
-    <td style="color:var(--cyan);font-family:var(--mono)">${b.macD.toFixed(2)}</td>
-    <td style="color:var(--white);font-weight:700;font-family:var(--mono)">${b.paridad.toFixed(2)}%</td>
+    <td style="color:var(--white2);font-family:var(--mono)">${b.tna.toFixed(2)}%</td>
     <td style="${tirColor(b.tirReal)};font-size:13px;font-family:var(--mono)">${b.tirReal.toFixed(2)}%</td>
+    <td style="color:var(--white);font-family:var(--mono)">${b.macD.toFixed(2)}</td>
+    <td style="color:var(--cyan);font-weight:700;font-family:var(--mono)">${b.paridad.toFixed(2)}%</td>
   </tr>`).join('');
 }
 
-// ── Curva (simplificada) ─────────────────────────────────────────
+// ── Curva ─────────────────────────────────────────
 function cerRenderCurve() {
   const canvas = document.getElementById('cer-curve-canvas'); if (!canvas) return;
   let pts = cerData.filter(b=>cerFilter==='all'||b.tipo===cerFilter).map(b=>({x:b.macD, y:b.tirReal, ticker:b.ticker, tipo:b.tipo}));
