@@ -1036,28 +1036,6 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
 id="page-cer">
 <div class="lecap-page">
 
-  <!-- ── CER Hero bar ── -->
-  <div id="cer-hero" style="background:linear-gradient(90deg,#0a1825,#0d2240);border-bottom:2px solid rgba(34,214,138,.25);padding:10px 20px;display:flex;align-items:center;gap:24px;flex-wrap:wrap">
-    <div style="display:flex;align-items:center;gap:10px">
-      <div style="font-family:var(--mono);font-size:9px;font-weight:700;color:rgba(34,214,138,.6);letter-spacing:.18em;text-transform:uppercase">COEF. CER HOY</div>
-      <div id="cer-valor" style="font-family:var(--mono);font-size:22px;font-weight:900;color:#22d68a;letter-spacing:.02em">—</div>
-      <div id="cer-fecha" style="font-family:var(--mono);font-size:10px;color:rgba(122,153,196,.5)">—</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:20px">
-      <div><div style="font-family:var(--mono);font-size:8px;color:rgba(122,153,196,.4);letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px">Inflación últimas 30 ruedas</div><div id="cer-infl30" style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--amber)">—</div></div>
-      <div><div style="font-family:var(--mono);font-size:8px;color:rgba(122,153,196,.4);letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px">Inflación anualizada</div><div id="cer-inflA" style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--cyan)">—</div></div>
-      <div>
-        <div style="font-family:var(--mono);font-size:8px;color:rgba(122,153,196,.4);letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px">CER T-10 (settlement)</div>
-        <div id="cer-t10-val" style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--blue3)">—</div>
-      </div>
-      <div><div style="font-family:var(--mono);font-size:8px;color:rgba(122,153,196,.4);letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px">Fuente</div><div id="cer-fuente-lbl" style="font-family:var(--mono);font-size:10px;color:rgba(74,106,154,.5)">BCRA</div></div>
-    </div>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
-      <div id="cer-dot" style="width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 6px var(--amber);animation:arbpulse 2s infinite"></div>
-      <span id="cer-src" style="font-family:var(--mono);font-size:9px;color:var(--gray2);letter-spacing:.08em">CARGANDO...</span>
-    </div>
-  </div>
-
   <!-- ── Toolbar ── -->
   <div class="lc-toolbar">
     <div>
@@ -1083,14 +1061,15 @@ id="page-cer">
         <th onclick="cerSort('price')"  data-col="price">PRECIO <span class="sort-arrow"></span></th>
         <th onclick="cerSort('varPct')" data-col="varPct">VAR % <span class="sort-arrow"></span></th>
         <th onclick="cerSort('venc')"   data-col="venc">VENCIMIENTO <span class="sort-arrow"></span></th>
-        <th onclick="cerSort('tirReal')" data-col="tirReal">TIR REAL % <span class="sort-arrow"></span></th>
-        <th onclick="cerSort('modD')"   data-col="modD">DUR.MOD <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('dias')"   data-col="dias">DÍAS <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('tea')"    data-col="tea" style="color:var(--green)">TIR TEA % <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('tem')"    data-col="tem">TEM % <span class="sort-arrow"></span></th>
         <th style="width:60px">CALC</th>
       </tr></thead>
       <tbody id="cer-tbody">
-        <tr class="lc-skel"><td colspan="8"><div class="lc-skel-bar" style="width:65%"></div></td></tr>
-        <tr class="lc-skel"><td colspan="8"><div class="lc-skel-bar" style="width:80%"></div></td></tr>
-        <tr class="lc-skel"><td colspan="8"><div class="lc-skel-bar" style="width:55%"></div></td></tr>
+        <tr class="lc-skel"><td colspan="9"><div class="lc-skel-bar" style="width:65%"></div></td></tr>
+        <tr class="lc-skel"><td colspan="9"><div class="lc-skel-bar" style="width:80%"></div></td></tr>
+        <tr class="lc-skel"><td colspan="9"><div class="lc-skel-bar" style="width:55%"></div></td></tr>
       </tbody>
     </table>
   </div>
@@ -1108,7 +1087,7 @@ id="page-cer">
 
   <div class="lc-statusbar">
     <span id="cer-last-upd" style="color:var(--gray)">—</span>
-    <span style="color:var(--blue3)">Precios: data912.com · CER: BCRA v4.0 vía Netlify · argentinadatos.com (fallback)</span>
+    <span style="color:var(--blue3)">Precios: data912.com · CER: BCRA Serie 3540 · argentinadatos.com</span>
   </div>
 </div>
 </div>
@@ -1125,7 +1104,7 @@ id="page-cer">
   </div>
   <div class="lc-modal-body">
     <!-- Inputs principales -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div class="lc-calc-field">
         <div class="lc-calc-lbl">Precio actual</div>
         <input class="lc-calc-inp" type="number" id="cer-inp-price" step="0.01" min="0.01" oninput="cerCalcModal()">
@@ -1134,40 +1113,20 @@ id="page-cer">
         <div class="lc-calc-lbl">Invertir ($)</div>
         <input class="lc-calc-inp" type="number" id="cer-inp-invest" step="10000" value="1000000" oninput="cerCalcModal()">
       </div>
-      <div class="lc-calc-field">
-        <div class="lc-calc-lbl">Inflación mensual estimada %</div>
-        <input class="lc-calc-inp" type="number" id="cer-inp-infl" step="0.1" value="3.0" oninput="cerCalcModal()" style="color:var(--amber)">
-      </div>
     </div>
     <!-- Métricas -->
-    <div class="lc-metrics-row" style="grid-template-columns:repeat(5,1fr)">
-      <div class="lc-met"><div class="lc-met-k">TIR Real</div><div class="lc-met-v tir" id="cer-m-tirreal">—</div></div>
-      <div class="lc-met"><div class="lc-met-k">TIR Nominal</div><div class="lc-met-v" style="color:var(--amber)" id="cer-m-tirnom">—</div></div>
-      <div class="lc-met"><div class="lc-met-k">DurMod</div><div class="lc-met-v" style="color:var(--cyan)" id="cer-m-dur">—</div></div>
-      <div class="lc-met"><div class="lc-met-k">CER actual</div><div class="lc-met-v" style="color:var(--green)" id="cer-m-cer">—</div></div>
+    <div class="lc-metrics-row" style="grid-template-columns:repeat(4,1fr)">
+      <div class="lc-met"><div class="lc-met-k">TIR TEA</div><div class="lc-met-v tir" id="cer-m-tea">—</div></div>
+      <div class="lc-met"><div class="lc-met-k">TEM</div><div class="lc-met-v" style="color:var(--amber)" id="cer-m-tem">—</div></div>
+      <div class="lc-met"><div class="lc-met-k">TNA</div><div class="lc-met-v" style="color:var(--cyan)" id="cer-m-tna">—</div></div>
       <div class="lc-met"><div class="lc-met-k">Días</div><div class="lc-met-v dias" id="cer-m-dias">—</div></div>
-    </div>
-    <!-- Cashflow table -->
-    <div class="bnd-cf-title">FLUJO DE FONDOS PROYECTADO (ajustado por CER + inflación estimada)</div>
-    <div class="bnd-cf-wrap" style="max-height:220px">
-      <table class="bnd-cf-table">
-        <thead><tr>
-          <th style="text-align:left">Fecha</th>
-          <th>CER proj.</th>
-          <th>VN aj.</th>
-          <th>Cupón $</th>
-          <th>Amort. $</th>
-          <th>Total $</th>
-        </tr></thead>
-        <tbody id="cer-cf-tbody"></tbody>
-      </table>
     </div>
     <!-- Resumen -->
     <div class="lc-summary">
-      <div class="lc-sum-row"><span class="lc-sum-k">Nominales a comprar</span><span class="lc-sum-v" id="cer-sum-vn">—</span></div>
-      <div class="lc-sum-row"><span class="lc-sum-k">Invertís</span><span class="lc-sum-v" id="cer-sum-inv">—</span></div>
-      <div class="lc-sum-row"><span class="lc-sum-k">Total a cobrar (con CER proyectado)</span><span class="lc-sum-v" style="color:var(--cyan)" id="cer-sum-cobra">—</span></div>
-      <div class="lc-sum-row profit"><span class="lc-sum-k">Ganancia nominal</span><span class="lc-sum-v" id="cer-sum-gan">—</span></div>
+      <div class="lc-sum-row"><span class="lc-sum-k">Nominales a comprar (VN)</span><span class="lc-sum-v" id="cer-sum-vn">—</span></div>
+      <div class="lc-sum-row"><span class="lc-sum-k">Invertís hoy</span><span class="lc-sum-v" id="cer-sum-inv">—</span></div>
+      <div class="lc-sum-row"><span class="lc-sum-k">Cobrás al vencimiento (VN ajustado CER)</span><span class="lc-sum-v" style="color:var(--cyan)" id="cer-sum-cobra">—</span></div>
+      <div class="lc-sum-row profit"><span class="lc-sum-k">Ganancia implícita en el precio</span><span class="lc-sum-v" id="cer-sum-gan">—</span></div>
     </div>
   </div>
 </div>
@@ -1296,196 +1255,95 @@ let CER_HOY = null, CER_INFL_MENSUAL = null;
 let cerData = [], cerFilter = 'all', cerSortCol = 'venc', cerSortDir = 'asc';
 let cerCurveChart = null, cerCurrentBond = null;
 
-// ── Globals CER ─────────────────────────────────────────────
-let CER_T10 = null; // CER para settlement T+1 (T-10 hábiles)
-
-// ── Helpers Netlify function URLs ────────────────────────────
-const NETLIFY_CER_ULTIMO  = '/.netlify/functions/cer-ultimo';
-const NETLIFY_CER_T10     = '/.netlify/functions/cer-t10';
-const NETLIFY_CER_PRICES  = '/.netlify/functions/cer-prices';
-
-// Detectar si estamos en Netlify (para usar funciones serverless) o local
-function isNetlify() {
-  return !window.location.protocol.startsWith('file') &&
-    (window.location.hostname.endsWith('netlify.app') ||
-     window.location.hostname.endsWith('netlify.com') ||
-     window.location.pathname.startsWith('/.netlify') ||
-     // también si hay un _redirects o netlify.toml: lo detectamos por dominio propio desplegado
-     (!['localhost','127.0.0.1'].includes(window.location.hostname) &&
-      !window.location.protocol.startsWith('file')));
-}
-
-// ── Fetch CER ────────────────────────────────────────────────
-// Jerarquía:
-//   1. /.netlify/functions/cer-ultimo  + cer-t10  (Netlify deploy)
-//   2. estadisticasbcra.com  con token localStorage  (fallback directo)
-//   3. argentinadatos.com · UVA ≈ CER
-//   4. argentinadatos.com · IPC mensual
-//   5. BCRA v4 via CORS proxy
-//   6. Referencia estática
+// ── Fetch CER desde BCRA API (serie 3540) ───────────────────
 async function cerFetchCER() {
   const dot = document.getElementById('cer-dot');
   const src = document.getElementById('cer-src');
 
-  function cerSetValues(cerVal, cerFechaStr, inflMensual, source) {
+  function cerSetValues(cerVal, cerFechaStr, infl30, source) {
     if (cerVal) {
       CER_HOY = cerVal;
       document.getElementById('cer-valor').textContent = cerVal.toFixed(6);
-      document.getElementById('cer-fecha').textContent = cerFechaStr ? 'al ' + cerFechaStr : '';
+      document.getElementById('cer-fecha').textContent = cerFechaStr ? 'al '+cerFechaStr : '';
     } else {
       document.getElementById('cer-valor').textContent = 'N/D';
       document.getElementById('cer-fecha').textContent = 'estimado por inflación mensual';
     }
-    if (inflMensual !== null && inflMensual !== undefined) {
-      CER_INFL_MENSUAL = inflMensual;
-      document.getElementById('cer-infl30').textContent = inflMensual.toFixed(2) + '%';
-      document.getElementById('cer-inflA').textContent = ((Math.pow(1 + inflMensual / 100, 12) - 1) * 100).toFixed(1) + '%';
+    if (infl30 !== null) {
+      CER_INFL_MENSUAL = infl30;
+      document.getElementById('cer-infl30').textContent = infl30.toFixed(2)+'%';
+      document.getElementById('cer-inflA').textContent = ((Math.pow(1+infl30/100,12)-1)*100).toFixed(1)+'%';
       const inp = document.getElementById('cer-inp-infl');
-      if (inp && !inp.dataset.userEdited) inp.value = Math.max(1.5, inflMensual).toFixed(1);
+      if (!inp.dataset.userEdited) inp.value = Math.max(1.5, infl30).toFixed(1);
     }
     const live = !!cerVal;
     dot.style.background = live ? '#22d68a' : '#f0b429';
     dot.style.boxShadow  = live ? '0 0 6px #22d68a' : '0 0 6px #f0b429';
-    src.textContent = source + ' · ' + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-    const lbl = document.getElementById('cer-fuente-lbl');
-    if (lbl) lbl.textContent = source.split(' · ')[0];
+    src.textContent = source + ' · ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
   }
 
-  // ══ 1. Netlify functions (fetch paralelo último + T10) ══
-  try {
-    const [resUlt, resT10] = await Promise.allSettled([
-      fetch(NETLIFY_CER_ULTIMO),
-      fetch(NETLIFY_CER_T10)
-    ]);
-
-    let cerVal = null, cerFecha = null, inflMensual = null;
-
-    if (resUlt.status === 'fulfilled' && resUlt.value.ok) {
-      const d = await resUlt.value.json();
-      if (d && d.cer) {
-        cerVal   = parseFloat(d.cer);
-        cerFecha = d.fecha ? new Date(d.fecha + 'T00:00:00').toLocaleDateString('es-AR') : null;
-      }
-    }
-
-    if (resT10.status === 'fulfilled' && resT10.value.ok) {
-      const d = await resT10.value.json();
-      if (d && d.cer) {
-        CER_T10 = parseFloat(d.cer);
-        const elT10 = document.getElementById('cer-t10-val');
-        if (elT10) elT10.textContent = CER_T10.toFixed(4);
-        // Inflación mensual implícita entre T-10 y hoy (aproximada)
-        if (cerVal && CER_T10) {
-          // delta en ~10 días hábiles ≈ 14 días calendario → mensualizar
-          const deltaFactor = cerVal / CER_T10;
-          inflMensual = (Math.pow(deltaFactor, 30 / 14) - 1) * 100;
-        }
-      }
-    }
-
-    if (cerVal) {
-      cerSetValues(cerVal, cerFecha, inflMensual, 'BCRA · Netlify');
-      return;
-    }
-  } catch (e) {
-    console.warn('[CER] Netlify function error:', e);
-  }
-
-  // ══ 2. estadisticasbcra.com con token (si hay) ══
-  const token = localStorage.getItem('bcra_api_token') || '';
-  if (token) {
-    try {
-      const headers = { 'Authorization': 'BEARER ' + token };
-      const [resCer, resInfl] = await Promise.allSettled([
-        fetch('https://api.estadisticasbcra.com/cer',                       { headers }),
-        fetch('https://api.estadisticasbcra.com/inflacion_mensual_oficial', { headers })
-      ]);
-
-      let cerVal = null, cerFecha = null, inflFinal = null;
-
-      if (resCer.status === 'fulfilled' && resCer.value.ok) {
-        const arr = await resCer.value.json();
-        if (Array.isArray(arr) && arr.length > 0) {
-          arr.sort((a, b) => a.d > b.d ? 1 : -1);
-          const last   = arr[arr.length - 1];
-          const hace30 = arr[Math.max(0, arr.length - 31)];
-          cerVal   = parseFloat(last.v);
-          cerFecha = new Date(last.d + 'T00:00:00').toLocaleDateString('es-AR');
-          inflFinal = hace30 ? (cerVal / parseFloat(hace30.v) - 1) * 100 : null;
-        }
-      }
-      if (resInfl.status === 'fulfilled' && resInfl.value.ok) {
-        const arr = await resInfl.value.json();
-        if (Array.isArray(arr) && arr.length > 0) {
-          arr.sort((a, b) => a.d > b.d ? 1 : -1);
-          inflFinal = parseFloat(arr[arr.length - 1].v);
-        }
-      }
-
-      if (cerVal) {
-        cerSetValues(cerVal, cerFecha, inflFinal, 'EstadísticasBCRA');
-        return;
-      }
-    } catch (e) {}
-  }
-
-  // ══ 3. argentinadatos · UVA ≈ CER ══
+  // ── Estrategia 1: argentinadatos UVA (tiene CORS nativo, similar a CER) ──
   try {
     const r = await fetch('https://api.argentinadatos.com/v1/finanzas/indices/uva');
     if (r.ok) {
       const arr = await r.json();
       if (arr && arr.length > 0) {
-        arr.sort((a, b) => a.fecha > b.fecha ? 1 : -1);
-        const last   = arr[arr.length - 1];
-        const hace30 = arr[Math.max(0, arr.length - 31)];
+        arr.sort((a,b)=>a.fecha>b.fecha?1:-1);
+        const last   = arr[arr.length-1];
+        const hace30 = arr[Math.max(0,arr.length-31)];
         const uvaHoy = parseFloat(last.valor);
-        const infl30 = hace30 ? (uvaHoy / parseFloat(hace30.valor) - 1) * 100 : null;
-        cerSetValues(uvaHoy, new Date(last.fecha + 'T00:00:00').toLocaleDateString('es-AR'), infl30, 'ArgentinaDatos · UVA');
+        const infl30 = hace30 ? (uvaHoy/parseFloat(hace30.valor)-1)*100 : null;
+        const fecha  = new Date(last.fecha+'T00:00:00').toLocaleDateString('es-AR');
+        // UVA ≈ CER (misma base inflacionaria); mostramos como CER estimado
+        cerSetValues(uvaHoy, fecha, infl30, 'ArgentinaDatos · UVA≈CER');
         return;
       }
     }
-  } catch (e) {}
+  } catch(e) {}
 
-  // ══ 4. argentinadatos · IPC mensual ══
+  // ── Estrategia 2: argentinadatos inflación mensual (directa, CORS) ──
   try {
     const r = await fetch('https://api.argentinadatos.com/v1/finanzas/indices/inflacion');
     if (r.ok) {
       const arr = await r.json();
       if (arr && arr.length > 0) {
-        arr.sort((a, b) => a.fecha > b.fecha ? 1 : -1);
-        cerSetValues(null, null, parseFloat(arr[arr.length - 1].valor), 'ArgentinaDatos · IPC');
+        arr.sort((a,b)=>a.fecha>b.fecha?1:-1);
+        const infl30 = parseFloat(arr[arr.length-1].valor);
+        cerSetValues(null, null, infl30, 'ArgentinaDatos · IPC mensual');
         return;
       }
     }
-  } catch (e) {}
+  } catch(e) {}
 
-  // ══ 5. BCRA v4 via CORS proxy (serie 3540) ══
+  // ── Estrategia 3: BCRA via proxy (serie 3540) ──
   try {
     const hoy   = new Date();
-    const desde = new Date(hoy); desde.setDate(desde.getDate() - 65);
-    const fmt   = d => d.toISOString().slice(0, 10);
-    const bcraUrl  = `https://api.bcra.gob.ar/estadisticas/v4/datosvariable/3540/${fmt(desde)}/${fmt(hoy)}?limit=65`;
-    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(bcraUrl);
+    const desde = new Date(hoy); desde.setDate(desde.getDate()-65);
+    const fmt   = d => d.toISOString().slice(0,10);
+    const bcraUrl = `https://api.bcra.gob.ar/estadisticas/v4/datosvariable/3540/${fmt(desde)}/${fmt(hoy)}?limit=65`;
+    const proxyUrl = 'https://api.allorigins.win/get?url='+encodeURIComponent(bcraUrl);
     const r = await fetch(proxyUrl);
     if (r.ok) {
       const wrapper = await r.json();
       const data    = JSON.parse(wrapper.contents || '{}');
       const arr     = data.results || [];
       if (arr.length > 0) {
-        arr.sort((a, b) => a.fecha > b.fecha ? 1 : -1);
-        const last   = arr[arr.length - 1];
-        const hace30 = arr[Math.max(0, arr.length - 31)];
+        arr.sort((a,b)=>a.fecha>b.fecha?1:-1);
+        const last   = arr[arr.length-1];
+        const hace30 = arr[Math.max(0,arr.length-31)];
         const cerVal = parseFloat(last.valor);
-        const infl30 = hace30 ? (cerVal / parseFloat(hace30.valor) - 1) * 100 : null;
-        cerSetValues(cerVal, new Date(last.fecha + 'T00:00:00').toLocaleDateString('es-AR'), infl30, 'BCRA · Serie 3540');
+        const infl30 = hace30 ? (cerVal/parseFloat(hace30.valor)-1)*100 : null;
+        const fecha  = new Date(last.fecha+'T00:00:00').toLocaleDateString('es-AR');
+        cerSetValues(cerVal, fecha, infl30, 'BCRA · Serie 3540');
         return;
       }
     }
-  } catch (e) {}
+  } catch(e) {}
 
-  // ══ 6. Fallback estático ══
-  cerSetValues(null, null, 3.0, 'Referencia estática');
-  dot.style.background = '#ff4d6a'; dot.style.boxShadow = '0 0 6px #ff4d6a';
+  // ── Fallback estático: últimas lecturas conocidas ──────────────────────
+  // CER al 27/3/2026 ≈ 9732 (base 02/02/2002 = 1), inflación mensual ~3%
+  cerSetValues(null, null, 3.0, 'Referencia estática (sin conexión)');
+  dot.style.background='#ff4d6a'; dot.style.boxShadow='0 0 6px #ff4d6a';
 }
 
 // Marcar input como editado por el usuario para no sobreescribir
@@ -1513,123 +1371,76 @@ function cerGetFlows(ticker) {
   return flows;
 }
 
-// ── TIR real (sobre VN=100) via Newton-Raphson ──────────────
-function cerSolveIRR(flows, price) {
-  if (!flows.length || price <= 0) return 0;
-  const today = new Date(); today.setHours(0,0,0,0);
-  // t_i en años
-  const futs = flows.map(f => ({
-    t: Math.max(1, (new Date(f.date+'T00:00:00') - today) / 86400000) / 365,
-    cf: f.coupon + f.amort,
-  }));
-  // Valorización: precio = Σ CF_i / (1+r)^t_i
-  let r = 0.02;
-  for (let i = 0; i < 200; i++) {
-    const pv  = futs.reduce((s,f) => s + f.cf / Math.pow(1+r, f.t), 0);
-    const dpv = futs.reduce((s,f) => s - f.t * f.cf / Math.pow(1+r, f.t+1), 0);
-    if (Math.abs(dpv) < 1e-14) break;
-    const step = (pv - price) / dpv;
-    r -= step;
-    if (r < -0.9) r = -0.5; if (r > 5) r = 2;
-    if (Math.abs(step) < 1e-10) break;
-  }
-  return r * 100;
+// ── TIR estilo LECAP ────────────────────────────────────────
+// Para bonos CER tratamos el precio como si fuera un descuento puro:
+//   TEA = (100 / precio)^(365 / dias) − 1
+//   TEM = (1 + TEA)^(1/12) − 1
+//   TNA = TEM × 12
+function cerTEA(price, dias) {
+  if (price <= 0 || dias <= 0) return 0;
+  return (Math.pow(100 / price, 365 / dias) - 1) * 100;
 }
-
-// Duration Macaulay y Modificada
-function cerDuration(flows, price) {
-  const today = new Date(); today.setHours(0,0,0,0);
-  const r = cerSolveIRR(flows, price) / 100;
-  let sPV = 0, sTPV = 0;
-  for (const f of flows) {
-    const t = Math.max(1, (new Date(f.date+'T00:00:00') - today) / 86400000) / 365;
-    const cf = f.coupon + f.amort;
-    const pvcf = cf / Math.pow(1 + r, t);
-    sPV += pvcf; sTPV += t * pvcf;
-  }
-  const macD = sPV > 0 ? sTPV / sPV : 0;
-  const modD = r > -1 ? macD / (1 + r) : macD;
-  return { macD, modD };
+function cerTEM(tea) {
+  return (Math.pow(1 + tea / 100, 1 / 12) - 1) * 100;
+}
+function cerTNA(tea) {
+  return cerTEM(tea) * 12;
 }
 
 // ── Fetch precios de mercado ─────────────────────────────────
-// Jerarquía:
-//   1. /.netlify/functions/cer-prices  → {data:[...], count, timestamp}
-//   2. data912.com directo via pfetch  (fallback sin Netlify / local)
-//   3. CER_FALLBACK estático
 async function cerFetch() {
-  const btn  = document.getElementById('cer-refresh-btn');
+  const btn = document.getElementById('cer-refresh-btn');
   const pill = document.getElementById('cer-pill');
   btn.classList.add('loading'); btn.textContent = '↻ CARGANDO...';
   pill.className = 'lc-status-pill loading'; pill.textContent = 'CARGANDO...';
 
   let apiPrices = {}, src = '';
 
-  // ══ 1. Netlify function ══
   try {
-    const r = await fetch(NETLIFY_CER_PRICES);
-    if (r.ok) {
-      const json = await r.json();
-      const arr  = json.data || json;
-      if (Array.isArray(arr) && arr.length > 0) {
-        arr.forEach(b => {
-          const tk    = (b.ticker || b.symbol || b.t || '').replace(/\s+/g, '').toUpperCase();
-          const price = parseFloat(b.c || b.ultimo || b.last || b.price || 0);
-          const varPct = parseFloat(b.pct_change || b.variacion_pct || b.var || 0);
-          if (tk && price > 0) apiPrices[tk] = { price, varPct };
-        });
-        if (Object.keys(apiPrices).length > 0) src = 'data912 · Netlify';
-      }
-    }
-  } catch (e) { console.warn('[cerFetch] Netlify cer-prices:', e); }
-
-  // ══ 2. data912 directo (fallback — funciona localmente o sin Netlify) ══
-  if (!Object.keys(apiPrices).length) {
-    try {
-      const [rawBonds, rawNotes] = await Promise.all([
-        pfetch('https://data912.com/live/arg_bonds').catch(() => null),
-        pfetch('https://data912.com/live/arg_notes').catch(() => null),
-      ]);
-      const arr = [
-        ...((Array.isArray(rawBonds) ? rawBonds : (rawBonds?.data || [])) || []),
-        ...((Array.isArray(rawNotes) ? rawNotes : (rawNotes?.data || [])) || []),
-      ];
+    const [rawBonds, rawNotes] = await Promise.all([
+      pfetch('https://data912.com/live/arg_bonds').catch(()=>null),
+      pfetch('https://data912.com/live/arg_notes').catch(()=>null),
+    ]);
+    const arr = [
+      ...((Array.isArray(rawBonds)?rawBonds:(rawBonds?.data||[]))||[]),
+      ...((Array.isArray(rawNotes)?rawNotes:(rawNotes?.data||[]))||[]),
+    ];
+    if (arr.length > 0) {
       arr.forEach(b => {
-        const tk    = (b.ticker || b.symbol || b.t || '').replace(/\s+/g, '').toUpperCase();
-        const price = parseFloat(b.c || b.ultimo || b.last || b.price || 0);
-        const varPct = parseFloat(b.pct_change || b.variacion_pct || b.var || 0);
+        const tk = (b.ticker||b.symbol||b.t||'').replace(/\s+/g,'').toUpperCase();
+        const price = parseFloat(b.c||b.ultimo||b.last||b.price||0);
+        const varPct = parseFloat(b.pct_change||b.variacion_pct||b.var||0);
         if (tk && price > 0) apiPrices[tk] = { price, varPct };
       });
-      if (Object.keys(apiPrices).length > 0) src = 'data912.com';
-    } catch (e) { console.warn('[cerFetch] data912 directo:', e); }
-  }
+      src = 'data912.com';
+    }
+  } catch(e) { console.warn('cerFetch:', e); }
 
-  // ══ 3. Fallback estático ══
   if (!Object.keys(apiPrices).length) {
-    Object.entries(CER_FALLBACK).forEach(([tk, px]) => { apiPrices[tk] = { price: px, varPct: 0 }; });
+    Object.entries(CER_FALLBACK).forEach(([tk,px]) => { apiPrices[tk] = {price:px,varPct:0}; });
     src = 'referencia estática';
     pill.textContent = '⚠ OFFLINE (ref.)';
   }
 
   cerData = [];
   for (const ticker of Object.keys(CER_CONFIG)) {
-    const candidates = [ticker, ticker + 'C', ticker + 'D'];
+    const candidates = [ticker, ticker+'C', ticker+'D'];
     let found = null;
-    for (const c of candidates) { if (apiPrices[c]) { found = { ...apiPrices[c] }; break; } }
+    for (const c of candidates) { if (apiPrices[c]) { found = {...apiPrices[c]}; break; } }
     if (!found && CER_FALLBACK[ticker]) found = { price: CER_FALLBACK[ticker], varPct: 0 };
     if (!found) continue;
 
     const flows = cerGetFlows(ticker);
     if (!flows.length) continue;
 
-    const tirReal = cerSolveIRR(flows, found.price);
-    const { macD, modD } = cerDuration(flows, found.price);
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const dias  = Math.max(1, Math.round((new Date(CER_CONFIG[ticker].venc + 'T00:00:00') - today) / 86400000));
+    const today = new Date(); today.setHours(0,0,0,0);
+    const dias  = Math.max(1, Math.round((new Date(CER_CONFIG[ticker].venc+'T00:00:00')-today)/86400000));
+    const tea   = cerTEA(found.price, dias);
+    const tem   = cerTEM(tea);
 
     cerData.push({
       ticker, ...CER_CONFIG[ticker], price: found.price, varPct: found.varPct,
-      tirReal, macD, modD, dias, flows
+      tea, tem, dias
     });
   }
 
@@ -1639,7 +1450,7 @@ async function cerFetch() {
     pill.className = 'lc-status-pill err'; pill.textContent = '⚠ OFFLINE';
   }
   document.getElementById('cer-last-upd').textContent =
-    '✓ ' + new Date().toLocaleTimeString('es-AR') + ' · ' + cerData.length + ' bonos · ' + src;
+    '✓ '+new Date().toLocaleTimeString('es-AR')+' · '+cerData.length+' bonos · '+src;
   btn.classList.remove('loading'); btn.textContent = '↻ ACTUALIZAR';
   cerRender(); cerRenderCurve();
   setTimeout(cerFetch, 30000);
@@ -1672,13 +1483,13 @@ function cerRender() {
     return cerSortDir==='asc'?va-vb:vb-va;
   });
   if (!rows.length) {
-    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray)">Sin datos</td></tr>';
+    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--gray)">Sin datos</td></tr>';
     return;
   }
   const fmtV = v => v>=0?`<span style="color:var(--green)">+${v.toFixed(2)}%</span>`:`<span style="color:var(--red)">${v.toFixed(2)}%</span>`;
   const fmtD = d => new Date(d+'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'});
-  const tirColor = v => v > 3 ? 'color:var(--green);font-weight:700' : v > 0 ? 'color:var(--amber);font-weight:700' : 'color:var(--red);font-weight:700';
-  tbody.innerHTML = rows.map(b=>`<tr>
+  const teaColor = v => v > 80 ? 'color:var(--green);font-weight:700' : v > 50 ? 'color:var(--amber);font-weight:700' : 'color:var(--red);font-weight:700';
+  tbody.innerHTML = rows.map(b=>`<tr onclick="cerOpenModal('${b.ticker}')" style="cursor:pointer">
     <td><div class="lc-ticker-wrap">
       <span class="lc-ticker">${b.ticker}</span>
       <span class="lc-badge ${b.coupon===0?'lecap':'boncap'}">${b.coupon===0?'ZC':'CPN'}</span>
@@ -1687,17 +1498,18 @@ function cerRender() {
     <td class="lc-price">${b.price.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
     <td>${fmtV(b.varPct)}</td>
     <td style="color:var(--blue3)">${fmtD(b.venc)}</td>
-    <td style="${tirColor(b.tirReal)};font-size:13px;font-family:var(--mono)">${b.tirReal.toFixed(2)}%</td>
-    <td style="color:var(--cyan);font-family:var(--mono)">${b.modD.toFixed(3)}y</td>
-    <td><button onclick="cerOpenModal('${b.ticker}')" style="background:rgba(58,111,216,.15);border:1px solid var(--blue2);color:var(--blue3);font-family:var(--mono);font-size:9px;font-weight:700;padding:3px 8px;cursor:pointer;border-radius:3px;height:22px;transition:all .12s" onmouseover="this.style.background='rgba(58,111,216,.3)'" onmouseout="this.style.background='rgba(58,111,216,.15)'">CALC</button></td>
+    <td style="color:var(--gray);font-family:var(--mono)">${b.dias}d</td>
+    <td style="${teaColor(b.tea)};font-size:13px;font-family:var(--mono)">${b.tea.toFixed(2)}%</td>
+    <td style="color:var(--cyan);font-family:var(--mono)">${b.tem.toFixed(2)}%</td>
+    <td><button onclick="event.stopPropagation();cerOpenModal('${b.ticker}')" style="background:rgba(58,111,216,.15);border:1px solid var(--blue2);color:var(--blue3);font-family:var(--mono);font-size:9px;font-weight:700;padding:3px 8px;cursor:pointer;border-radius:3px;height:22px;transition:all .12s" onmouseover="this.style.background='rgba(58,111,216,.3)'" onmouseout="this.style.background='rgba(58,111,216,.15)'">CALC</button></td>
   </tr>`).join('');
 }
 
-// ── Curva ────────────────────────────────────────────────────
+// ── Curva TEA vs Días ─────────────────────────────────────────
 function cerRenderCurve() {
   const canvas = document.getElementById('cer-curve-canvas'); if (!canvas) return;
   let pts = cerData.filter(b=>cerFilter==='all'||b.tipo===cerFilter)
-    .map(b=>({x:b.modD, y:b.tirReal, ticker:b.ticker, tipo:b.tipo}));
+    .map(b=>({x:b.dias, y:b.tea, ticker:b.ticker, tipo:b.tipo}));
   if (!pts.length) return;
   pts.sort((a,b)=>a.x-b.x);
 
@@ -1740,17 +1552,17 @@ function cerRenderCurve() {
       tooltip:{filter:i=>i.datasetIndex===1,backgroundColor:'#060f1e',borderColor:'#2a4a7a',borderWidth:1,titleColor:'#7aa3f0',bodyColor:'#c8d8f0',padding:10,
         titleFont:{family:"'JetBrains Mono',monospace",size:11,weight:'700'},bodyFont:{family:"'JetBrains Mono',monospace",size:11},
         callbacks:{title:items=>{const p=pts[items[0].dataIndex];return p.ticker+' · '+CER_CONFIG[p.ticker].name;},
-          label:item=>{const p=pts[item.dataIndex];return['  TIR Real: '+p.y.toFixed(2)+'%','  DurMod: '+p.x.toFixed(3)+'y'];}
+          label:item=>{const p=pts[item.dataIndex];return['  TIR TEA: '+p.y.toFixed(2)+'%','  Días: '+p.x+'d'];}
         }
       }
     },
     scales:{
-      x:{type:'linear',min:0,max:xMax+xMax*0.08,grid:{color:'rgba(30,58,98,.5)'},
-        ticks:{color:'#4a6a8a',font:{family:"'JetBrains Mono',monospace",size:9},callback:v=>v.toFixed(1)+'y'},
-        title:{display:true,text:'Duration Modificada [años]',color:'#4a6a8a',font:{family:"'JetBrains Mono',monospace",size:9,weight:'600'},padding:{top:5}}},
+      x:{type:'linear',min:0,max:Math.max(...pts.map(p=>p.x))*1.08,grid:{color:'rgba(30,58,98,.5)'},
+        ticks:{color:'#4a6a8a',font:{family:"'JetBrains Mono',monospace",size:9},callback:v=>v+'d'},
+        title:{display:true,text:'Días al vencimiento',color:'#4a6a8a',font:{family:"'JetBrains Mono',monospace",size:9,weight:'600'},padding:{top:5}}},
       y:{min:yMin,max:yMax,grid:{color:'rgba(30,58,98,.5)'},
         ticks:{color:'#4a6a8a',font:{family:"'JetBrains Mono',monospace",size:9},callback:v=>v.toFixed(1)+'%'},
-        title:{display:true,text:'TIR Real % (spread CER)',color:'#22d68a',font:{family:"'JetBrains Mono',monospace",size:9,weight:'700'},padding:{bottom:5}}}
+        title:{display:true,text:'TIR TEA %',color:'#22d68a',font:{family:"'JetBrains Mono',monospace",size:9,weight:'700'},padding:{bottom:5}}}
     }
   }});
 }
@@ -1762,87 +1574,40 @@ function cerOpenModal(ticker) {
   document.getElementById('cer-modal-title').textContent = ticker + ' — Calculadora CER';
   document.getElementById('cer-modal-sub').textContent =
     b.name+' · Vence: '+new Date(b.venc+'T00:00:00').toLocaleDateString('es-AR')+
-    ' · TIR Real: '+b.tirReal.toFixed(2)+'%'+
-    ' · DurMod: '+b.modD.toFixed(3)+'y';
+    ' · TIR TEA: '+b.tea.toFixed(2)+'%  TEM: '+b.tem.toFixed(2)+'%';
   document.getElementById('cer-inp-price').value = b.price.toFixed(2);
   document.getElementById('cer-inp-invest').value = 1000000;
-  if (CER_INFL_MENSUAL) {
-    document.getElementById('cer-inp-infl').value = Math.max(1.5, CER_INFL_MENSUAL).toFixed(1);
-  }
-  document.getElementById('cer-m-cer').textContent = CER_HOY ? CER_HOY.toFixed(4) : 'N/D';
-  if (CER_T10) {
-    const elT10m = document.getElementById('cer-m-cer');
-    if (elT10m) elT10m.title = 'CER T-10 (settlement): ' + CER_T10.toFixed(6);
-  }
   cerCalcModal();
   document.getElementById('cer-modal-overlay').classList.add('open');
 }
 
 function cerCalcModal() {
   const b = cerCurrentBond; if (!b) return;
-  const price = parseFloat(document.getElementById('cer-inp-price').value) || b.price;
+  const price  = parseFloat(document.getElementById('cer-inp-price').value) || b.price;
   const invest = parseFloat(document.getElementById('cer-inp-invest').value) || 1000000;
-  const inflMensual = parseFloat(document.getElementById('cer-inp-infl').value) || 3.0;
 
-  const flows = b.flows;
-  const tirReal = cerSolveIRR(flows, price);
-  const {modD} = cerDuration(flows, price);
-  const today = new Date(); today.setHours(0,0,0,0);
+  const tea = cerTEA(price, b.dias);
+  const tem = cerTEM(tea);
+  const tna = cerTNA(tea);
 
-  document.getElementById('cer-m-tirreal').textContent = tirReal.toFixed(2)+'%';
-  document.getElementById('cer-m-dur').textContent = modD.toFixed(3)+'y';
+  document.getElementById('cer-m-tea').textContent = tea.toFixed(2)+'%';
+  document.getElementById('cer-m-tem').textContent = tem.toFixed(2)+'%';
+  document.getElementById('cer-m-tna').textContent = tna.toFixed(2)+'%';
   document.getElementById('cer-m-dias').textContent = b.dias+'d';
 
-  // TIR nominal = (1+TIR_real)*(1+inflMensual)^12 - 1
-  const inflAnual = Math.pow(1+inflMensual/100,12)-1;
-  const tirNom = ((1+tirReal/100)*(1+inflAnual)-1)*100;
-  document.getElementById('cer-m-tirnom').textContent = tirNom.toFixed(2)+'%';
-
-  // VN a comprar
-  const vn = invest / price; // precio es % del VN ajustado, asumimos VN=100
-  const vnInt = Math.floor(vn);
+  // Resumen de inversión: VN = unidades de bono (% del VN ajustado)
+  const vnInt  = Math.floor(invest / price);
   const invReal = vnInt * price;
-  document.getElementById('cer-sum-vn').textContent = vnInt.toLocaleString('es-AR')+' VN @ $'+price.toFixed(2);
-  document.getElementById('cer-sum-inv').textContent = '$ '+invReal.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
-
-  // Proyectar CER futuro por fecha de cada flujo
-  const tbody = document.getElementById('cer-cf-tbody');
-  let totalCobrar = 0;
-  let rows = '';
-  const cerBase = CER_HOY || 1000;
-
-  for (const f of flows) {
-    const fDate = new Date(f.date+'T00:00:00');
-    const diasF = Math.max(0, Math.round((fDate - today) / 86400000));
-    const mesesF = diasF / 30.4375;
-    const cerProj = cerBase * Math.pow(1+inflMensual/100, mesesF);
-    const cerRatio = cerProj / cerBase; // factor CER acumulado
-
-    // Para ZC: VN ajustado = 100 * cerRatio → pago = (cupón + amort) * vnInt * cerRatio / 100
-    // Para bonos con cupón: los cupones ya están expresados en % sobre VN ajustado
-    const cuponPesos = (f.coupon * cerRatio) * vnInt / 100;
-    const amortPesos = (f.amort * cerRatio) * vnInt / 100;
-    const totalPesos = cuponPesos + amortPesos;
-    totalCobrar += totalPesos;
-
-    const ds = fDate.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'});
-    const fmt2 = n => n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
-    rows += `<tr>
-      <td>${ds}</td>
-      <td style="color:var(--green)">${cerProj.toFixed(4)}</td>
-      <td style="color:var(--amber)">${(100*cerRatio).toFixed(2)}</td>
-      <td style="color:var(--white)">${cuponPesos>0?'$ '+fmt2(cuponPesos):'—'}</td>
-      <td style="color:var(--cyan)">${amortPesos>0?'$ '+fmt2(amortPesos):'—'}</td>
-      <td style="color:var(--green);font-weight:700">$ ${fmt2(totalPesos)}</td>
-    </tr>`;
-  }
-  tbody.innerHTML = rows;
+  // Lo que cobrás al venc = VN × 100 (precio de rescate en % del VN ajustado CER)
+  const cobra  = vnInt * 100;
+  const gan    = cobra - invReal;
 
   const fmt2 = n => n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
-  document.getElementById('cer-sum-cobra').textContent = '$ '+fmt2(totalCobrar);
-  const gan = totalCobrar - invReal;
-  document.getElementById('cer-sum-gan').textContent = (gan>=0?'+':'')+'$ '+fmt2(gan);
-  document.getElementById('cer-sum-gan').style.color = gan>=0?'var(--green)':'var(--red)';
+  document.getElementById('cer-sum-vn').textContent    = vnInt.toLocaleString('es-AR')+' VN @ $'+price.toFixed(2);
+  document.getElementById('cer-sum-inv').textContent   = '$ '+fmt2(invReal);
+  document.getElementById('cer-sum-cobra').textContent = '$ '+fmt2(cobra)+' (en VN ajustado CER)';
+  document.getElementById('cer-sum-gan').textContent   = (gan>=0?'+':'')+'$ '+fmt2(gan);
+  document.getElementById('cer-sum-gan').style.color   = gan>=0?'var(--green)':'var(--red)';
   const pk = document.querySelector('#cer-modal-overlay .lc-sum-row.profit .lc-sum-k');
   if(pk) pk.style.color = gan>=0?'var(--green)':'var(--red)';
 }
@@ -1851,7 +1616,6 @@ function cerModalClose(e){if(e===null||e.target===document.getElementById('cer-m
 document.addEventListener('keydown',e=>{if(e.key==='Escape')cerModalClose(null);});
 
 // Init
-cerFetchCER();
 cerFetch();
 
 
