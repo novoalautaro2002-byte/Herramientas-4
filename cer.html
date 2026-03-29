@@ -267,7 +267,7 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
   <div class="lc-toolbar">
     <div>
       <div class="lc-title">BONOS CER — Ajuste por Inflación (Metodología rendimientos.co)</div>
-      <div class="lc-sub">TNA y TEA iterando sobre Precio Real · data912.com</div>
+      <div class="lc-sub">TNA y TEA iterando Precio Real · Ajuste CER T-10 · data912.com</div>
     </div>
     <div class="lc-filters">
       <button class="lc-ftab on"  id="cer-f-all"   onclick="cerSetFilter('all')">TODOS</button>
@@ -310,7 +310,7 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
 
   <div class="lc-statusbar">
     <span id="cer-last-upd" style="color:var(--gray)">—</span>
-    <span style="color:var(--blue3)">Precios: data912.com · Cálculos: Act/365, Liq T+1</span>
+    <span style="color:var(--blue3)" id="cer-source-info">Precios: data912.com · Cálculos: Act/365, Liq T+1</span>
   </div>
 </div>
 </div>
@@ -385,7 +385,6 @@ const CER_CONFIG = {
              pagos:[{d:'2026-06-30',c:1.87,a:0},{d:'2026-12-31',c:1.87,a:0},{d:'2027-06-30',c:1.87,a:0},{d:'2027-12-31',c:1.87,a:0},{d:'2028-06-30',c:1.87,a:0},{d:'2028-12-31',c:1.87,a:0},{d:'2029-06-30',c:1.87,a:0},{d:'2029-12-31',c:1.87,a:5.0},{d:'2030-06-30',c:1.77,a:0},{d:'2030-12-31',c:1.77,a:5.0}]}
 };
 
-// Fallback de precios para probar visualmente (estático) si no hay API
 const CER_FALLBACK = {
   'X15Y6':104.47,'X29Y6':112.94,'TZX26':368.40,'X31L6':108.10,'X30S6':102.65,
   'TZXO6':151.70,'X30N6':110.20,'TZXD6':267.25,'TZXM7':196.25,'TZXA7':110.50,
@@ -393,15 +392,71 @@ const CER_FALLBACK = {
   'TX26':1314.00,'TX28':1915.00,'TX31':1359.00,'DICP':48570.00,'PARP':32690.00,
 };
 
-// CER "Mágico" deducido de la captura de rendimientos.co para que dé exacto out of the box
-let CER_HOY = 722.35; 
+let CER_HOY = 722.35; // Default seguro
 let cerData = [], cerFilter = 'all', cerSortCol = 'venc', cerSortDir = 'asc';
 let cerCurveChart = null;
 
-// Intentamos pisar el CER mágico con el real de CriptoYa, si falla, usa el 722
+// ════════════════════════════════════════════════════════════════
+// NUEVA LÓGICA DE FETCH CER: TU API -> BCRA T-10 -> CRIPTOYA
+// ════════════════════════════════════════════════════════════════
 async function cerFetchCER() {
-  function set(val) { if (val > 0) { CER_HOY = val; if (cerData.length) { cerRender(); cerRenderCurve(); } } }
-  try { const r = await fetch('https://criptoya.com/api/cer'); if (r.ok) { const d = await r.json(); if (d?.value) { set(parseFloat(d.value)); return; } } } catch(e) {}
+  function set(val, src) { 
+    if (val > 0) { 
+      CER_HOY = val; 
+      document.getElementById('cer-source-info').innerHTML = `Precios: data912.com · CER: ${val.toFixed(2)} (${src}) · Liq T+1`;
+      if (cerData.length) { cerRender(); cerRenderCurve(); } 
+    } 
+  }
+
+  // 1. Intentar usar tu propia API (si está hosteada localmente)
+  try {
+    const r = await fetch('/api/cer');
+    if (r.ok) {
+      const d = await r.json();
+      if (d?.cer) { set(parseFloat(d.cer), 'Tu API T-10'); return; }
+    }
+  } catch(e) {}
+
+  // 2. Lógica directa en el frontend (portada de tu Node.js al BCRA)
+  try {
+    const bcraUrl = 'https://api.bcra.gob.ar/estadisticas/v4.0/Monetarias/30';
+    const data = await pfetch(bcraUrl); // pfetch maneja CORS si la llamas del navegador
+    
+    // Adaptamos el path dependiendo de cómo responda el proxy
+    let detalle = data?.results?.[0]?.detalle || data?.detalle;
+    
+    if (detalle && detalle.length > 0) {
+      const hoy = new Date();
+      const t1 = getBusinessDaysAdd(hoy, 1); // Settlement T+1
+      const fc = new Date(t1);
+      fc.setDate(fc.getDate() - 14); // T-10 aproximado (14 días calendario)
+      
+      const fcStr = fc.toISOString().split('T')[0];
+      
+      let cerT10 = null;
+      for (let i = 0; i < detalle.length; i++) {
+        if (detalle[i].fecha <= fcStr) {
+          cerT10 = detalle[i];
+          break;
+        }
+      }
+      if (!cerT10) cerT10 = detalle[detalle.length - 1]; // Fallback al más viejo si no hay
+      
+      if (cerT10 && cerT10.valor) { 
+        set(parseFloat(cerT10.valor), 'BCRA T-10'); 
+        return; 
+      }
+    }
+  } catch(e) { console.warn('Error calculando BCRA T-10 directo:', e); }
+
+  // 3. Fallback a CriptoYa (T-1 aprox)
+  try { 
+    const r = await fetch('https://criptoya.com/api/cer'); 
+    if (r.ok) { 
+      const d = await r.json(); 
+      if (d?.value) { set(parseFloat(d.value), 'CriptoYa Fallback'); return; } 
+    } 
+  } catch(e) {}
 }
 
 function cerGetFlows(ticker) {
@@ -418,7 +473,7 @@ function cerGetFlows(ticker) {
 }
 
 // ════════════════════════════════════════════════════════════════
-// NUEVO MOTOR EXACTO A RENDIMIENTOS.CO (T+1, ACT/365, TNA y TEA)
+// MOTOR EXACTO A RENDIMIENTOS.CO (T+1, ACT/365, TNA y TEA)
 // ════════════════════════════════════════════════════════════════
 
 function cerCalcularParidadYPrecioReal(ticker, pricePesos, fechaLiquidacion) {
