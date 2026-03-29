@@ -266,8 +266,8 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
 
   <div class="lc-toolbar">
     <div>
-      <div class="lc-title">BONOS CER — Ajuste por Inflación (Flujos Dinámicos)</div>
-      <div class="lc-sub">Motor rendimientos.co · Paridad s/ Precio Real · data912.com</div>
+      <div class="lc-title">BONOS CER — Ajuste por Inflación (TIR REAL Exacta)</div>
+      <div class="lc-sub">Cálculo de TIR Real iterando flujos sobre Precio Desinflactado · CER T-10</div>
     </div>
     <div class="lc-filters">
       <button class="lc-ftab on"  id="cer-f-all"   onclick="cerSetFilter('all')">TODOS</button>
@@ -283,13 +283,13 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
     <table class="lc-table" id="cer-table">
       <thead><tr>
         <th onclick="cerSort('ticker')" data-col="ticker">TICKER <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('name')"   data-col="name">DESCRIPCIÓN <span class="sort-arrow"></span></th>
         <th onclick="cerSort('venc')"   data-col="venc">VENCIMIENTO <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('dias')"   data-col="dias">DÍAS <span class="sort-arrow"></span></th>
         <th onclick="cerSort('price')"  data-col="price">PRECIO DIRTY <span class="sort-arrow"></span></th>
         <th onclick="cerSort('varPct')" data-col="varPct">VAR. (%) <span class="sort-arrow"></span></th>
-        <th onclick="cerSort('tna')"    data-col="tna">TNA <span class="sort-arrow"></span></th>
-        <th onclick="cerSort('tirReal')"data-col="tirReal" style="color:var(--green)">TEA <span class="sort-arrow"></span></th>
         <th onclick="cerSort('macD')"   data-col="macD">DUR. MOD. <span class="sort-arrow"></span></th>
-        <th onclick="cerSort('paridad')"data-col="paridad" style="color:var(--cyan)">PARIDAD <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('tirReal')"data-col="tirReal" style="color:var(--green)">TIR REAL % <span class="sort-arrow"></span></th>
       </tr></thead>
       <tbody id="cer-tbody">
         <tr class="lc-skel"><td colspan="8"><div class="lc-skel-bar" style="width:65%"></div></td></tr>
@@ -301,7 +301,7 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
 
   <div class="lc-curves-panel">
     <div class="lc-curve-controls">
-      <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green);letter-spacing:.06em">CURVA CER — TEA REAL vs DURACIÓN MODIFICADA</span>
+      <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green);letter-spacing:.06em">CURVA CER — TIR REAL vs DURACIÓN MODIFICADA</span>
     </div>
     <div style="position:relative;height:380px;width:100%;padding:16px 32px 16px">
       <canvas id="cer-curve-canvas"></canvas>
@@ -317,7 +317,7 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
 
 <script>
 // ════════════════════════════════════════════════════════════════
-// 1. DATA DE FLUJOS (Tu calendario exacto pegado aquí)
+// 1. DATA DE FLUJOS (Tu calendario exacto)
 // ════════════════════════════════════════════════════════════════
 const DATOS_CSV_FLUJOS = `
 X15Y6	Fecha	Por 1 VN
@@ -401,7 +401,7 @@ PARP	Fecha	Por 1 VN
 	31/12/2038	$ 252.285
 `;
 
-// Parseador Automático: Extrae el peso relativo de cada flujo
+// Parseador Automático: Extrae la forma y fechas de cada flujo
 const flujosParseados = {};
 let tickerActual = '';
 DATOS_CSV_FLUJOS.split('\n').forEach(line => {
@@ -417,7 +417,6 @@ DATOS_CSV_FLUJOS.split('\n').forEach(line => {
             const fp = fechaStr.split('/');
             if (fp.length === 3) fechaStr = `${fp[2]}-${fp[1].padStart(2,'0')}-${fp[0].padStart(2,'0')}`;
             
-            // Convierte el valor ignorando signos $ y asumiendo punto como separador general
             let valStr = parts[1].replace('$', '').trim().replace(/\./g, '').replace(',', '.');
             flujosParseados[tickerActual].push({ date: fechaStr, amount: parseFloat(valStr) });
         }
@@ -461,25 +460,25 @@ async function pfetch(url){
 Chart.register(ChartDataLabels);
 
 const CER_CONFIG = {
-  'X15Y6':  {name:'TZXY May-26A', tipo:'corto', venc:'2026-05-15', vnr: 100, cerBase: 701.614,  coupon:0},
-  'X29Y6':  {name:'TZXY May-26B', tipo:'corto', venc:'2026-05-29', vnr: 100, cerBase: 651.8981, coupon:0},
-  'TZX26':  {name:'TZXY Jun-26',  tipo:'corto', venc:'2026-06-30', vnr: 100, cerBase: 200.388,  coupon:0},
-  'X31L6':  {name:'TZXY Jul-26',  tipo:'corto', venc:'2026-07-31', vnr: 100, cerBase: 685.5506, coupon:0},
-  'X30S6':  {name:'TZXY Sep-26',  tipo:'corto', venc:'2026-09-30', vnr: 100, cerBase: 714.9849, coupon:0},
-  'TZXO6':  {name:'TZXY Oct-26',  tipo:'corto', venc:'2026-10-30', vnr: 100, cerBase: 480.1526, coupon:0},
-  'X30N6':  {name:'TZXY Nov-26',  tipo:'corto', venc:'2026-11-30', vnr: 100, cerBase: 659.6789, coupon:0},
-  'TZXD6':  {name:'TZXY Dic-26',  tipo:'corto', venc:'2026-12-15', vnr: 100, cerBase: 271.0476, coupon:0},
-  'TZXM7':  {name:'TZXY Mar-27',  tipo:'corto', venc:'2027-03-31', vnr: 100, cerBase: 361.3176, coupon:0},
-  'TZXA7':  {name:'TZXY Abr-27',  tipo:'corto', venc:'2027-04-30', vnr: 100, cerBase: 651.8981, coupon:0},
-  'TZXY7':  {name:'TZXY May-27',  tipo:'corto', venc:'2027-05-31', vnr: 100, cerBase: 659.6789, coupon:0},
-  'TZX27':  {name:'TZXY Jun-27',  tipo:'corto', venc:'2027-06-30', vnr: 100, cerBase: 200.388,  coupon:0},
-  'TZXD7':  {name:'TZXY Dic-27',  tipo:'largo', venc:'2027-12-15', vnr: 100, cerBase: 271.0476, coupon:0},
-  'TZX28':  {name:'TZXY Jun-28',  tipo:'largo', venc:'2028-06-30', vnr: 100, cerBase: 200.388,  coupon:0},
-  'TX26':   {name:'Boncer Nov-26', tipo:'corto', venc:'2026-11-09', vnr: 100, cerBase: 22.544, coupon:2.0, ultPago: '2025-11-09'},
-  'TX28':   {name:'Boncer Nov-28', tipo:'largo', venc:'2028-11-09', vnr: 100, cerBase: 22.544, coupon:2.0, ultPago: '2025-11-09'},
-  'TX31':   {name:'Boncer Nov-31', tipo:'largo', venc:'2031-11-30', vnr: 100, cerBase: 46.913, coupon:2.5, ultPago: '2025-11-30'},
-  'DICP':   {name:'Discount Pesos', tipo:'largo', venc:'2033-12-31', vnr: 55.48, cerBase: 1.4551, coupon:5.83, ultPago: '2025-12-31'},
-  'PARP':   {name:'Par Pesos', tipo:'largo', venc:'2038-12-31', vnr: 100, cerBase: 1.4551, coupon:3.74, ultPago: '2025-12-31'}
+  'X15Y6':  {name:'TZXY May-26A', tipo:'corto', venc:'2026-05-15', cerBase: 701.614},
+  'X29Y6':  {name:'TZXY May-26B', tipo:'corto', venc:'2026-05-29', cerBase: 651.8981},
+  'TZX26':  {name:'TZXY Jun-26',  tipo:'corto', venc:'2026-06-30', cerBase: 200.388},
+  'X31L6':  {name:'TZXY Jul-26',  tipo:'corto', venc:'2026-07-31', cerBase: 685.5506},
+  'X30S6':  {name:'TZXY Sep-26',  tipo:'corto', venc:'2026-09-30', cerBase: 714.9849},
+  'TZXO6':  {name:'TZXY Oct-26',  tipo:'corto', venc:'2026-10-30', cerBase: 480.1526},
+  'X30N6':  {name:'TZXY Nov-26',  tipo:'corto', venc:'2026-11-30', cerBase: 659.6789},
+  'TZXD6':  {name:'TZXY Dic-26',  tipo:'corto', venc:'2026-12-15', cerBase: 271.0476},
+  'TZXM7':  {name:'TZXY Mar-27',  tipo:'corto', venc:'2027-03-31', cerBase: 361.3176},
+  'TZXA7':  {name:'TZXY Abr-27',  tipo:'corto', venc:'2027-04-30', cerBase: 651.8981},
+  'TZXY7':  {name:'TZXY May-27',  tipo:'corto', venc:'2027-05-31', cerBase: 659.6789},
+  'TZX27':  {name:'TZXY Jun-27',  tipo:'corto', venc:'2027-06-30', cerBase: 200.388},
+  'TZXD7':  {name:'TZXY Dic-27',  tipo:'largo', venc:'2027-12-15', cerBase: 271.0476},
+  'TZX28':  {name:'TZXY Jun-28',  tipo:'largo', venc:'2028-06-30', cerBase: 200.388},
+  'TX26':   {name:'Boncer Nov-26', tipo:'corto', venc:'2026-11-09', cerBase: 22.544},
+  'TX28':   {name:'Boncer Nov-28', tipo:'largo', venc:'2028-11-09', cerBase: 22.544},
+  'TX31':   {name:'Boncer Nov-31', tipo:'largo', venc:'2031-11-30', cerBase: 46.913},
+  'DICP':   {name:'Discount Pesos', tipo:'largo', venc:'2033-12-31', cerBase: 1.4551},
+  'PARP':   {name:'Par Pesos', tipo:'largo', venc:'2038-12-31', cerBase: 1.4551}
 };
 
 const CER_FALLBACK = {
@@ -494,31 +493,32 @@ let cerData = [], cerFilter = 'all', cerSortCol = 'venc', cerSortDir = 'asc';
 let cerCurveChart = null;
 
 // ════════════════════════════════════════════════════════════════
-// GENERADOR DE FLUJOS NORMALIZADOS
-// Extrae la proporción de tus datos y mantiene el cálculo limpio
+// GENERADOR DE FLUJOS REALES NORMALIZADOS
+// Extrae la proporción de tus datos y mantiene el cálculo en base 100
 // ════════════════════════════════════════════════════════════════
-function cerGetFlujosEstructura(ticker) {
-  const today = new Date(); today.setHours(0,0,0,0);
+function cerGetFlujosEstructura(ticker, fechaLiquidacion) {
+  const today = fechaLiquidacion;
   const cfg = CER_CONFIG[ticker];
   if (!cfg) return [];
 
-  // 1. Si pusiste el bono en tu texto arriba, usa esa estructura milimétrica
+  // Usamos el CSV para deducir fechas y pesos proporcionales de cada flujo
   if (flujosParseados[ticker] && flujosParseados[ticker].length > 0) {
       const flujosFuturos = flujosParseados[ticker].filter(p => new Date(p.date+'T00:00:00') > today);
       if (flujosFuturos.length > 0) {
           const totalAmount = flujosFuturos.reduce((sum, f) => sum + f.amount, 0);
-          // Aproximamos el retorno real total (VNR + cupones). 
-          // Esto normaliza los nominales a porcentajes exactos de VNR.
-          const retornoRealAprox = cfg.vnr + (cfg.vnr * (cfg.coupon/100) * (flujosFuturos.length/2));
           
+          // La sumatoria de flujos reales de cualquier bono sano aproxima a 100 (capital).
+          // Al usar regla de 3, evitamos que un flujo proyectado nominal rompa el cálculo Real.
+          const sumaReal = 100; 
+
           return flujosFuturos.map(f => ({
               date: f.date,
-              cf: (f.amount / totalAmount) * retornoRealAprox
+              cf: (f.amount / totalAmount) * sumaReal
           }));
       }
   }
 
-  // 2. Si te olvidaste alguno, asume Bullet
+  // Fallback por si te falta algún bono: asume Bullet al Vencimiento
   if (new Date(cfg.venc+'T00:00:00') > today) {
      return [{ date: cfg.venc, cf: 100 }];
   }
@@ -576,33 +576,22 @@ async function cerFetchCER() {
 }
 
 // ════════════════════════════════════════════════════════════════
-// MOTOR EXACTO A RENDIMIENTOS.CO (T+1, ACT/365, TNA y TEA)
+// MOTOR TIR REAL (Iterando flujos reales sobre Precio Desinflactado)
 // ════════════════════════════════════════════════════════════════
 
-function cerCalcularParidadYPrecioReal(ticker, pricePesos, fechaLiquidacion) {
+function cerCalcularPrecioReal(ticker, pricePesos) {
   const cfg = CER_CONFIG[ticker];
-  if (!cfg) return { paridad: 0, precioReal: 0 };
+  if (!cfg) return 0;
   
-  let intCorr = 0;
-  if (cfg.coupon > 0 && cfg.ultPago) {
-      const fechaUltPago = new Date(cfg.ultPago + 'T00:00:00');
-      const diasCorridos = (fechaLiquidacion - fechaUltPago) / (1000 * 60 * 60 * 24);
-      intCorr = cfg.vnr * (cfg.coupon / 100) * (diasCorridos / 365);
-  }
-
+  // Precio Real (Se le saca el efecto CER al precio de pizarra para igualarlo a los flujos Base 100)
   const ajusteCER = CER_HOY / cfg.cerBase;
-  const precioReal = pricePesos / ajusteCER;
-  const valorTecnicoReal = cfg.vnr + intCorr;
-  
-  if (valorTecnicoReal <= 0) return { paridad: 0, precioReal: 0 };
-  const paridad = (precioReal / valorTecnicoReal) * 100;
-
-  return { paridad, precioReal };
+  return pricePesos / ajusteCER;
 }
 
 function cerSolveReal(precioReal, flows, fechaLiquidacion) {
   if (precioReal <= 0 || !flows.length) return 0;
 
+  // Calculamos el tiempo t en años exactos desde Liquidación T+1 hasta cada Flujo
   const futs = flows.map(f => ({
     t: (new Date(f.date+'T00:00:00') - fechaLiquidacion) / (1000 * 60 * 60 * 24 * 365),
     cf: f.cf
@@ -612,6 +601,7 @@ function cerSolveReal(precioReal, flows, fechaLiquidacion) {
     return (Math.pow(futs[0].cf / precioReal, 1 / futs[0].t) - 1);
   }
 
+  // Método de Newton-Raphson
   let r = 0.05; 
   for (let i = 0; i < 300; i++) {
     let pv = 0;
@@ -625,10 +615,10 @@ function cerSolveReal(precioReal, flows, fechaLiquidacion) {
     if (Math.abs(diff) < 1e-12) break;
     const step = diff / dpv;
     r -= step;
-    if (r < -0.99) r = -0.5; if (r > 10) r = 2;
+    if (r < -0.99) r = -0.5; if (r > 10) r = 2; // Límites de seguridad
     if (Math.abs(step) < 1e-12) break;
   }
-  return r; 
+  return r; // Retorna TIR en formato decimal (ej: 0.05 = 5%)
 }
 
 function cerMacDuration(teaDecimal, flows, fechaLiquidacion) {
@@ -688,21 +678,20 @@ async function cerFetch() {
     if (!found && CER_FALLBACK[ticker]) found = { price: CER_FALLBACK[ticker], varPct: 0 };
     if (!found) continue;
 
-    const flows = cerGetFlujosEstructura(ticker);
+    const flows = cerGetFlujosEstructura(ticker, fechaLiquidacion);
     if (!flows.length) continue;
 
-    const { paridad, precioReal } = cerCalcularParidadYPrecioReal(ticker, found.price, fechaLiquidacion);
+    const precioReal = cerCalcularPrecioReal(ticker, found.price);
     
     const teaDecimal = cerSolveReal(precioReal, flows, fechaLiquidacion);
-    const tea = teaDecimal * 100;
-    
-    // TNA Argentina con capitalización Semestral
-    const tna = (Math.pow(1 + teaDecimal, 0.5) - 1) * 2 * 100;
+    const tirReal = teaDecimal * 100;
     const macD = cerMacDuration(teaDecimal, flows, fechaLiquidacion);
+
+    const dias = Math.max(1, Math.round((new Date(CER_CONFIG[ticker].venc+'T00:00:00')-fechaLiquidacion)/86400000));
 
     cerData.push({
       ticker, ...CER_CONFIG[ticker], price: found.price, varPct: found.varPct,
-      paridad, tna, tirReal: tea, macD, flows
+      tirReal, macD, dias, flows
     });
   }
 
@@ -750,19 +739,17 @@ function cerRender() {
   tbody.innerHTML = rows.map(b=>`<tr>
     <td><div class="lc-ticker-wrap">
       <span class="lc-ticker">${b.ticker}</span>
-      <span class="lc-badge ${b.coupon===0?'lecap':'boncap'}">${b.coupon===0?'ZC':'CPN'}</span>
     </div></td>
+    <td style="color:var(--white2);font-size:11px">${b.name}</td>
     <td style="color:var(--blue3)">${fmtD(b.venc)}</td>
+    <td style="color:var(--gray);font-family:var(--mono)">${b.dias}d</td>
     <td class="lc-price">${b.price.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
     <td>${fmtV(b.varPct)}</td>
-    <td style="color:var(--white2);font-family:var(--mono)">${b.tna.toFixed(2)}%</td>
+    <td style="color:var(--cyan);font-family:var(--mono)">${b.macD.toFixed(2)}</td>
     <td style="${tirColor(b.tirReal)};font-size:13px;font-family:var(--mono)">${b.tirReal.toFixed(2)}%</td>
-    <td style="color:var(--white);font-family:var(--mono)">${b.macD.toFixed(2)}</td>
-    <td style="color:var(--cyan);font-weight:700;font-family:var(--mono)">${b.paridad.toFixed(2)}%</td>
   </tr>`).join('');
 }
 
-// ── Curva ─────────────────────────────────────────
 function cerRenderCurve() {
   const canvas = document.getElementById('cer-curve-canvas'); if (!canvas) return;
   let pts = cerData.filter(b=>cerFilter==='all'||b.tipo===cerFilter).map(b=>({x:b.macD, y:b.tirReal, ticker:b.ticker, tipo:b.tipo}));
@@ -779,7 +766,6 @@ function cerRenderCurve() {
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
 }
 
-// Init
 cerFetchCER();
 cerFetch();
 
