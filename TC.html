@@ -17,7 +17,6 @@
             font-size: 13px; overflow-x: hidden;
         }
 
-        /* TOOLBAR */
         .tc-toolbar {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
@@ -36,18 +35,16 @@
             display: flex; align-items: center; gap: 5px;
         }
         .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; box-shadow: 0 0 5px var(--green); }
+        .dot.loading { background: var(--amber); box-shadow: 0 0 5px var(--amber); }
 
-        /* GRID */
         .main-grid { display: grid; grid-template-columns: 1fr 380px; gap: 15px; }
         .card { background: var(--navy2); border: 1px solid var(--border); border-radius: 6px; padding: 15px; }
         
         .section-title {
             font-family: var(--mono); font-size: 10px; color: var(--blue2);
             text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px;
-            display: flex; justify-content: space-between;
         }
 
-        /* INPUTS */
         .row { display: flex; gap: 10px; margin-bottom: 12px; }
         .col { flex: 1; display: flex; flex-direction: column; gap: 5px; }
         label { font-size: 9px; color: var(--gray); text-transform: uppercase; font-weight: 600; }
@@ -59,7 +56,6 @@
         }
         input { color: var(--amber); }
 
-        /* RESULTADOS */
         .res-display {
             background: linear-gradient(180deg, var(--navy3), var(--navy));
             border-radius: 6px; padding: 20px; text-align: center; margin-bottom: 15px;
@@ -90,7 +86,7 @@
             <button id="btn-tc" class="btn-mode active" onclick="setMode('TC')">Tipo de Cambio</button>
             <button id="btn-canje" class="btn-mode" onclick="setMode('CANJE')">Canje Cable/MEP</button>
         </div>
-        <div class="status-pill"><div class="dot"></div> DATA912 LIVE</div>
+        <div class="status-pill" id="api-status"><div class="dot"></div> DATA912 LIVE</div>
     </div>
 
     <div class="main-grid">
@@ -102,13 +98,13 @@
                         <label>Plazo Liquidación</label>
                         <select id="plazo" onchange="fetchData()">
                             <option value="ci">Contado Inmediato</option>
-                            <option value="t1" selected>T+1 (24hs)</option>
+                            <option value="48h" selected>T+1 (24hs/48hs)</option>
                         </select>
                     </div>
                     <div class="col">
-                        <label>Instrumento de Referencia</label>
+                        <label>Instrumento</label>
                         <select id="ticker" disabled>
-                            <option value="AL30">Bonos Soberanos (AL30)</option>
+                            <option value="AL30">AL30 (Soberano)</option>
                         </select>
                     </div>
                 </div>
@@ -139,8 +135,8 @@
                     <div class="col">
                         <label>Sentido de Operación</label>
                         <select id="sentido-canje" onchange="calculate()">
-                            <option value="m-c">MEP a CABLE (AL30D ➔ AL30C)</option>
-                            <option value="c-m">CABLE a MEP (AL30C ➔ AL30D)</option>
+                            <option value="m-c">MEP a CABLE (D ➔ C)</option>
+                            <option value="c-m">CABLE a MEP (C ➔ D)</option>
                         </select>
                     </div>
                     <div class="col">
@@ -150,7 +146,7 @@
                 </div>
                 <div class="row">
                     <div class="col">
-                        <label>Cantidad USD Origen</label>
+                        <label>Monto USD Origen</label>
                         <input type="number" id="monto-usd" value="1000" oninput="calculate()">
                     </div>
                 </div>
@@ -161,12 +157,12 @@
         </div>
 
         <div class="card" style="border-color: var(--blue);">
-            <div class="section-title">Resumen de Liquidación <span id="plazo-label" style="color:var(--amber)">T+1</span></div>
+            <div class="section-title">Resumen Liquidación <span id="plazo-label" style="color:var(--amber)">T+1</span></div>
             
             <div class="res-display">
                 <div id="main-label" style="font-size: 10px; color: var(--gray); letter-spacing: 1px;">TC IMPLÍCITO FINAL</div>
                 <div id="res-main" class="big-price">$ 0.00</div>
-                <div id="res-ratio-bruto" class="dim">Bruto: $ 0.00</div>
+                <div id="res-ratio-bruto" class="dim">Bruto Market: $ 0.00</div>
             </div>
 
             <table class="data-table">
@@ -175,11 +171,11 @@
                     <td class="val" id="row-monto">0.00</td>
                 </tr>
                 <tr>
-                    <td>Comisión AlyC + IVA</td>
+                    <td>Comisión + IVA (21%)</td>
                     <td class="val red" id="row-com">0.00</td>
                 </tr>
                 <tr>
-                    <td>Derechos de Mercado (0.01%)</td>
+                    <td>DDMM (0.01% Exento)</td>
                     <td class="val red" id="row-ddmm">0.00</td>
                 </tr>
                 <tr style="border-top: 1px solid var(--blue);">
@@ -191,7 +187,8 @@
     </div>
 
     <script>
-        let prices = { al30: 0, al30d: 0, al30c: 0, tc_oficial: 860 }; // Oficial referencial
+        // Variables globales de precios
+        let prices = { al30: 0, al30d: 0, al30c: 0, tc_oficial: 0 };
         let mode = 'TC';
 
         function setMode(m) {
@@ -205,19 +202,36 @@
         }
 
         async function fetchData() {
-            const plazo = document.getElementById('plazo').value;
+            const statusIcon = document.getElementById('api-status');
+            statusIcon.innerHTML = '<div class="dot loading"></div> ACTUALIZANDO...';
+            
+            const plazo = document.getElementById('plazo').value; // 'ci' o '48h'
+
             try {
-                // Simulación de llamada a data912.com 
-                // En uso real: const r = await fetch('https://api.data912.com/precios/AL30');
-                prices = {
-                    al30: plazo === 'ci' ? 51500 : 52300,
-                    al30d: plazo === 'ci' ? 48.10 : 49.05,
-                    al30c: plazo === 'ci' ? 46.90 : 47.85,
-                    tc_oficial: 865.50 // Dólar Mayorista (BCRA 3500)
-                };
+                // Endpoint real de data912 para bonos soberanos
+                const response = await fetch('https://data912.com/api/v1/quotes/sovereign_bonds');
+                const data = await response.json();
+
+                // Buscamos los tickers específicos dentro del array de respuesta
+                // Nota: Los nombres de los campos 'ticker' y 'last' dependen de la estructura exacta de la API
+                const findTicker = (t, p) => data.find(i => i.ticker === t && i.settlement === p) || { last: 0 };
+
+                prices.al30 = findTicker('AL30', plazo).last;
+                prices.al30d = findTicker('AL30D', plazo).last;
+                prices.al30c = findTicker('AL30C', plazo).last;
+                
+                // Obtenemos el oficial (BCRA 3500) para el cálculo de DDMM pesificado
+                const fxData = await fetch('https://data912.com/api/v1/quotes/fx');
+                const fx = await fxData.json();
+                prices.tc_oficial = fx.find(i => i.ticker === 'USD_OFICIAL')?.last || 865;
+
+                statusIcon.innerHTML = '<div class="dot"></div> DATA912 LIVE';
                 renderMarket();
                 calculate();
-            } catch(e) { console.error("Error fetching data"); }
+            } catch(e) {
+                console.error("Error API:", e);
+                statusIcon.innerHTML = '<div class="dot" style="background:var(--red)"></div> ERROR API';
+            }
         }
 
         function calculate() {
@@ -229,15 +243,16 @@
                 const target = document.getElementById('target-tc').value;
                 const pUsd = target === 'mep' ? prices.al30d : prices.al30c;
 
-                // 1. Compra de Bonos en ARS
-                const comArs = montoArs * comRate * 1.21; // Com con IVA
-                const ddmmArs = montoArs * ddmm_rate; // DDMM Exento
+                if(!prices.al30 || !pUsd) return;
+
+                // 1. GASTOS COMPRA (ARS)
+                const comArs = montoArs * comRate * 1.21; 
+                const ddmmArs = montoArs * ddmm_rate; 
                 const montoNetoCompra = montoArs - comArs - ddmmArs;
                 const cantNominales = montoNetoCompra / (prices.al30 / 100);
 
-                // 2. Venta de Bonos en USD
+                // 2. GASTOS VENTA (USD pero cobrados en ARS Oficial)
                 const brutoUsd = (cantNominales * pUsd) / 100;
-                // Los gastos de la venta se calculan sobre el monto en USD pero se cobran en ARS al oficial
                 const comUsdVentaArs = (brutoUsd * comRate * 1.21) * prices.tc_oficial;
                 const ddmmUsdVentaArs = (brutoUsd * ddmm_rate) * prices.tc_oficial;
                 
@@ -245,40 +260,34 @@
                 const tcFinal = montoArs / netoUsd;
 
                 document.getElementById('res-main').textContent = `$ ${tcFinal.toFixed(2)}`;
-                document.getElementById('res-ratio-bruto').textContent = `Bruto: $ ${(prices.al30 / pUsd).toFixed(2)}`;
+                document.getElementById('res-ratio-bruto').textContent = `Bruto Market: $ ${(prices.al30 / pUsd).toFixed(2)}`;
                 document.getElementById('row-monto').textContent = `$ ${montoArs.toLocaleString()}`;
                 document.getElementById('row-com').textContent = `$ ${(comArs + comUsdVentaArs).toFixed(2)}`;
                 document.getElementById('row-ddmm').textContent = `$ ${(ddmmArs + ddmmUsdVentaArs).toFixed(2)}`;
                 document.getElementById('row-final').textContent = `${netoUsd.toFixed(2)} USD`;
 
             } else {
-                // MODO CANJE
                 const montoUsd = parseFloat(document.getElementById('monto-usd').value) || 0;
                 const comRate = parseFloat(document.getElementById('com-canje').value) / 100;
                 const sentido = document.getElementById('sentido-canje').value;
                 
-                // DDMM y Com se calculan sobre el valor de la operacion en USD, convertida a oficial ARS
-                const valorOpArs = (montoUsd * (sentido === 'm-c' ? prices.al30d : prices.al30c) / 100) * prices.tc_oficial;
-                const gastosArsTotal = (valorOpArs * (comRate * 1.21 + ddmm_rate)) * 2; // Entrada y salida
+                if(!prices.al30d || !prices.al30c) return;
+
+                const pIn = sentido === 'm-c' ? prices.al30d : prices.al30c;
+                const pOut = sentido === 'm-c' ? prices.al30c : prices.al30d;
+
+                // Base imponible en ARS oficial para gastos
+                const valorOpArs = (montoUsd * pIn / 100) * prices.tc_oficial;
+                const gastosArsTotal = (valorOpArs * (comRate * 1.21 + ddmm_rate)) * 2; 
                 const gastosUsdTotal = gastosArsTotal / prices.tc_oficial;
 
-                let ratioNeto, montoFinal;
-                if (sentido === 'm-c') {
-                    // MEP a Cable: ((AL30C / AL30D) - 1)
-                    const ratioBruto = ((prices.al30c / prices.al30d) - 1) * 100;
-                    montoFinal = (montoUsd * (prices.al30c / prices.al30d)) - gastosUsdTotal;
-                    ratioNeto = ((montoFinal / montoUsd) - 1) * 100;
-                    document.getElementById('res-ratio-bruto').textContent = `Bruto: ${ratioBruto.toFixed(2)}%`;
-                } else {
-                    // Cable a MEP: ((AL30D / AL30C) - 1)
-                    const ratioBruto = ((prices.al30d / prices.al30c) - 1) * 100;
-                    montoFinal = (montoUsd * (prices.al30d / prices.al30c)) - gastosUsdTotal;
-                    ratioNeto = ((montoFinal / montoUsd) - 1) * 100;
-                    document.getElementById('res-ratio-bruto').textContent = `Bruto: ${ratioBruto.toFixed(2)}%`;
-                }
+                const brutoCanje = (montoUsd * pOut / pIn);
+                const montoFinal = brutoCanje - gastosUsdTotal;
+                const ratioNeto = ((montoFinal / montoUsd) - 1) * 100;
+                const ratioBruto = ((pOut / pIn) - 1) * 100;
 
-                document.getElementById('res-main').className = 'big-price canje';
                 document.getElementById('res-main').textContent = `${ratioNeto.toFixed(2)}%`;
+                document.getElementById('res-ratio-bruto').textContent = `Bruto Market: ${ratioBruto.toFixed(2)}%`;
                 document.getElementById('row-monto').textContent = `${montoUsd.toFixed(2)} USD`;
                 document.getElementById('row-com').textContent = `$ ${(valorOpArs * comRate * 1.21 * 2).toFixed(2)} (ARS)`;
                 document.getElementById('row-ddmm').textContent = `$ ${(valorOpArs * ddmm_rate * 2).toFixed(2)} (ARS)`;
@@ -288,15 +297,16 @@
 
         function renderMarket() {
             document.getElementById('market-display').innerHTML = `
-                <div class="m-item"><div class="m-label">AL30</div><div class="m-val">$${prices.al30}</div></div>
-                <div class="m-item"><div class="m-label">AL30D</div><div class="m-val">u$s${prices.al30d}</div></div>
-                <div class="m-item"><div class="m-label">AL30C</div><div class="m-val">u$s${prices.al30c}</div></div>
+                <div class="m-item"><div class="m-label">AL30</div><div class="m-val">$${prices.al30 || '---'}</div></div>
+                <div class="m-item"><div class="m-label">AL30D</div><div class="m-val">u$s${prices.al30d || '---'}</div></div>
+                <div class="m-item"><div class="m-label">AL30C</div><div class="m-val">u$s${prices.al30c || '---'}</div></div>
             `;
             document.getElementById('plazo-label').textContent = document.getElementById('plazo').value.toUpperCase();
         }
 
+        // Ejecución inicial y bucle
         fetchData();
-        setInterval(fetchData, 30000); // Auto-update cada 30s
+        setInterval(fetchData, 15000); // Actualización cada 15 seg
     </script>
 </body>
 </html>
