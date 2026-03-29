@@ -93,23 +93,23 @@
                 <div class="section-title">Calculadora TC</div>
                 <div class="row">
                     <div class="col">
-                        <label>Plazo Liquidación</label>
-                        <select id="plazo" onchange="bndFetch()">
-                            <option value="24hs" selected>T+1 (24 hs)</option>
-                            <option value="CI">Contado Inmediato (CI)</option>
+                        <label>Plazo</label>
+                        <select id="plazo" onchange="tcFetch()">
+                            <option value="24hs" selected>T+1 (24hs)</option>
+                            <option value="CI">Contado Inmediato</option>
                         </select>
                     </div>
                     <div class="col">
-                        <label>Tipo de Cambio</label>
+                        <label>Tipo</label>
                         <select id="target-tc" onchange="calculate()">
-                            <option value="mep">Dólar MEP (AL30/D)</option>
-                            <option value="ccl">Dólar CCL (AL30/C)</option>
+                            <option value="mep">MEP (AL30/D)</option>
+                            <option value="ccl">CCL (AL30/C)</option>
                         </select>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col">
-                        <label>Comisión % (AlyC)</label>
+                        <label>Comisión %</label>
                         <input type="number" id="comision" value="0.5" step="0.1" oninput="calculate()">
                     </div>
                     <div class="col">
@@ -130,7 +130,7 @@
                         </select>
                     </div>
                     <div class="col">
-                        <label>Comisión % (AlyC)</label>
+                        <label>Comisión %</label>
                         <input type="number" id="com-canje" value="0.5" step="0.1" oninput="calculate()">
                     </div>
                 </div>
@@ -146,15 +146,15 @@
         </div>
 
         <div class="card" style="border-color: var(--blue);">
-            <div class="section-title">Resumen de Operación</div>
+            <div class="section-title">Liquidación Estimada</div>
             <div class="res-display">
                 <div id="main-label" style="font-size: 10px; color: var(--gray);">TC IMPLÍCITO FINAL</div>
                 <div id="res-main" class="big-price">$ 0.00</div>
             </div>
             <table class="data-table">
                 <tr><td>Monto Operado</td><td class="val" id="row-monto">0.00</td></tr>
-                <tr><td>Comisión + IVA (21%)</td><td class="val red" id="row-com">0.00</td></tr>
-                <tr><td>DDMM (0.01% Exento)</td><td class="val red" id="row-ddmm">0.00</td></tr>
+                <tr><td>Comisión + IVA</td><td class="val red" id="row-com">0.00</td></tr>
+                <tr><td>DDMM (0.01%)</td><td class="val red" id="row-ddmm">0.00</td></tr>
                 <tr style="border-top: 1px solid var(--blue);"><td style="padding-top:10px; font-weight:700;">RECIBE NETO</td><td class="val" id="row-final" style="padding-top:10px; font-size:16px; color:var(--green);">0.00</td></tr>
             </table>
         </div>
@@ -163,6 +163,17 @@
     <script>
         let prices = { al30: 0, al30d: 0, al30c: 0, oficial: 0 };
         let mode = 'TC';
+
+        // Proxy de conexión idéntico al de bonos.html para evitar errores de API
+        async function pfetch(url){
+          try{const r=await fetch(url);if(r.ok)return r.json();}catch(e){}
+          try{
+            const r2=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url));
+            if(!r2.ok)throw new Error('proxy');
+            const d=await r2.json(); return JSON.parse(d.contents);
+          }catch(e){}
+          throw new Error('unreachable');
+        }
 
         function setMode(m) {
             mode = m;
@@ -174,40 +185,43 @@
             calculate();
         }
 
-        async function bndFetch() {
+        async function tcFetch() {
             const status = document.getElementById('api-status');
-            status.innerHTML = '<div class="dot loading"></div> CONECTANDO...';
-            const plazo = document.getElementById('plazo').value; // Sincronizado a CI o 24hs
+            status.innerHTML = '<div class="dot loading"></div> ACTUALIZANDO...';
+            const plazo = document.getElementById('plazo').value;
 
             try {
-                const r = await fetch('https://data912.com/api/v1/quotes/sovereign_bonds');
-                const data = await r.json();
+                // Obtenemos bonos soberanos
+                const raw = await pfetch('https://data912.com/live/arg_bonds');
+                const data = Array.isArray(raw) ? raw : (raw.data || raw.items || []);
 
                 const findVal = (t) => {
-                    const item = data.find(i => i.ticker === t && i.settlement === plazo);
-                    return item ? parseFloat(item.last) : 0;
+                    const item = data.find(i => (i.ticker || i.symbol || '').replace(/\s+/g,'').toUpperCase() === t && i.settlement === plazo);
+                    return item ? parseFloat(item.c || item.last || 0) : 0;
                 };
 
                 prices.al30 = findVal('AL30');
                 prices.al30d = findVal('AL30D');
                 prices.al30c = findVal('AL30C');
 
-                const rf = await fetch('https://data912.com/api/v1/quotes/fx');
-                const fxData = await rf.json();
-                const ofi = fxData.find(i => i.ticker === 'USD_OFICIAL_BCRA3500');
-                prices.oficial = ofi ? parseFloat(ofi.last) : 865;
+                // Obtenemos TC Oficial para pesificar DDMM
+                // Usamos el mismo método de pfetch
+                const rawFx = await pfetch('https://data912.com/live/fx');
+                const fxData = Array.isArray(rawFx) ? rawFx : (rawFx.data || rawFx.items || []);
+                const ofi = fxData.find(i => i.ticker === 'USD_OFICIAL_BCRA3500' || i.ticker === 'USD_MAYORISTA');
+                prices.oficial = ofi ? parseFloat(ofi.c || ofi.last || 0) : 865;
 
                 status.innerHTML = '<div class="dot"></div> DATA912 LIVE';
                 renderMarket();
                 calculate();
             } catch(e) {
-                console.error(e);
+                console.warn(e);
                 status.innerHTML = '<div class="dot" style="background:var(--red)"></div> ERROR API';
             }
         }
 
         function calculate() {
-            const ddmm_rate = 0.0001; // 0.01% DDMM Títulos Públicos
+            const ddmm_rate = 0.0001; // 0.01%
             if (!prices.al30 || !prices.al30d || !prices.al30c) return;
 
             if (mode === 'TC') {
@@ -215,11 +229,13 @@
                 const comRate = parseFloat(document.getElementById('comision').value) / 100;
                 const pUsd = document.getElementById('target-tc').value === 'mep' ? prices.al30d : prices.al30c;
 
+                // Gastos Compra (ARS)
                 const comArs = montoArs * comRate * 1.21;
                 const ddmmArs = montoArs * ddmm_rate;
                 const netArs = montoArs - comArs - ddmmArs;
                 const nominales = netArs / (prices.al30 / 100);
 
+                // Gastos Venta (USD pesificados al Oficial)
                 const brutoUsd = (nominales * pUsd) / 100;
                 const comUsdArs = (brutoUsd * comRate * 1.21) * prices.oficial;
                 const ddmmUsdArs = (brutoUsd * ddmm_rate) * prices.oficial;
@@ -256,14 +272,14 @@
 
         function renderMarket() {
             document.getElementById('market-display').innerHTML = `
-                <div class="m-item"><div class="m-label">AL30</div><div class="m-val">$${prices.al30}</div></div>
-                <div class="m-item"><div class="m-label">AL30D</div><div class="m-val">u$s${prices.al30d}</div></div>
-                <div class="m-item"><div class="m-label">AL30C</div><div class="m-val">u$s${prices.al30c}</div></div>
+                <div class="m-item"><div class="m-label">AL30</div><div class="m-val">$${prices.al30.toFixed(2)}</div></div>
+                <div class="m-item"><div class="m-label">AL30D</div><div class="m-val">u$s${prices.al30d.toFixed(2)}</div></div>
+                <div class="m-item"><div class="m-label">AL30C</div><div class="m-val">u$s${prices.al30c.toFixed(2)}</div></div>
             `;
         }
 
-        bndFetch();
-        setInterval(bndFetch, 15000);
+        tcFetch();
+        setInterval(tcFetch, 30000);
     </script>
 </body>
 </html>
