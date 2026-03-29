@@ -1,1 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>TC & Canje - Terminal Financiera</title>
+    <style>
+        :root {
+            --navy: #0d1b2e; --navy2: #122540; --navy3: #172d4d; --panel: #1a3358;
+            --border: #2a4a7a; --blue: #3a6fd8; --blue2: #5b8def; --white: #f0f4ff;
+            --gray: #7a99c4; --green: #22d68a; --red: #ff4d6a; --amber: #f0b429;
+            --font: 'Inter', sans-serif; --mono: 'JetBrains Mono', monospace;
+        }
 
+        body {
+            background: var(--navy); color: var(--white);
+            font-family: var(--font); margin: 0; padding: 15px;
+            font-size: 13px; overflow-x: hidden;
+        }
+
+        /* TOOLBAR */
+        .tc-toolbar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+        }
+        .btn-group { display: flex; gap: 8px; }
+        .btn-mode {
+            background: var(--navy3); border: 1px solid var(--border);
+            color: var(--gray); padding: 6px 14px; cursor: pointer;
+            font-family: var(--mono); font-weight: 700; border-radius: 4px;
+            font-size: 11px; transition: 0.2s;
+        }
+        .btn-mode.active { background: var(--blue); color: white; border-color: var(--blue2); }
+
+        .status-pill {
+            font-family: var(--mono); font-size: 10px; color: var(--green);
+            display: flex; align-items: center; gap: 5px;
+        }
+        .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; box-shadow: 0 0 5px var(--green); }
+
+        /* GRID */
+        .main-grid { display: grid; grid-template-columns: 1fr 380px; gap: 15px; }
+        .card { background: var(--navy2); border: 1px solid var(--border); border-radius: 6px; padding: 15px; }
+        
+        .section-title {
+            font-family: var(--mono); font-size: 10px; color: var(--blue2);
+            text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px;
+            display: flex; justify-content: space-between;
+        }
+
+        /* INPUTS */
+        .row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .col { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 9px; color: var(--gray); text-transform: uppercase; font-weight: 600; }
+        
+        select, input {
+            background: var(--navy); border: 1px solid var(--border);
+            color: var(--white); font-family: var(--mono); padding: 10px;
+            border-radius: 4px; outline: none; font-size: 13px;
+        }
+        input { color: var(--amber); }
+
+        /* RESULTADOS */
+        .res-display {
+            background: linear-gradient(180deg, var(--navy3), var(--navy));
+            border-radius: 6px; padding: 20px; text-align: center; margin-bottom: 15px;
+            border: 1px solid var(--border);
+        }
+        .big-price { font-size: 32px; font-weight: 800; color: var(--white); font-family: var(--mono); margin: 5px 0; }
+        .big-price.canje { color: var(--green); }
+        
+        .data-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
+        .data-table td { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .val { text-align: right; font-weight: 600; }
+        .red { color: var(--red); }
+        .dim { color: var(--gray); font-size: 10px; }
+
+        .market-ref {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+            margin-top: 15px; padding-top: 15px; border-top: 1px dotted var(--border);
+        }
+        .m-item { text-align: center; }
+        .m-label { font-size: 9px; color: var(--gray); margin-bottom: 2px; }
+        .m-val { font-family: var(--mono); font-size: 11px; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <div class="tc-toolbar">
+        <div class="btn-group">
+            <button id="btn-tc" class="btn-mode active" onclick="setMode('TC')">Tipo de Cambio</button>
+            <button id="btn-canje" class="btn-mode" onclick="setMode('CANJE')">Canje Cable/MEP</button>
+        </div>
+        <div class="status-pill"><div class="dot"></div> DATA912 LIVE</div>
+    </div>
+
+    <div class="main-grid">
+        <div class="card">
+            <div id="config-tc">
+                <div class="section-title">Parámetros Operativos</div>
+                <div class="row">
+                    <div class="col">
+                        <label>Plazo Liquidación</label>
+                        <select id="plazo" onchange="fetchData()">
+                            <option value="ci">Contado Inmediato</option>
+                            <option value="t1" selected>T+1 (24hs)</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label>Instrumento de Referencia</label>
+                        <select id="ticker" disabled>
+                            <option value="AL30">Bonos Soberanos (AL30)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label>Conversión</label>
+                        <select id="target-tc" onchange="calculate()">
+                            <option value="mep">PESOS ➔ MEP (AL30/D)</option>
+                            <option value="ccl">PESOS ➔ CABLE (AL30/C)</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label>Comisión AlyC (%)</label>
+                        <input type="number" id="comision" value="0.5" step="0.1" oninput="calculate()">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label>Capital a Invertir</label>
+                        <input type="number" id="monto-ars" value="1000000" oninput="calculate()">
+                    </div>
+                </div>
+            </div>
+
+            <div id="config-canje" style="display:none">
+                <div class="section-title">Parámetros de Canje</div>
+                <div class="row">
+                    <div class="col">
+                        <label>Sentido de Operación</label>
+                        <select id="sentido-canje" onchange="calculate()">
+                            <option value="m-c">MEP a CABLE (AL30D ➔ AL30C)</option>
+                            <option value="c-m">CABLE a MEP (AL30C ➔ AL30D)</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label>Comisión AlyC (%)</label>
+                        <input type="number" id="com-canje" value="0.5" step="0.1" oninput="calculate()">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label>Cantidad USD Origen</label>
+                        <input type="number" id="monto-usd" value="1000" oninput="calculate()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="market-ref" id="market-display">
+                </div>
+        </div>
+
+        <div class="card" style="border-color: var(--blue);">
+            <div class="section-title">Resumen de Liquidación <span id="plazo-label" style="color:var(--amber)">T+1</span></div>
+            
+            <div class="res-display">
+                <div id="main-label" style="font-size: 10px; color: var(--gray); letter-spacing: 1px;">TC IMPLÍCITO FINAL</div>
+                <div id="res-main" class="big-price">$ 0.00</div>
+                <div id="res-ratio-bruto" class="dim">Bruto: $ 0.00</div>
+            </div>
+
+            <table class="data-table">
+                <tr>
+                    <td>Monto Operado</td>
+                    <td class="val" id="row-monto">0.00</td>
+                </tr>
+                <tr>
+                    <td>Comisión AlyC + IVA</td>
+                    <td class="val red" id="row-com">0.00</td>
+                </tr>
+                <tr>
+                    <td>Derechos de Mercado (0.01%)</td>
+                    <td class="val red" id="row-ddmm">0.00</td>
+                </tr>
+                <tr style="border-top: 1px solid var(--blue);">
+                    <td style="padding-top: 15px; font-weight: 700;">RECIBE NETO</td>
+                    <td class="val" id="row-final" style="padding-top: 15px; font-size: 16px; color: var(--green);">0.00</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let prices = { al30: 0, al30d: 0, al30c: 0, tc_oficial: 860 }; // Oficial referencial
+        let mode = 'TC';
+
+        function setMode(m) {
+            mode = m;
+            document.getElementById('btn-tc').classList.toggle('active', m==='TC');
+            document.getElementById('btn-canje').classList.toggle('active', m==='CANJE');
+            document.getElementById('config-tc').style.display = m==='TC' ? 'block' : 'none';
+            document.getElementById('config-canje').style.display = m==='CANJE' ? 'block' : 'none';
+            document.getElementById('main-label').textContent = m==='TC' ? 'TC IMPLÍCITO FINAL' : 'RATIO CANJE NETO';
+            calculate();
+        }
+
+        async function fetchData() {
+            const plazo = document.getElementById('plazo').value;
+            try {
+                // Simulación de llamada a data912.com 
+                // En uso real: const r = await fetch('https://api.data912.com/precios/AL30');
+                prices = {
+                    al30: plazo === 'ci' ? 51500 : 52300,
+                    al30d: plazo === 'ci' ? 48.10 : 49.05,
+                    al30c: plazo === 'ci' ? 46.90 : 47.85,
+                    tc_oficial: 865.50 // Dólar Mayorista (BCRA 3500)
+                };
+                renderMarket();
+                calculate();
+            } catch(e) { console.error("Error fetching data"); }
+        }
+
+        function calculate() {
+            const ddmm_rate = 0.0001; // 0.01% para Títulos Públicos (PPT)
+
+            if (mode === 'TC') {
+                const montoArs = parseFloat(document.getElementById('monto-ars').value) || 0;
+                const comRate = parseFloat(document.getElementById('comision').value) / 100;
+                const target = document.getElementById('target-tc').value;
+                const pUsd = target === 'mep' ? prices.al30d : prices.al30c;
+
+                // 1. Compra de Bonos en ARS
+                const comArs = montoArs * comRate * 1.21; // Com con IVA
+                const ddmmArs = montoArs * ddmm_rate; // DDMM Exento
+                const montoNetoCompra = montoArs - comArs - ddmmArs;
+                const cantNominales = montoNetoCompra / (prices.al30 / 100);
+
+                // 2. Venta de Bonos en USD
+                const brutoUsd = (cantNominales * pUsd) / 100;
+                // Los gastos de la venta se calculan sobre el monto en USD pero se cobran en ARS al oficial
+                const comUsdVentaArs = (brutoUsd * comRate * 1.21) * prices.tc_oficial;
+                const ddmmUsdVentaArs = (brutoUsd * ddmm_rate) * prices.tc_oficial;
+                
+                const netoUsd = brutoUsd - (comUsdVentaArs / prices.tc_oficial) - (ddmmUsdVentaArs / prices.tc_oficial);
+                const tcFinal = montoArs / netoUsd;
+
+                document.getElementById('res-main').textContent = `$ ${tcFinal.toFixed(2)}`;
+                document.getElementById('res-ratio-bruto').textContent = `Bruto: $ ${(prices.al30 / pUsd).toFixed(2)}`;
+                document.getElementById('row-monto').textContent = `$ ${montoArs.toLocaleString()}`;
+                document.getElementById('row-com').textContent = `$ ${(comArs + comUsdVentaArs).toFixed(2)}`;
+                document.getElementById('row-ddmm').textContent = `$ ${(ddmmArs + ddmmUsdVentaArs).toFixed(2)}`;
+                document.getElementById('row-final').textContent = `${netoUsd.toFixed(2)} USD`;
+
+            } else {
+                // MODO CANJE
+                const montoUsd = parseFloat(document.getElementById('monto-usd').value) || 0;
+                const comRate = parseFloat(document.getElementById('com-canje').value) / 100;
+                const sentido = document.getElementById('sentido-canje').value;
+                
+                // DDMM y Com se calculan sobre el valor de la operacion en USD, convertida a oficial ARS
+                const valorOpArs = (montoUsd * (sentido === 'm-c' ? prices.al30d : prices.al30c) / 100) * prices.tc_oficial;
+                const gastosArsTotal = (valorOpArs * (comRate * 1.21 + ddmm_rate)) * 2; // Entrada y salida
+                const gastosUsdTotal = gastosArsTotal / prices.tc_oficial;
+
+                let ratioNeto, montoFinal;
+                if (sentido === 'm-c') {
+                    // MEP a Cable: ((AL30C / AL30D) - 1)
+                    const ratioBruto = ((prices.al30c / prices.al30d) - 1) * 100;
+                    montoFinal = (montoUsd * (prices.al30c / prices.al30d)) - gastosUsdTotal;
+                    ratioNeto = ((montoFinal / montoUsd) - 1) * 100;
+                    document.getElementById('res-ratio-bruto').textContent = `Bruto: ${ratioBruto.toFixed(2)}%`;
+                } else {
+                    // Cable a MEP: ((AL30D / AL30C) - 1)
+                    const ratioBruto = ((prices.al30d / prices.al30c) - 1) * 100;
+                    montoFinal = (montoUsd * (prices.al30d / prices.al30c)) - gastosUsdTotal;
+                    ratioNeto = ((montoFinal / montoUsd) - 1) * 100;
+                    document.getElementById('res-ratio-bruto').textContent = `Bruto: ${ratioBruto.toFixed(2)}%`;
+                }
+
+                document.getElementById('res-main').className = 'big-price canje';
+                document.getElementById('res-main').textContent = `${ratioNeto.toFixed(2)}%`;
+                document.getElementById('row-monto').textContent = `${montoUsd.toFixed(2)} USD`;
+                document.getElementById('row-com').textContent = `$ ${(valorOpArs * comRate * 1.21 * 2).toFixed(2)} (ARS)`;
+                document.getElementById('row-ddmm').textContent = `$ ${(valorOpArs * ddmm_rate * 2).toFixed(2)} (ARS)`;
+                document.getElementById('row-final').textContent = `${montoFinal.toFixed(2)} USD`;
+            }
+        }
+
+        function renderMarket() {
+            document.getElementById('market-display').innerHTML = `
+                <div class="m-item"><div class="m-label">AL30</div><div class="m-val">$${prices.al30}</div></div>
+                <div class="m-item"><div class="m-label">AL30D</div><div class="m-val">u$s${prices.al30d}</div></div>
+                <div class="m-item"><div class="m-label">AL30C</div><div class="m-val">u$s${prices.al30c}</div></div>
+            `;
+            document.getElementById('plazo-label').textContent = document.getElementById('plazo').value.toUpperCase();
+        }
+
+        fetchData();
+        setInterval(fetchData, 30000); // Auto-update cada 30s
+    </script>
+</body>
+</html>
