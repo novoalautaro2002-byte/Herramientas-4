@@ -14,7 +14,7 @@
         body {
             background: var(--navy); color: var(--white);
             font-family: var(--font); margin: 0; padding: 15px;
-            font-size: 13px; overflow-x: hidden;
+            font-size: 13px; overflow: hidden;
         }
 
         .tc-toolbar {
@@ -62,13 +62,11 @@
             border: 1px solid var(--border);
         }
         .big-price { font-size: 32px; font-weight: 800; color: var(--white); font-family: var(--mono); margin: 5px 0; }
-        .big-price.canje { color: var(--green); }
         
         .data-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
         .data-table td { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .val { text-align: right; font-weight: 600; }
         .red { color: var(--red); }
-        .dim { color: var(--gray); font-size: 10px; }
 
         .market-ref {
             display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
@@ -84,7 +82,7 @@
     <div class="tc-toolbar">
         <div class="btn-group">
             <button id="btn-tc" class="btn-mode active" onclick="setMode('TC')">Tipo de Cambio</button>
-            <button id="btn-canje" class="btn-mode" onclick="setMode('CANJE')">Canje Cable/MEP</button>
+            <button id="btn-canje" class="btn-mode" onclick="setMode('CANJE')">Canje</button>
         </div>
         <div class="status-pill" id="api-status"><div class="dot"></div> DATA912 LIVE</div>
     </div>
@@ -92,103 +90,78 @@
     <div class="main-grid">
         <div class="card">
             <div id="config-tc">
-                <div class="section-title">Parámetros Operativos</div>
+                <div class="section-title">Calculadora TC</div>
                 <div class="row">
                     <div class="col">
                         <label>Plazo Liquidación</label>
-                        <select id="plazo" onchange="fetchData()">
-                            <option value="ci">Contado Inmediato</option>
-                            <option value="48h" selected>T+1 (24hs/48hs)</option>
+                        <select id="plazo" onchange="bndFetch()">
+                            <option value="24hs" selected>T+1 (24 hs)</option>
+                            <option value="CI">Contado Inmediato (CI)</option>
                         </select>
                     </div>
                     <div class="col">
-                        <label>Instrumento</label>
-                        <select id="ticker" disabled>
-                            <option value="AL30">AL30 (Soberano)</option>
+                        <label>Tipo de Cambio</label>
+                        <select id="target-tc" onchange="calculate()">
+                            <option value="mep">Dólar MEP (AL30/D)</option>
+                            <option value="ccl">Dólar CCL (AL30/C)</option>
                         </select>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col">
-                        <label>Conversión</label>
-                        <select id="target-tc" onchange="calculate()">
-                            <option value="mep">PESOS ➔ MEP (AL30/D)</option>
-                            <option value="ccl">PESOS ➔ CABLE (AL30/C)</option>
-                        </select>
-                    </div>
-                    <div class="col">
-                        <label>Comisión AlyC (%)</label>
+                        <label>Comisión % (AlyC)</label>
                         <input type="number" id="comision" value="0.5" step="0.1" oninput="calculate()">
                     </div>
-                </div>
-                <div class="row">
                     <div class="col">
-                        <label>Capital a Invertir</label>
+                        <label>Pesos Origen</label>
                         <input type="number" id="monto-ars" value="1000000" oninput="calculate()">
                     </div>
                 </div>
             </div>
 
             <div id="config-canje" style="display:none">
-                <div class="section-title">Parámetros de Canje</div>
+                <div class="section-title">Calculadora Canje</div>
                 <div class="row">
                     <div class="col">
-                        <label>Sentido de Operación</label>
+                        <label>Sentido</label>
                         <select id="sentido-canje" onchange="calculate()">
                             <option value="m-c">MEP a CABLE (D ➔ C)</option>
                             <option value="c-m">CABLE a MEP (C ➔ D)</option>
                         </select>
                     </div>
                     <div class="col">
-                        <label>Comisión AlyC (%)</label>
+                        <label>Comisión % (AlyC)</label>
                         <input type="number" id="com-canje" value="0.5" step="0.1" oninput="calculate()">
                     </div>
                 </div>
                 <div class="row">
                     <div class="col">
-                        <label>Monto USD Origen</label>
+                        <label>USD Origen</label>
                         <input type="number" id="monto-usd" value="1000" oninput="calculate()">
                     </div>
                 </div>
             </div>
 
-            <div class="market-ref" id="market-display">
-                </div>
+            <div class="market-ref" id="market-display"></div>
         </div>
 
         <div class="card" style="border-color: var(--blue);">
-            <div class="section-title">Resumen Liquidación <span id="plazo-label" style="color:var(--amber)">T+1</span></div>
-            
+            <div class="section-title">Resumen de Operación</div>
             <div class="res-display">
-                <div id="main-label" style="font-size: 10px; color: var(--gray); letter-spacing: 1px;">TC IMPLÍCITO FINAL</div>
+                <div id="main-label" style="font-size: 10px; color: var(--gray);">TC IMPLÍCITO FINAL</div>
                 <div id="res-main" class="big-price">$ 0.00</div>
-                <div id="res-ratio-bruto" class="dim">Bruto Market: $ 0.00</div>
             </div>
-
             <table class="data-table">
-                <tr>
-                    <td>Monto Operado</td>
-                    <td class="val" id="row-monto">0.00</td>
-                </tr>
-                <tr>
-                    <td>Comisión + IVA (21%)</td>
-                    <td class="val red" id="row-com">0.00</td>
-                </tr>
-                <tr>
-                    <td>DDMM (0.01% Exento)</td>
-                    <td class="val red" id="row-ddmm">0.00</td>
-                </tr>
-                <tr style="border-top: 1px solid var(--blue);">
-                    <td style="padding-top: 15px; font-weight: 700;">RECIBE NETO</td>
-                    <td class="val" id="row-final" style="padding-top: 15px; font-size: 16px; color: var(--green);">0.00</td>
-                </tr>
+                <tr><td>Monto Operado</td><td class="val" id="row-monto">0.00</td></tr>
+                <tr><td>Comisión + IVA (21%)</td><td class="val red" id="row-com">0.00</td></tr>
+                <tr><td>DDMM (0.01% Exento)</td><td class="val red" id="row-ddmm">0.00</td></tr>
+                <tr style="border-top: 1px solid var(--blue);"><td style="padding-top:10px; font-weight:700;">RECIBE NETO</td><td class="val" id="row-final" style="padding-top:10px; font-size:16px; color:var(--green);">0.00</td></tr>
             </table>
         </div>
     </div>
 
     <script>
-        // Variables globales de precios
-        let prices = { al30: 0, al30d: 0, al30c: 0, tc_oficial: 0 };
+        let prices = { al30: 0, al30d: 0, al30c: 0, oficial: 0 };
         let mode = 'TC';
 
         function setMode(m) {
@@ -201,112 +174,96 @@
             calculate();
         }
 
-        async function fetchData() {
-            const statusIcon = document.getElementById('api-status');
-            statusIcon.innerHTML = '<div class="dot loading"></div> ACTUALIZANDO...';
-            
-            const plazo = document.getElementById('plazo').value; // 'ci' o '48h'
+        async function bndFetch() {
+            const status = document.getElementById('api-status');
+            status.innerHTML = '<div class="dot loading"></div> CONECTANDO...';
+            const plazo = document.getElementById('plazo').value; // Sincronizado a CI o 24hs
 
             try {
-                // Endpoint real de data912 para bonos soberanos
-                const response = await fetch('https://data912.com/api/v1/quotes/sovereign_bonds');
-                const data = await response.json();
+                const r = await fetch('https://data912.com/api/v1/quotes/sovereign_bonds');
+                const data = await r.json();
 
-                // Buscamos los tickers específicos dentro del array de respuesta
-                // Nota: Los nombres de los campos 'ticker' y 'last' dependen de la estructura exacta de la API
-                const findTicker = (t, p) => data.find(i => i.ticker === t && i.settlement === p) || { last: 0 };
+                const findVal = (t) => {
+                    const item = data.find(i => i.ticker === t && i.settlement === plazo);
+                    return item ? parseFloat(item.last) : 0;
+                };
 
-                prices.al30 = findTicker('AL30', plazo).last;
-                prices.al30d = findTicker('AL30D', plazo).last;
-                prices.al30c = findTicker('AL30C', plazo).last;
-                
-                // Obtenemos el oficial (BCRA 3500) para el cálculo de DDMM pesificado
-                const fxData = await fetch('https://data912.com/api/v1/quotes/fx');
-                const fx = await fxData.json();
-                prices.tc_oficial = fx.find(i => i.ticker === 'USD_OFICIAL')?.last || 865;
+                prices.al30 = findVal('AL30');
+                prices.al30d = findVal('AL30D');
+                prices.al30c = findVal('AL30C');
 
-                statusIcon.innerHTML = '<div class="dot"></div> DATA912 LIVE';
+                const rf = await fetch('https://data912.com/api/v1/quotes/fx');
+                const fxData = await rf.json();
+                const ofi = fxData.find(i => i.ticker === 'USD_OFICIAL_BCRA3500');
+                prices.oficial = ofi ? parseFloat(ofi.last) : 865;
+
+                status.innerHTML = '<div class="dot"></div> DATA912 LIVE';
                 renderMarket();
                 calculate();
             } catch(e) {
-                console.error("Error API:", e);
-                statusIcon.innerHTML = '<div class="dot" style="background:var(--red)"></div> ERROR API';
+                console.error(e);
+                status.innerHTML = '<div class="dot" style="background:var(--red)"></div> ERROR API';
             }
         }
 
         function calculate() {
-            const ddmm_rate = 0.0001; // 0.01% para Títulos Públicos (PPT)
+            const ddmm_rate = 0.0001; // 0.01% DDMM Títulos Públicos
+            if (!prices.al30 || !prices.al30d || !prices.al30c) return;
 
             if (mode === 'TC') {
                 const montoArs = parseFloat(document.getElementById('monto-ars').value) || 0;
                 const comRate = parseFloat(document.getElementById('comision').value) / 100;
-                const target = document.getElementById('target-tc').value;
-                const pUsd = target === 'mep' ? prices.al30d : prices.al30c;
+                const pUsd = document.getElementById('target-tc').value === 'mep' ? prices.al30d : prices.al30c;
 
-                if(!prices.al30 || !pUsd) return;
+                const comArs = montoArs * comRate * 1.21;
+                const ddmmArs = montoArs * ddmm_rate;
+                const netArs = montoArs - comArs - ddmmArs;
+                const nominales = netArs / (prices.al30 / 100);
 
-                // 1. GASTOS COMPRA (ARS)
-                const comArs = montoArs * comRate * 1.21; 
-                const ddmmArs = montoArs * ddmm_rate; 
-                const montoNetoCompra = montoArs - comArs - ddmmArs;
-                const cantNominales = montoNetoCompra / (prices.al30 / 100);
+                const brutoUsd = (nominales * pUsd) / 100;
+                const comUsdArs = (brutoUsd * comRate * 1.21) * prices.oficial;
+                const ddmmUsdArs = (brutoUsd * ddmm_rate) * prices.oficial;
 
-                // 2. GASTOS VENTA (USD pero cobrados en ARS Oficial)
-                const brutoUsd = (cantNominales * pUsd) / 100;
-                const comUsdVentaArs = (brutoUsd * comRate * 1.21) * prices.tc_oficial;
-                const ddmmUsdVentaArs = (brutoUsd * ddmm_rate) * prices.tc_oficial;
-                
-                const netoUsd = brutoUsd - (comUsdVentaArs / prices.tc_oficial) - (ddmmUsdVentaArs / prices.tc_oficial);
-                const tcFinal = montoArs / netoUsd;
+                const finalUsd = brutoUsd - (comUsdArs / prices.oficial) - (ddmmUsdArs / prices.oficial);
+                const tcFinal = montoArs / finalUsd;
 
                 document.getElementById('res-main').textContent = `$ ${tcFinal.toFixed(2)}`;
-                document.getElementById('res-ratio-bruto').textContent = `Bruto Market: $ ${(prices.al30 / pUsd).toFixed(2)}`;
                 document.getElementById('row-monto').textContent = `$ ${montoArs.toLocaleString()}`;
-                document.getElementById('row-com').textContent = `$ ${(comArs + comUsdVentaArs).toFixed(2)}`;
-                document.getElementById('row-ddmm').textContent = `$ ${(ddmmArs + ddmmUsdVentaArs).toFixed(2)}`;
-                document.getElementById('row-final').textContent = `${netoUsd.toFixed(2)} USD`;
-
+                document.getElementById('row-com').textContent = `$ ${(comArs + comUsdArs).toFixed(2)}`;
+                document.getElementById('row-ddmm').textContent = `$ ${(ddmmArs + ddmmUsdArs).toFixed(2)}`;
+                document.getElementById('row-final').textContent = `${finalUsd.toFixed(2)} USD`;
             } else {
                 const montoUsd = parseFloat(document.getElementById('monto-usd').value) || 0;
                 const comRate = parseFloat(document.getElementById('com-canje').value) / 100;
-                const sentido = document.getElementById('sentido-canje').value;
+                const m2c = document.getElementById('sentido-canje').value === 'm-c';
                 
-                if(!prices.al30d || !prices.al30c) return;
+                const pIn = m2c ? prices.al30d : prices.al30c;
+                const pOut = m2c ? prices.al30c : prices.al30d;
 
-                const pIn = sentido === 'm-c' ? prices.al30d : prices.al30c;
-                const pOut = sentido === 'm-c' ? prices.al30c : prices.al30d;
-
-                // Base imponible en ARS oficial para gastos
-                const valorOpArs = (montoUsd * pIn / 100) * prices.tc_oficial;
-                const gastosArsTotal = (valorOpArs * (comRate * 1.21 + ddmm_rate)) * 2; 
-                const gastosUsdTotal = gastosArsTotal / prices.tc_oficial;
-
-                const brutoCanje = (montoUsd * pOut / pIn);
-                const montoFinal = brutoCanje - gastosUsdTotal;
-                const ratioNeto = ((montoFinal / montoUsd) - 1) * 100;
-                const ratioBruto = ((pOut / pIn) - 1) * 100;
+                const valorOpArs = (montoUsd * pIn / 100) * prices.oficial;
+                const gastosArs = (valorOpArs * (comRate * 1.21 + ddmm_rate)) * 2;
+                
+                const finalUsd = (montoUsd * pOut / pIn) - (gastosArs / prices.oficial);
+                const ratioNeto = ((finalUsd / montoUsd) - 1) * 100;
 
                 document.getElementById('res-main').textContent = `${ratioNeto.toFixed(2)}%`;
-                document.getElementById('res-ratio-bruto').textContent = `Bruto Market: ${ratioBruto.toFixed(2)}%`;
                 document.getElementById('row-monto').textContent = `${montoUsd.toFixed(2)} USD`;
                 document.getElementById('row-com').textContent = `$ ${(valorOpArs * comRate * 1.21 * 2).toFixed(2)} (ARS)`;
                 document.getElementById('row-ddmm').textContent = `$ ${(valorOpArs * ddmm_rate * 2).toFixed(2)} (ARS)`;
-                document.getElementById('row-final').textContent = `${montoFinal.toFixed(2)} USD`;
+                document.getElementById('row-final').textContent = `${finalUsd.toFixed(2)} USD`;
             }
         }
 
         function renderMarket() {
             document.getElementById('market-display').innerHTML = `
-                <div class="m-item"><div class="m-label">AL30</div><div class="m-val">$${prices.al30 || '---'}</div></div>
-                <div class="m-item"><div class="m-label">AL30D</div><div class="m-val">u$s${prices.al30d || '---'}</div></div>
-                <div class="m-item"><div class="m-label">AL30C</div><div class="m-val">u$s${prices.al30c || '---'}</div></div>
+                <div class="m-item"><div class="m-label">AL30</div><div class="m-val">$${prices.al30}</div></div>
+                <div class="m-item"><div class="m-label">AL30D</div><div class="m-val">u$s${prices.al30d}</div></div>
+                <div class="m-item"><div class="m-label">AL30C</div><div class="m-val">u$s${prices.al30c}</div></div>
             `;
-            document.getElementById('plazo-label').textContent = document.getElementById('plazo').value.toUpperCase();
         }
 
-        // Ejecución inicial y bucle
-        fetchData();
-        setInterval(fetchData, 15000); // Actualización cada 15 seg
+        bndFetch();
+        setInterval(bndFetch, 15000);
     </script>
 </body>
 </html>
