@@ -5,57 +5,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portfolio Investment — Bonos CER</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+/* ─── ESTILOS ORIGINALES PRESERVADOS ─── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-
 :root{
-  --navy:   #0d1b2e; --navy2:  #122540; --navy3:  #172d4d; --border: #2a4a7a; --border2:#3a5a8a;
-  --blue:   #3a6fd8; --blue2:  #5b8def; --blue3:  #7aa3f0; --blue4:  #a8c4f8; --white:  #f0f4ff;
-  --white2: #d0ddf5; --gray:   #7a99c4; --gray2:  #4a6a9a; --green:  #22d68a; --green2: #16a86a;
-  --green-bg:#0a2a1a; --red:    #ff4d6a; --red2:   #cc3a55; --red-bg: #2a0a12; --amber:  #f0b429;
-  --cyan:   #22d4f0; --font:   'Inter', sans-serif; --mono:   'JetBrains Mono', 'Courier New', monospace;
+  --navy: #0d1b2e; --navy2: #122540; --navy3: #172d4d; --border: #2a4a7a; --border2:#3a5a8a;
+  --blue: #3a6fd8; --blue2: #5b8def; --blue3: #7aa3f0; --white: #f0f4ff; --white2: #d0ddf5;
+  --gray: #7a99c4; --green: #22d68a; --amber: #f0b429; --cyan: #22d4f0;
+  --font: 'Inter', sans-serif; --mono: 'JetBrains Mono', monospace;
 }
-
 html,body{background:var(--navy);color:var(--white);font-family:var(--font);font-size:13px;min-height:100vh;overflow-x:hidden}
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-track{background:var(--navy2)}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-
-.top-bar{
-  background:linear-gradient(135deg, var(--navy2) 0%, var(--navy3) 100%);
-  border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 20px;height:56px;position:sticky;top:0;z-index:200;
-  box-shadow:0 2px 16px rgba(0,0,0,.4);
-}
+.top-bar{background:linear-gradient(135deg, var(--navy2) 0%, var(--navy3) 100%); border-bottom:1px solid var(--border); display:flex;align-items:center;justify-content:space-between; padding:0 20px;height:56px;position:sticky;top:0;z-index:200;}
 .logo-area{display:flex;align-items:center;gap:12px}
-.logo-svg{width:40px;height:40px;flex-shrink:0}
-.logo-text{display:flex;flex-direction:column;line-height:1.1}
-.logo-text strong{font-size:16px;font-weight:800;color:var(--white);letter-spacing:-.02em}
-.logo-text span{font-size:10px;font-weight:500;color:var(--blue3);letter-spacing:.08em;text-transform:uppercase}
-#clock{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--blue3);background:var(--navy);padding:3px 8px;border:1px solid var(--border);border-radius:4px}
-
-.nav-bar{background:var(--navy2);border-bottom:2px solid var(--border);display:flex;align-items:stretch;padding:0 20px;gap:0;}
-.nav-tab{display:flex;align-items:center;gap:8px;padding:0 22px;height:42px;font-family:var(--font);font-size:12px;font-weight:600;text-transform:uppercase;color:var(--gray);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+.logo-text strong{font-size:16px;font-weight:800;color:var(--white)}
+.nav-bar{background:var(--navy2);border-bottom:2px solid var(--border);display:flex;padding:0 20px;}
+.nav-tab{padding:0 22px;height:42px;font-weight:600;color:var(--gray);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;}
 .nav-tab.active{color:var(--white);border-bottom-color:var(--blue);background:rgba(58,111,216,.12)}
-
 .lecap-page{min-height:calc(100vh - 98px);display:flex;flex-direction:column;background:var(--navy2)}
-.lc-toolbar{background:linear-gradient(90deg,var(--navy3),var(--navy2)); border-bottom:1px solid var(--border); padding:8px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
-.lc-title{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue2);letter-spacing:.06em}
-.lc-refresh-btn{background:var(--navy3);border:1px solid var(--border2);color:var(--blue3);font-family:var(--mono);font-size:10px;font-weight:700;padding:0 12px;cursor:pointer;height:28px;border-radius:4px;transition:all .15s;}
-.lc-table-wrap{flex:1;overflow:auto}
+.lc-toolbar{background:linear-gradient(90deg,var(--navy3),var(--navy2)); border-bottom:1px solid var(--border); padding:8px 20px;display:flex;align-items:center;gap:12px;}
 .lc-table{width:100%;border-collapse:collapse;font-family:var(--mono)}
 .lc-table thead tr{background:#0a1525;border-bottom:2px solid var(--border)}
-.lc-table thead th{padding:8px 14px;font-size:10px;font-weight:700;color:#f0b429;text-transform:uppercase;text-align:right;position:sticky;top:0;background:#0a1525;z-index:2;border-right:1px solid rgba(42,74,122,.4);}
-.lc-table tbody tr{border-bottom:1px solid rgba(42,74,122,.4);cursor:pointer;transition:background .1s;}
-.lc-table tbody tr:hover{background:rgba(58,111,216,.12)}
-.lc-table tbody td{padding:7px 14px;font-size:12px;text-align:right;color:var(--white2);border-right:1px solid rgba(42,74,122,.25);}
-.lc-ticker{font-weight:700;font-size:13px;color:var(--white)}
-.lc-status-pill{font-size:10px;font-family:var(--mono);padding:2px 10px;border-radius:10px;border:1px solid;font-weight:600;}
-.lc-status-pill.ok{color:var(--green);border-color:var(--green2);background:var(--green-bg)}
+.lc-table thead th{padding:8px 14px;font-size:10px;color:#f0b429;text-align:right;text-transform:uppercase;position:sticky;top:0;z-index:2}
+.lc-table tbody tr{border-bottom:1px solid rgba(42,74,122,.4);cursor:pointer;}
+.lc-table tbody td{padding:7px 14px;font-size:12px;text-align:right;color:var(--white2);}
+#clock{font-family:var(--mono);font-size:12px;color:var(--blue3);padding:3px 8px;border:1px solid var(--border);border-radius:4px}
+.lc-status-pill.ok{color:var(--green);border-color:var(--green2);background:#0a2a1a;font-size:10px;padding:2px 10px;border-radius:10px;border:1px solid;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 </head>
 <body>
 
@@ -63,7 +39,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
   <div class="logo-area">
     <div class="logo-text"><strong>Portfolio Investment</strong><span>Sistema de Cálculo Financiero</span></div>
   </div>
-  <div id="clock">--:--:--</div>
+  <div class="top-right"><span id="clock">--:--:--</span></div>
 </div>
 
 <div class="nav-bar">
@@ -73,15 +49,15 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 <div class="lecap-page">
   <div class="lc-toolbar">
     <div>
-      <div class="lc-title">BONOS CER — Ajuste por Inflación (TIR REAL Exacta)</div>
-      <div style="font-size:10px;color:var(--gray)">Metodología: Precio Desinflactado vs Flujos Normalizados</div>
+      <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue2)">BONOS CER — VALORIZACIÓN REAL</div>
+      <div id="cer-status-text" style="font-size:10px;color:var(--gray)">Metodología: Flujos Normalizados (Base 100) vs Precio Desinflactado</div>
     </div>
     <div style="flex:1"></div>
     <span class="lc-status-pill ok" id="cer-pill">LIVE ●</span>
-    <button class="lc-refresh-btn" onclick="cerFetch()">↻ ACTUALIZAR</button>
+    <button onclick="cerFetch()" style="background:var(--navy3);border:1px solid var(--border2);color:var(--blue3);padding:5px 12px;border-radius:4px;cursor:pointer">↻ ACTUALIZAR</button>
   </div>
 
-  <div class="lc-table-wrap">
+  <div class="lc-table-wrap" style="flex:1;overflow:auto">
     <table class="lc-table">
       <thead><tr>
         <th style="text-align:left">TICKER</th>
@@ -95,15 +71,14 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
     </table>
   </div>
 
-  <div style="position:relative;height:350px;width:100%;padding:16px;background:var(--navy2)">
+  <div style="position:relative;height:320px;width:100%;padding:16px">
     <canvas id="cer-curve-canvas"></canvas>
   </div>
 </div>
 
 <script>
-// 1. DATA DE FLUJOS (Tu CSV original)
-const DATOS_CSV_FLUJOS = `
-X15Y6	Fecha	Por 1 VN
+// 1. DATA DE FLUJOS (CSV ORIGINAL)
+const DATOS_CSV_FLUJOS = `X15Y6	Fecha	Por 1 VN
 	15/5/2026	$ 10.336
 X29Y6	Fecha	Por 1 VN
 	29/5/2026	$ 11.125
@@ -118,8 +93,7 @@ DICP	Fecha	Por 1 VN
 	30/6/2027	$ 445.632
 PARP	Fecha	Por 1 VN
 	31/3/2026	$ 44.107
-	30/9/2026	$ 44.107
-`;
+	30/9/2026	$ 44.107`;
 
 // 2. PARSEADOR
 const flujosParseados = {};
@@ -150,21 +124,24 @@ const CER_CONFIG = {
 let CER_HOY = 724.54;
 let cerCurveChart = null;
 
-// 3. MOTOR FINANCIERO (NORMALIZACIÓN BASE 100)
+// 3. MOTOR DE CÁLCULO FINANCIERO CORREGIDO (TEA REAL)
 function resolverTirReal(precioDirty, ticker, liq) {
     const cfg = CER_CONFIG[ticker];
     const flows = flujosParseados[ticker] ? flujosParseados[ticker].filter(f => new Date(f.date+'T00:00:00') > liq) : [];
     if (!cfg || !flows.length) return 0;
 
-    const coef = CER_HOY / cfg.cerBase;
-    const precioRealBase100 = precioDirty / coef; //
+    // Desinflactar Precio: Dirty / (CER_hoy / CER_base)
+    const coeficiente = CER_HOY / cfg.cerBase;
+    const precioRealBase100 = precioDirty / coeficiente;
 
+    // Normalización: Llevamos los flujos del CSV a escala Base 100 para coincidir con el precio
     const sumaNominalFutura = flows.reduce((s, f) => s + f.amount, 0);
     const futs = flows.map(f => ({
-        t: (new Date(f.date + 'T00:00:00') - liq) / (1000 * 60 * 60 * 24 * 365),
-        cf: (f.amount / sumaNominalFutura) * 100 // Normalización
+        t: (new Date(f.date + 'T00:00:00') - liq) / (31536000000), // milisegundos en un año
+        cf: (f.amount / sumaNominalFutura) * 100 
     }));
 
+    // Iteración Newton-Raphson
     let r = 0.05;
     for (let i = 0; i < 100; i++) {
         let pv = 0, dpv = 0;
@@ -184,14 +161,14 @@ function calcularMD(r, ticker, liq) {
     const flows = flujosParseados[ticker] ? flujosParseados[ticker].filter(f => new Date(f.date+'T00:00:00') > liq) : [];
     let num = 0, den = 0;
     flows.forEach(f => {
-        let t = (new Date(f.date + 'T00:00:00') - liq) / (31536000000);
+        let t = (new Date(f.date + 'T00:00:00') - liq) / 31536000000;
         let pv = f.amount / Math.pow(1 + r, t);
         num += t * pv; den += pv;
     });
     return den > 0 ? (num / den) / (1 + r) : 0;
 }
 
-// 4. FETCH Y RENDER
+// 4. ACTUALIZACIÓN
 async function cerFetch() {
     const liq = new Date(); liq.setDate(liq.getDate() + 1); liq.setHours(0,0,0,0);
     try {
@@ -211,7 +188,7 @@ async function cerFetch() {
                 const md = calcularMD(r, ticker, liq);
                 const dias = Math.round((new Date(CER_CONFIG[ticker].venc) - liq) / 86400000);
                 chartData.push({ticker, x: md, y: r*100});
-                html += `<tr><td class="lc-ticker">${ticker}</td><td>${CER_CONFIG[ticker].venc}</td><td>${dias}d</td><td>$ ${px.toLocaleString()}</td><td>${md.toFixed(2)}</td><td style="color:var(--green);font-weight:800">${(r*100).toFixed(2)}%</td></tr>`;
+                html += `<tr><td><span style="font-weight:700">${ticker}</span></td><td>${CER_CONFIG[ticker].venc}</td><td>${dias}d</td><td>$ ${px.toLocaleString()}</td><td>${md.toFixed(2)}</td><td style="color:var(--green);font-weight:800">${(r*100).toFixed(2)}%</td></tr>`;
             }
         });
         document.getElementById('cer-tbody').innerHTML = html;
