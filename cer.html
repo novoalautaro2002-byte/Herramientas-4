@@ -5,33 +5,212 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portfolio Investment — Bonos CER</title>
 <style>
-/* Se mantiene todo tu CSS original sin cambios */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
 :root{
-  --navy:   #0d1b2e; --navy2:  #122540; --navy3:  #172d4d; --border: #2a4a7a; --border2:#3a5a8a;
-  --blue:   #3a6fd8; --blue2:  #5b8def; --blue3:  #7aa3f0; --blue4:  #a8c4f8; --white:  #f0f4ff;
-  --white2: #d0ddf5; --gray:   #7a99c4; --gray2:  #4a6a9a; --green:  #22d68a; --green2: #16a86a;
-  --green-bg:#0a2a1a; --red:    #ff4d6a; --red2:   #cc3a55; --red-bg: #2a0a12; --amber:  #f0b429;
-  --cyan:   #22d4f0; --font:   'Inter', sans-serif; --mono:   'JetBrains Mono', 'Courier New', monospace;
+  --navy:   #0d1b2e;
+  --navy2:  #122540;
+  --navy3:  #172d4d;
+  --border: #2a4a7a;
+  --border2:#3a5a8a;
+  --blue:   #3a6fd8;
+  --blue2:  #5b8def;
+  --blue3:  #7aa3f0;
+  --blue4:  #a8c4f8;
+  --white:  #f0f4ff;
+  --white2: #d0ddf5;
+  --gray:   #7a99c4;
+  --gray2:  #4a6a9a;
+  --green:  #22d68a;
+  --green2: #16a86a;
+  --green-bg:#0a2a1a;
+  --red:    #ff4d6a;
+  --red2:   #cc3a55;
+  --red-bg: #2a0a12;
+  --amber:  #f0b429;
+  --cyan:   #22d4f0;
+  --font:   'Inter', sans-serif;
+  --mono:   'JetBrains Mono', 'Courier New', monospace;
 }
+
 html,body{background:var(--navy);color:var(--white);font-family:var(--font);font-size:13px;min-height:100vh;overflow-x:hidden}
-.top-bar{background:linear-gradient(135deg, var(--navy2) 0%, var(--navy3) 100%); border-bottom:1px solid var(--border); display:flex;align-items:center;justify-content:space-between; padding:0 20px;height:56px;position:sticky;top:0;z-index:200;}
+
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--navy2)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ─── TOP BAR ─── */
+.top-bar{
+  background:linear-gradient(135deg, var(--navy2) 0%, var(--navy3) 100%);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:56px;position:sticky;top:0;z-index:200;
+  box-shadow:0 2px 16px rgba(0,0,0,.4);
+}
 .logo-area{display:flex;align-items:center;gap:12px}
-.logo-text strong{font-size:16px;font-weight:800;color:var(--white)}
-.nav-bar{background:var(--navy2);border-bottom:2px solid var(--border);display:flex;padding:0 20px;}
-.nav-tab{padding:0 22px;height:42px;font-weight:600;color:var(--gray);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;}
+.logo-svg{width:40px;height:40px;flex-shrink:0}
+.logo-text{display:flex;flex-direction:column;line-height:1.1}
+.logo-text strong{font-size:16px;font-weight:800;color:var(--white);letter-spacing:-.02em}
+.logo-text span{font-size:10px;font-weight:500;color:var(--blue3);letter-spacing:.08em;text-transform:uppercase}
+.top-right{display:flex;align-items:center;gap:16px}
+.top-badge{font-size:10px;font-weight:600;color:var(--blue4);letter-spacing:.06em;font-family:var(--mono)}
+#clock{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--blue3);letter-spacing:.04em;
+  background:var(--navy);padding:3px 8px;border:1px solid var(--border);border-radius:4px}
+
+/* ─── NAV TABS ─── */
+.nav-bar{
+  background:var(--navy2);border-bottom:2px solid var(--border);
+  display:flex;align-items:stretch;padding:0 20px;gap:0;
+}
+.nav-tab{
+  display:flex;align-items:center;gap:8px;padding:0 22px;height:42px;
+  font-family:var(--font);font-size:12px;font-weight:600;
+  letter-spacing:.04em;text-transform:uppercase;
+  color:var(--gray);border:none;background:none;
+  cursor:pointer;border-bottom:2px solid transparent;
+  margin-bottom:-2px;transition:all .15s;white-space:nowrap;
+}
+.nav-tab:hover{color:var(--blue3);background:rgba(58,111,216,.08)}
 .nav-tab.active{color:var(--white);border-bottom-color:var(--blue);background:rgba(58,111,216,.12)}
+.nav-tab .tab-icon{font-size:14px}
+.nav-spacer{flex:1}
+.nav-meta{display:flex;align-items:center;gap:8px;padding:0 4px}
+.nav-meta-txt{font-size:10px;color:var(--gray2);letter-spacing:.06em;font-family:var(--mono)}
+
+/* ─── PAGE ─── */
+.page{display:none;min-height:calc(100vh - 98px)}
+.page.active{display:block}
+
 .lecap-page{min-height:calc(100vh - 98px);display:flex;flex-direction:column;background:var(--navy2)}
-.lc-toolbar{background:linear-gradient(90deg,var(--navy3),var(--navy2)); border-bottom:1px solid var(--border); padding:8px 20px;display:flex;align-items:center;gap:12px;}
+.lc-toolbar{
+  background:linear-gradient(90deg,var(--navy3),var(--navy2));
+  border-bottom:1px solid var(--border);
+  padding:8px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.lc-title{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue2);letter-spacing:.06em}
+.lc-sub{font-size:10px;color:var(--gray);letter-spacing:.08em;text-transform:uppercase}
+.lc-spacer{flex:1}
+.lc-refresh-btn{
+  background:var(--navy3);border:1px solid var(--border2);color:var(--blue3);
+  font-family:var(--mono);font-size:10px;font-weight:700;padding:0 12px;
+  cursor:pointer;height:28px;border-radius:4px;letter-spacing:.06em;
+  transition:all .15s;display:flex;align-items:center;gap:6px;
+}
+.lc-refresh-btn:hover{border-color:var(--blue);background:rgba(58,111,216,.15);color:var(--white)}
+.lc-refresh-btn.loading{opacity:.6;pointer-events:none}
+.lc-status-pill{
+  font-size:10px;font-family:var(--mono);padding:2px 10px;border-radius:10px;
+  border:1px solid;letter-spacing:.06em;font-weight:600;
+}
+.lc-status-pill.ok{color:var(--green);border-color:var(--green2);background:var(--green-bg)}
+.lc-status-pill.loading{color:var(--amber);border-color:#7a5a10;background:rgba(120,80,10,.2);animation:pillblink 1s step-end infinite}
+.lc-status-pill.err{color:var(--red);border-color:var(--red2);background:var(--red-bg)}
+@keyframes pillblink{0%,100%{opacity:1}50%{opacity:.4}}
+.lc-filters{display:flex;gap:4px}
+.lc-ftab{
+  background:var(--navy3);border:1px solid var(--border);color:var(--gray);
+  font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 10px;
+  cursor:pointer;letter-spacing:.06em;border-radius:3px;height:26px;
+  display:flex;align-items:center;transition:all .12s;
+}
+.lc-ftab:hover{color:var(--white);border-color:var(--blue2)}
+.lc-ftab.on{background:rgba(58,111,216,.2);color:var(--blue2);border-color:var(--blue)}
+.lc-ftab.on-green{background:rgba(22,168,106,.15);color:var(--green);border-color:var(--green2)}
+.lc-ftab.on-amber{background:rgba(120,80,10,.2);color:var(--amber);border-color:var(--amber)}
+.lc-table-wrap{flex:1;overflow:auto}
 .lc-table{width:100%;border-collapse:collapse;font-family:var(--mono)}
 .lc-table thead tr{background:#0a1525;border-bottom:2px solid var(--border)}
-.lc-table thead th{padding:8px 14px;font-size:10px;color:#f0b429;text-align:right;text-transform:uppercase;cursor:pointer;position:sticky;top:0;z-index:2}
-.lc-table tbody tr{border-bottom:1px solid rgba(42,74,122,.4);cursor:pointer;}
-.lc-table tbody td{padding:7px 14px;font-size:12px;text-align:right;color:var(--white2);}
-.lc-ticker{font-weight:700;font-size:13px;color:var(--white)}
-#clock{font-family:var(--mono);font-size:12px;color:var(--blue3);padding:3px 8px;border:1px solid var(--border);border-radius:4px}
-.lc-refresh-btn{background:var(--navy3);border:1px solid var(--border2);color:var(--blue3);font-family:var(--mono);font-size:10px;font-weight:700;padding:0 12px;cursor:pointer;height:28px;border-radius:4px;}
+.lc-table thead th{
+  padding:8px 14px;font-size:10px;font-weight:700;
+  color:#f0b429;letter-spacing:.12em;text-transform:uppercase;
+  text-align:right;white-space:nowrap;border-right:1px solid rgba(42,74,122,.4);
+  cursor:pointer;user-select:none;transition:color .12s;position:sticky;top:0;
+  background:#0a1525;z-index:2;
+}
+.lc-table thead th:first-child{text-align:left}
+.lc-table thead th:last-child{border-right:none}
+.lc-table thead th:hover{color:var(--white)}
+.lc-table thead th .sort-arrow{opacity:.4;margin-left:4px;font-size:9px}
+.lc-table thead th.sort-asc .sort-arrow::after{content:'▲';opacity:1}
+.lc-table thead th.sort-desc .sort-arrow::after{content:'▼';opacity:1}
+.lc-table thead th:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
+.lc-table tbody tr{
+  border-bottom:1px solid rgba(42,74,122,.4);cursor:pointer;transition:background .1s;
+}
+.lc-table tbody tr:hover{background:rgba(58,111,216,.12)}
+.lc-table tbody tr:nth-child(even){background:rgba(10,21,37,.4)}
+.lc-table tbody tr:nth-child(even):hover{background:rgba(58,111,216,.12)}
+.lc-table tbody td{
+  padding:7px 14px;font-size:12px;text-align:right;
+  color:var(--white2);border-right:1px solid rgba(42,74,122,.25);white-space:nowrap;
+}
+.lc-table tbody td:first-child{text-align:left}
+.lc-table tbody td:last-child{border-right:none}
+.lc-ticker-wrap{display:flex;align-items:center;gap:8px}
+.lc-ticker{font-weight:700;font-size:13px;color:var(--white);letter-spacing:.04em}
+.lc-badge{font-size:8px;font-weight:700;letter-spacing:.08em;padding:1px 5px;border-radius:2px;border:1px solid;text-transform:uppercase}
+.lc-badge.lecap{color:#22d4f0;border-color:#1a9ab0;background:rgba(34,212,240,.08)}
+.lc-badge.boncap{color:var(--amber);border-color:#8a6820;background:rgba(240,180,41,.08)}
+.lc-price{color:var(--white);font-weight:600}
+.lc-skel td{opacity:.4}
+.lc-skel-bar{height:12px;background:linear-gradient(90deg,var(--border) 25%,var(--border2) 50%,var(--border) 75%);
+  border-radius:2px;animation:shimmer 1.4s infinite;background-size:200% 100%}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.lc-statusbar{
+  background:var(--navy3);border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:5px 16px;font-size:10px;font-family:var(--mono);
+}
+.lc-curves-panel{display:flex;flex-direction:column;background:var(--navy2);border-top:2px solid var(--border2)}
+.lc-curve-controls{
+  background:var(--navy2);border-bottom:1px solid var(--border);
+  padding:8px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+
+/* ── Dropdown nav ── */
+.nav-dropdown{position:relative;display:flex;align-items:stretch}
+.nav-dropdown-btn{
+  display:flex;align-items:center;gap:7px;padding:0 18px;height:42px;
+  font-family:var(--font);font-size:12px;font-weight:600;
+  letter-spacing:.04em;text-transform:uppercase;
+  color:var(--gray);border:none;background:none;cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-2px;
+  transition:all .15s;white-space:nowrap;user-select:none;
+}
+.nav-dropdown-btn:hover{color:var(--blue3);background:rgba(58,111,216,.08)}
+.nav-dropdown-btn.open{color:var(--white);background:rgba(58,111,216,.08)}
+.nav-dropdown-btn .dd-arrow{font-size:8px;opacity:.6;transition:transform .15s}
+.nav-dropdown-btn.open .dd-arrow{transform:rotate(180deg);opacity:1}
+.nav-dropdown-menu{
+  display:none;position:absolute;top:42px;left:0;z-index:500;
+  background:var(--navy3);border:1px solid var(--border);
+  border-top:2px solid var(--blue);
+  min-width:200px;padding:4px 0;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+}
+.nav-dropdown.open .nav-dropdown-menu{display:block}
+.nav-dropdown-item{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 16px;font-family:var(--font);font-size:11px;
+  font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--gray2);cursor:pointer;border:none;background:none;
+  width:100%;text-align:left;text-decoration:none;
+  transition:all .12s;border-left:2px solid transparent;
+}
+.nav-dropdown-item:hover{
+  color:var(--white);background:rgba(58,111,216,.12);
+  border-left-color:var(--blue);
+}
+.nav-dropdown-item.active{
+  color:var(--blue3);background:rgba(58,111,216,.1);
+  border-left-color:var(--blue2);
+}
+.nav-dropdown-item .di-icon{font-size:13px;width:16px;text-align:center}
+
+/* standalone — page always visible */
+.page{display:block!important}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
@@ -40,42 +219,85 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 
 <div class="top-bar">
   <div class="logo-area">
-    <div class="logo-text"><strong>Portfolio Investment</strong><span>Sistema de Cálculo Financiero</span></div>
+    <svg class="logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="20" cy="20" r="19" fill="url(#lgOuter)" stroke="#2a4a8a" stroke-width="1"/>
+      <path d="M20 20 L20 2 A18 18 0 0 1 38 20 Z" fill="url(#lgSlice)"/>
+      <path d="M20 20 L2 20 A18 18 0 0 1 20 2 Z" fill="#3a6fd8" opacity=".6"/>
+      <circle cx="20" cy="20" r="7" fill="url(#lgInner)" stroke="#1a3358" stroke-width="1.5"/>
+      <circle cx="20" cy="20" r="3" fill="#0d1b2e"/>
+      <defs>
+        <radialGradient id="lgOuter" cx="40%" cy="35%"><stop offset="0%" stop-color="#3a6fd8"/><stop offset="100%" stop-color="#1a2d5a"/></radialGradient>
+        <linearGradient id="lgSlice" x1="20" y1="2" x2="38" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5b8def"/><stop offset="100%" stop-color="#2a5abf"/></linearGradient>
+        <radialGradient id="lgInner" cx="40%" cy="35%"><stop offset="0%" stop-color="#5b8def"/><stop offset="100%" stop-color="#1a3870"/></radialGradient>
+      </defs>
+    </svg>
+    <div class="logo-text">
+      <strong>Portfolio Investment</strong>
+      <span>Sistema de Cálculo Financiero</span>
+    </div>
   </div>
-  <div class="top-right"><span id="clock">--:--:--</span></div>
+  <div class="top-right">
+    <span class="top-badge">BYMA · MERVAL · MCE</span>
+    <span id="clock">--:--:--</span>
+  </div>
 </div>
 
 <div class="nav-bar">
-  <button class="nav-tab active">◎ Bonos CER</button>
+  <button class="nav-tab" id="nav-resumen" onclick="location.href='resumen.html'"><span class="tab-icon">◉</span> Resumen</button>
+  <div class="nav-dropdown open">
+    <button class="nav-dropdown-btn open">📊 Bonos <span class="dd-arrow">▼</span></button>
+    <div class="nav-dropdown-menu">
+      <a class="nav-dropdown-item" href="lecap.html"><span class="di-icon">◆</span> LECAP / BONCAP</a>
+      <a class="nav-dropdown-item active" href="cer.html"><span class="di-icon">◎</span> Bonos CER</a>
+    </div>
+  </div>
+  <div class="nav-spacer"></div>
+  <div class="nav-meta"><span class="nav-meta-txt">BYMA LIQ T+1</span></div>
 </div>
 
 <div id="page-cer" class="page active">
 <div class="lecap-page">
+
   <div class="lc-toolbar">
     <div>
-      <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue2)">BONOS CER — TIR REAL DE MERCADO</div>
-      <div id="cer-status-text" style="font-size:10px;color:var(--gray)">Calculando sobre Flujos Reales CSV...</div>
+      <div class="lc-title">BONOS CER — Ajuste por Inflación (TIR REAL Exacta)</div>
+      <div class="lc-sub">Cálculo de TIR Real iterando flujos sobre Precio Desinflactado · CER T-10</div>
     </div>
-    <div style="flex:1"></div>
-    <button class="lc-refresh-btn" onclick="cerFetch()">↻ ACTUALIZAR</button>
+    <div class="lc-filters">
+      <button class="lc-ftab on"  id="cer-f-all"   onclick="cerSetFilter('all')">TODOS</button>
+      <button class="lc-ftab"     id="cer-f-corto"  onclick="cerSetFilter('corto')">CORTO (≤2027)</button>
+      <button class="lc-ftab"     id="cer-f-largo"  onclick="cerSetFilter('largo')">LARGO (&gt;2027)</button>
+    </div>
+    <div class="lc-spacer"></div>
+    <span class="lc-status-pill loading" id="cer-pill">CARGANDO...</span>
+    <button class="lc-refresh-btn" id="cer-refresh-btn" onclick="cerFetch()">↻ ACTUALIZAR</button>
   </div>
 
   <div class="lc-table-wrap">
     <table class="lc-table" id="cer-table">
       <thead><tr>
-        <th onclick="cerSort('ticker')" data-col="ticker" style="text-align:left">TICKER</th>
-        <th onclick="cerSort('venc')"   data-col="venc">VENCIMIENTO</th>
-        <th onclick="cerSort('dias')"   data-col="dias">DÍAS</th>
-        <th onclick="cerSort('price')"  data-col="price">PRECIO DIRTY</th>
-        <th onclick="cerSort('macD')"   data-col="macD">DUR. MOD.</th>
-        <th onclick="cerSort('tirReal')"data-col="tirReal" style="color:var(--green)">TIR REAL %</th>
+        <th onclick="cerSort('ticker')" data-col="ticker">TICKER <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('name')"   data-col="name">DESCRIPCIÓN <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('venc')"   data-col="venc">VENCIMIENTO <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('dias')"   data-col="dias">DÍAS <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('price')"  data-col="price">PRECIO DIRTY <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('varPct')" data-col="varPct">VAR. (%) <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('macD')"   data-col="macD">DUR. MOD. <span class="sort-arrow"></span></th>
+        <th onclick="cerSort('tirReal')"data-col="tirReal" style="color:var(--green)">TIR REAL % <span class="sort-arrow"></span></th>
       </tr></thead>
-      <tbody id="cer-tbody"></tbody>
+      <tbody id="cer-tbody">
+        <tr class="lc-skel"><td colspan="8"><div class="lc-skel-bar" style="width:65%"></div></td></tr>
+        <tr class="lc-skel"><td colspan="8"><div class="lc-skel-bar" style="width:80%"></div></td></tr>
+        <tr class="lc-skel"><td colspan="8"><div class="lc-skel-bar" style="width:55%"></div></td></tr>
+      </tbody>
     </table>
   </div>
 
   <div class="lc-curves-panel">
-    <div style="position:relative;height:380px;width:100%;padding:16px">
+    <div class="lc-curve-controls">
+      <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green);letter-spacing:.06em">CURVA CER — TIR REAL vs DURACIÓN MODIFICADA</span>
+    </div>
+    <div style="position:relative;height:380px;width:100%;padding:16px 32px 16px">
       <canvas id="cer-curve-canvas"></canvas>
     </div>
   </div>
@@ -89,7 +311,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 
 <script>
 // ════════════════════════════════════════════════════════════════
-// 1. DATA DE FLUJOS (Mantenemos tu CSV original)
+// 1. DATA DE FLUJOS (Tu calendario exacto)
 // ════════════════════════════════════════════════════════════════
 const DATOS_CSV_FLUJOS = `
 X15Y6	Fecha	Por 1 VN
@@ -173,210 +395,351 @@ PARP	Fecha	Por 1 VN
 	31/12/2038	$ 252.285
 `;
 
-// Parseador de flujos
+// Parseador Automático: Extrae la forma y fechas de cada flujo
 const flujosParseados = {};
-let tickerAct = '';
+let tickerActual = '';
 DATOS_CSV_FLUJOS.split('\n').forEach(line => {
-    line = line.trim(); if (!line) return;
+    line = line.trim();
+    if (!line) return;
     if (line.includes('Por 1 VN')) {
-        tickerAct = line.split('\t')[0].trim().toUpperCase();
-        flujosParseados[tickerAct] = [];
-    } else if (tickerAct && line.includes('/')) {
+        tickerActual = line.split('\t')[0].trim().toUpperCase();
+        flujosParseados[tickerActual] = [];
+    } else if (tickerActual && line.includes('/')) {
         const parts = line.split('\t').filter(p => p.trim() !== '');
-        let fp = parts[0].trim().split('/');
-        let fechaStr = `${fp[2]}-${fp[1].padStart(2,'0')}-${fp[0].padStart(2,'0')}`;
-        let valStr = parts[1].replace('$', '').trim().replace(/\./g, '').replace(',', '.');
-        flujosParseados[tickerAct].push({ date: fechaStr, amount: parseFloat(valStr) });
+        if (parts.length >= 2) {
+            let fechaStr = parts[0].trim();
+            const fp = fechaStr.split('/');
+            if (fp.length === 3) fechaStr = `${fp[2]}-${fp[1].padStart(2,'0')}-${fp[0].padStart(2,'0')}`;
+            
+            let valStr = parts[1].replace('$', '').trim().replace(/\./g, '').replace(',', '.');
+            flujosParseados[tickerActual].push({ date: fechaStr, amount: parseFloat(valStr) });
+        }
     }
 });
 
-const CER_CONFIG = {
-  'X15Y6':  {tipo:'corto', venc:'2026-05-15', cerBase: 701.614},
-  'X29Y6':  {tipo:'corto', venc:'2026-05-29', cerBase: 651.8981},
-  'TZX26':  {tipo:'corto', venc:'2026-06-30', cerBase: 200.388},
-  'X31L6':  {tipo:'corto', venc:'2026-07-31', cerBase: 685.5506},
-  'X30S6':  {tipo:'corto', venc:'2026-09-30', cerBase: 714.9849},
-  'TZXO6':  {tipo:'corto', venc:'2026-10-30', cerBase: 480.1526},
-  'X30N6':  {tipo:'corto', venc:'2026-11-30', cerBase: 659.6789},
-  'TZXD6':  {tipo:'corto', venc:'2026-12-15', cerBase: 271.0476},
-  'TZXM7':  {tipo:'corto', venc:'2027-03-31', cerBase: 361.3176},
-  'TZXA7':  {tipo:'corto', venc:'2027-04-30', cerBase: 651.8981},
-  'TZXY7':  {tipo:'corto', venc:'2027-05-31', cerBase: 659.6789},
-  'TZX27':  {tipo:'corto', venc:'2027-06-30', cerBase: 200.388},
-  'TZXD7':  {tipo:'largo', venc:'2027-12-15', cerBase: 271.0476},
-  'TZX28':  {tipo:'largo', venc:'2028-06-30', cerBase: 200.388},
-  'TX26':   {tipo:'corto', venc:'2026-11-09', cerBase: 22.544},
-  'TX28':   {tipo:'largo', venc:'2028-11-09', cerBase: 22.544},
-  'TX31':   {tipo:'largo', venc:'2031-11-30', cerBase: 46.913},
-  'DICP':   {tipo:'largo', venc:'2033-12-31', cerBase: 1.4551},
-  'PARP':   {tipo:'largo', venc:'2038-12-31', cerBase: 1.4551}
-};
 
-let CER_HOY = 722.35;
-let cerData = [], cerSortCol = 'venc', cerSortDir = 'asc';
-let cerCurveChart = null;
-
-// ════════════════════════════════════════════════════════════════
-// MOTOR DE CÁLCULO CORE (TIR REAL)
-// ════════════════════════════════════════════════════════════════
-
-function resolverTirReal(precioDirty, ticker, flujos, liq) {
-    const cfg = CER_CONFIG[ticker];
-    if (!cfg || !flujos.length) return 0;
-
-    // A. Desinflactamos el precio: Precio Dirty / (CER Actual / CER Base)
-    const coeficiente = CER_HOY / cfg.cerBase;
-    const precioReal = precioDirty / coeficiente;
-
-    // B. Flujos futuros (t en años)
-    const futs = flujos.map(f => ({
-        t: (new Date(f.date + 'T00:00:00') - liq) / (1000 * 60 * 60 * 24 * 365),
-        cf: f.amount
-    })).filter(f => f.t > 0);
-
-    if (!futs.length) return 0;
-
-    // C. Iteración Newton-Raphson
-    // Ajustamos escala: Los precios son por cada VN 100. Los flujos CSV son por lámina (VN 1000).
-    // Para igualar: precioReal * (1000/100) = precioReal * 10
-    const objetivo = precioReal * 10; 
-
-    let r = 0.05;
-    for (let i = 0; i < 100; i++) {
-        let pv = 0, dpv = 0;
-        futs.forEach(f => {
-            let df = Math.pow(1 + r, f.t);
-            pv += f.cf / df;
-            dpv -= (f.t * f.cf) / (df * (1 + r));
-        });
-        let diff = pv - objetivo;
-        if (Math.abs(diff) < 0.00001) break;
-        r = r - (diff / dpv);
-        if (r < -0.9) r = -0.5; // Seguridad
-    }
-    return r;
-}
-
-function calcularMD(r, ticker, flujos, liq) {
-    const futs = flujos.map(f => ({
-        t: (new Date(f.date + 'T00:00:00') - liq) / (1000 * 60 * 60 * 24 * 365),
-        cf: f.amount
-    })).filter(f => f.t > 0);
-    
-    let num = 0, den = 0;
-    futs.forEach(f => {
-        let pv = f.cf / Math.pow(1 + r, f.t);
-        num += f.t * pv;
-        den += pv;
-    });
-    return den > 0 ? (num / den) / (1 + r) : 0;
-}
-
-// ════════════════════════════════════════════════════════════════
-// TOOLS Y FETCHING
-// ════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════
+//  GLOBAL Y HERRAMIENTAS
+// ════════════════════════════════════════
 function tick(){const n=new Date(),p=v=>String(v).padStart(2,'0');document.getElementById('clock').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;}
 tick();setInterval(tick,1000);
 
-async function cerFetch() {
-    const pill = document.getElementById('cer-pill');
-    pill.className = 'lc-status-pill loading'; pill.textContent = 'CARGANDO...';
-
-    const liq = new Date(); liq.setDate(liq.getDate() + 1); // T+1
-    liq.setHours(0,0,0,0);
-
-    try {
-        // 1. Obtener CER Hoy
-        const rCer = await fetch('https://criptoya.com/api/cer');
-        const dCer = await rCer.json();
-        if (dCer.value) CER_HOY = dCer.value;
-
-        // 2. Obtener Precios
-        const rPx = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://criptoya.com/api/bcra/bonos_cer'));
-        const dPx = await rPx.json();
-        const precios = JSON.parse(dPx.contents);
-
-        cerData = [];
-        Object.keys(CER_CONFIG).forEach(ticker => {
-            const dataMercado = precios.find(p => p.symbol === ticker);
-            const price = dataMercado ? dataMercado.last : 0;
-            if (price > 0) {
-                const flows = flujosParseados[ticker] || [];
-                const r = resolverTirReal(price, ticker, flows, liq);
-                const md = calcularMD(r, ticker, flows, liq);
-                const dias = Math.round((new Date(CER_CONFIG[ticker].venc) - liq) / 86400000);
-
-                cerData.push({
-                    ticker, 
-                    venc: CER_CONFIG[ticker].venc,
-                    dias, 
-                    price, 
-                    macD: md, 
-                    tirReal: r * 100,
-                    tipo: CER_CONFIG[ticker].tipo
-                });
-            }
-        });
-
-        pill.className = 'lc-status-pill ok'; pill.textContent = 'LIVE ●';
-        document.getElementById('cer-last-upd').textContent = '✓ ' + new Date().toLocaleTimeString();
-        cerRender(); cerRenderCurve();
-    } catch(e) {
-        pill.className = 'lc-status-pill err'; pill.textContent = 'ERROR';
+function getBusinessDaysAdd(date, days) {
+    let result = new Date(date);
+    let added = 0;
+    while (added < days) {
+        result.setDate(result.getDate() + 1);
+        if (result.getDay() !== 0 && result.getDay() !== 6) { added++; }
     }
+    return result;
 }
 
-function cerRender() {
-    const tbody = document.getElementById('cer-tbody');
-    let rows = [...cerData];
-    rows.sort((a,b) => (a[cerSortCol] > b[cerSortCol] ? 1 : -1) * (cerSortDir === 'asc' ? 1 : -1));
+async function pfetch(url){
+  try{const r=await fetch(url);if(r.ok)return r.json();}catch(e){}
+  try{
+    const r2=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url));
+    if(!r2.ok)throw new Error('proxy HTTP '+r2.status);
+    const d=await r2.json();return JSON.parse(d.contents);
+  }catch(e){}
+  try{
+    const r3=await fetch('https://corsproxy.io/?'+encodeURIComponent(url));
+    if(r3.ok)return r3.json();
+  }catch(e){}
+  throw new Error('unreachable: '+url);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  BONOS CER — MATRIZ DE CONFIGURACIÓN BÁSICA
+// ═══════════════════════════════════════════════════════════════
+Chart.register(ChartDataLabels);
+
+const CER_CONFIG = {
+  'X15Y6':  {name:'TZXY May-26A', tipo:'corto', venc:'2026-05-15', cerBase: 701.614},
+  'X29Y6':  {name:'TZXY May-26B', tipo:'corto', venc:'2026-05-29', cerBase: 651.8981},
+  'TZX26':  {name:'TZXY Jun-26',  tipo:'corto', venc:'2026-06-30', cerBase: 200.388},
+  'X31L6':  {name:'TZXY Jul-26',  tipo:'corto', venc:'2026-07-31', cerBase: 685.5506},
+  'X30S6':  {name:'TZXY Sep-26',  tipo:'corto', venc:'2026-09-30', cerBase: 714.9849},
+  'TZXO6':  {name:'TZXY Oct-26',  tipo:'corto', venc:'2026-10-30', cerBase: 480.1526},
+  'X30N6':  {name:'TZXY Nov-26',  tipo:'corto', venc:'2026-11-30', cerBase: 659.6789},
+  'TZXD6':  {name:'TZXY Dic-26',  tipo:'corto', venc:'2026-12-15', cerBase: 271.0476},
+  'TZXM7':  {name:'TZXY Mar-27',  tipo:'corto', venc:'2027-03-31', cerBase: 361.3176},
+  'TZXA7':  {name:'TZXY Abr-27',  tipo:'corto', venc:'2027-04-30', cerBase: 651.8981},
+  'TZXY7':  {name:'TZXY May-27',  tipo:'corto', venc:'2027-05-31', cerBase: 659.6789},
+  'TZX27':  {name:'TZXY Jun-27',  tipo:'corto', venc:'2027-06-30', cerBase: 200.388},
+  'TZXD7':  {name:'TZXY Dic-27',  tipo:'largo', venc:'2027-12-15', cerBase: 271.0476},
+  'TZX28':  {name:'TZXY Jun-28',  tipo:'largo', venc:'2028-06-30', cerBase: 200.388},
+  'TX26':   {name:'Boncer Nov-26', tipo:'corto', venc:'2026-11-09', cerBase: 22.544},
+  'TX28':   {name:'Boncer Nov-28', tipo:'largo', venc:'2028-11-09', cerBase: 22.544},
+  'TX31':   {name:'Boncer Nov-31', tipo:'largo', venc:'2031-11-30', cerBase: 46.913},
+  'DICP':   {name:'Discount Pesos', tipo:'largo', venc:'2033-12-31', cerBase: 1.4551},
+  'PARP':   {name:'Par Pesos', tipo:'largo', venc:'2038-12-31', cerBase: 1.4551}
+};
+
+const CER_FALLBACK = {
+  'X15Y6':104.47,'X29Y6':112.94,'TZX26':368.40,'X31L6':108.10,'X30S6':102.65,
+  'TZXO6':151.70,'X30N6':110.20,'TZXD6':267.25,'TZXM7':196.25,'TZXA7':110.50,
+  'TZXY7':113.10,'TZX27':348.50,'TZXD7':246.20,'TZX28':308.40,
+  'TX26':1314.00,'TX28':1915.00,'TX31':1359.00,'DICP':48570.00,'PARP':32690.00,
+};
+
+let CER_HOY = 722.35; 
+let cerData = [], cerFilter = 'all', cerSortCol = 'venc', cerSortDir = 'asc';
+let cerCurveChart = null;
+
+// ════════════════════════════════════════════════════════════════
+// LÓGICA DE FETCH CER: TU API -> BCRA T-10 -> CRIPTOYA
+// ════════════════════════════════════════════════════════════════
+async function cerFetchCER() {
+  function set(val, src) { 
+    if (val > 0) { 
+      CER_HOY = val; 
+      document.getElementById('cer-source-info').innerHTML = `Precios: data912.com · CER: ${val.toFixed(2)} (${src}) · Liq T+1`;
+      if (cerData.length) { cerRender(); cerRenderCurve(); } 
+    } 
+  }
+
+  try {
+    const r = await fetch('/api/cer');
+    if (r.ok) {
+      const d = await r.json();
+      if (d?.cer) { set(parseFloat(d.cer), 'Tu API T-10'); return; }
+    }
+  } catch(e) {}
+
+  try {
+    const bcraUrl = 'https://api.bcra.gob.ar/estadisticas/v4.0/Monetarias/30';
+    const data = await pfetch(bcraUrl); 
     
-    tbody.innerHTML = rows.map(b => `
-        <tr>
-            <td style="text-align:left"><span class="lc-ticker">${b.ticker}</span></td>
-            <td>${b.venc}</td>
-            <td>${b.dias}d</td>
-            <td class="lc-price">${b.price.toLocaleString('es-AR',{minimumFractionDigits:2})}</td>
-            <td style="color:var(--cyan)">${b.macD.toFixed(2)}</td>
-            <td style="color:var(--green); font-weight:800; font-size:13px">${b.tirReal.toFixed(2)}%</td>
-        </tr>
-    `).join('');
+    let detalle = data?.results?.[0]?.detalle || data?.detalle;
+    if (detalle && detalle.length > 0) {
+      const hoy = new Date();
+      const t1 = getBusinessDaysAdd(hoy, 1);
+      const fc = new Date(t1);
+      fc.setDate(fc.getDate() - 14); // T-10 aproximado
+      const fcStr = fc.toISOString().split('T')[0];
+      
+      let cerT10 = null;
+      for (let i = 0; i < detalle.length; i++) {
+        if (detalle[i].fecha <= fcStr) { cerT10 = detalle[i]; break; }
+      }
+      if (!cerT10) cerT10 = detalle[detalle.length - 1]; 
+      if (cerT10 && cerT10.valor) { set(parseFloat(cerT10.valor), 'BCRA T-10'); return; }
+    }
+  } catch(e) { console.warn('Error calculando BCRA T-10 directo:', e); }
+
+  try { 
+    const r = await fetch('https://criptoya.com/api/cer'); 
+    if (r.ok) { 
+      const d = await r.json(); 
+      if (d?.value) { set(parseFloat(d.value), 'CriptoYa Fallback'); return; } 
+    } 
+  } catch(e) {}
 }
 
-function cerRenderCurve() {
-    const ctx = document.getElementById('cer-curve-canvas').getContext('2d');
-    if (cerCurveChart) cerCurveChart.destroy();
-    cerCurveChart = new Chart(ctx, {
-        type: 'scatter',
-        data: {
-            datasets: [{
-                label: 'Bonos CER',
-                data: cerData.map(b => ({x: b.macD, y: b.tirReal, label: b.ticker})),
-                backgroundColor: cerData.map(b => b.tipo === 'corto' ? '#3a6fd8' : '#f0b429'),
-                pointRadius: 6
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { 
-                legend: { display: false },
-                datalabels: { display: true, align: 'top', color: '#fff', font: { size: 9 }, formatter: v => v.label }
-            },
-            scales: {
-                x: { title: { display: true, text: 'Duration Modificada', color: '#7a99c4' } },
-                y: { title: { display: true, text: 'TIR Real %', color: '#7a99c4' } }
-            }
-        }
+// ════════════════════════════════════════════════════════════════
+// MOTOR TIR REAL (Iterando flujos reales sobre Precio Desinflactado)
+// ════════════════════════════════════════════════════════════════
+
+function cerCalcularPrecioReal(ticker, pricePesos) {
+  const cfg = CER_CONFIG[ticker];
+  if (!cfg) return 0;
+  
+  // Precio Real (Se le saca el efecto CER al precio de pizarra para igualarlo a los flujos Base 100)
+  const ajusteCER = CER_HOY / cfg.cerBase;
+  return pricePesos / ajusteCER;
+}
+
+function cerSolveReal(precioReal, ticker, fechaLiquidacion) {
+  if (precioReal <= 0 || !flujosParseados[ticker]) return 0;
+
+  // Calculamos el tiempo t en años exactos desde Liquidación T+1 hasta cada Flujo
+  // Los montos del CSV se normalizan para el cálculo de TIR Real 
+  const flows = flujosParseados[ticker].filter(f => new Date(f.date+'T00:00:00') > fechaLiquidacion);
+  if (!flows.length) return 0;
+
+  const totalAmount = flows.reduce((s, f) => s + f.amount, 0);
+  const futs = flows.map(f => ({
+    t: (new Date(f.date+'T00:00:00') - fechaLiquidacion) / (1000 * 60 * 60 * 24 * 365),
+    cf: (f.amount / totalAmount) * 100 // Llevamos a base 100 para comparar con el precio real desinflactado
+  }));
+
+  // Método de Newton-Raphson para resolver la TIR Real
+  let r = 0.05; 
+  for (let i = 0; i < 300; i++) {
+    let pv = 0;
+    let dpv = 0;
+    for (const f of futs) {
+      const df = Math.pow(1 + r, f.t);
+      pv += f.cf / df;
+      dpv -= (f.t * f.cf) / (df * (1 + r));
+    }
+    const diff = pv - precioReal; 
+    if (Math.abs(diff) < 1e-12) break;
+    const step = diff / dpv;
+    r -= step;
+    if (r < -0.99) r = -0.5; if (r > 10) r = 2; // Límites de seguridad
+    if (Math.abs(step) < 1e-12) break;
+  }
+  return r; // Retorna TIR en formato decimal (ej: 0.05 = 5%)
+}
+
+function cerMacDuration(teaDecimal, ticker, fechaLiquidacion) {
+  if (!flujosParseados[ticker]) return 0;
+  const flows = flujosParseados[ticker].filter(f => new Date(f.date+'T00:00:00') > fechaLiquidacion);
+  if (!flows.length) return 0;
+
+  const totalAmount = flows.reduce((s, f) => s + f.amount, 0);
+  const futs = flows.map(f => ({
+    t: (new Date(f.date+'T00:00:00') - fechaLiquidacion) / (1000 * 60 * 60 * 24 * 365),
+    cf: (f.amount / totalAmount) * 100
+  }));
+  
+  let sPV = 0, sTPV = 0;
+  for (const f of futs) {
+    const pv = f.cf / Math.pow(1 + teaDecimal, f.t);
+    sPV += pv; sTPV += f.t * pv;
+  }
+  return sPV > 0 ? sTPV / sPV : 0;
+}
+
+async function cerFetch() {
+  const btn = document.getElementById('cer-refresh-btn');
+  const pill = document.getElementById('cer-pill');
+  btn.classList.add('loading'); btn.textContent = '↻ CARGANDO...';
+  pill.className = 'lc-status-pill loading'; pill.textContent = 'CARGANDO...';
+
+  const hoy = new Date();
+  hoy.setHours(0,0,0,0);
+  const fechaLiquidacion = getBusinessDaysAdd(hoy, 1); // T+1
+
+  let apiPrices = {}, src = '';
+  try {
+    const [rawBonds, rawNotes] = await Promise.all([
+      pfetch('https://data912.com/live/arg_bonds').catch(()=>null),
+      pfetch('https://data912.com/live/arg_notes').catch(()=>null),
+    ]);
+    const arr = [...((rawBonds?.data||rawBonds)||[]), ...((rawNotes?.data||rawNotes)||[])];
+    if (arr.length > 0) {
+      arr.forEach(b => {
+        const tk = (b.ticker||b.symbol||b.t||'').replace(/\s+/g,'').toUpperCase();
+        const price = parseFloat(b.c||b.ultimo||b.last||b.price||0);
+        const varPct = parseFloat(b.pct_change||b.variacion_pct||b.var||0);
+        if (tk && price > 0) apiPrices[tk] = { price, varPct };
+      });
+      src = 'data912.com';
+    }
+  } catch(e) {}
+
+  if (!Object.keys(apiPrices).length) {
+    Object.entries(CER_FALLBACK).forEach(([tk,px]) => { apiPrices[tk] = {price:px,varPct:0}; });
+    src = 'referencia estática';
+    pill.textContent = '⚠ OFFLINE (ref.)';
+  }
+
+  cerData = [];
+  for (const ticker of Object.keys(CER_CONFIG)) {
+    let found = apiPrices[ticker] || apiPrices[ticker+'C'] || apiPrices[ticker+'D'];
+    if (!found && CER_FALLBACK[ticker]) found = { price: CER_FALLBACK[ticker], varPct: 0 };
+    if (!found) continue;
+
+    const precioReal = cerCalcularPrecioReal(ticker, found.price);
+    const teaDecimal = cerSolveReal(precioReal, ticker, fechaLiquidacion);
+    const tirReal = teaDecimal * 100;
+    const macD = cerMacDuration(teaDecimal, ticker, fechaLiquidacion);
+
+    const dias = Math.max(1, Math.round((new Date(CER_CONFIG[ticker].venc+'T00:00:00')-fechaLiquidacion)/86400000));
+
+    cerData.push({
+      ticker, ...CER_CONFIG[ticker], price: found.price, varPct: found.varPct,
+      tirReal, macD, dias
     });
+  }
+
+  if (cerData.length > 0 && src !== 'referencia estática') {
+    pill.className = 'lc-status-pill ok'; pill.textContent = 'LIVE ●';
+  }
+  document.getElementById('cer-last-upd').textContent = '✓ '+new Date().toLocaleTimeString('es-AR')+' · '+src;
+  btn.classList.remove('loading'); btn.textContent = '↻ ACTUALIZAR';
+  cerRender(); cerRenderCurve();
+  setTimeout(cerFetch, 30000);
+}
+
+function cerSetFilter(f) {
+  cerFilter = f;
+  document.querySelectorAll('.lc-ftab').forEach(b => b.className = 'lc-ftab');
+  const cls = f==='corto'?'on-green':f==='largo'?'on-amber':'on';
+  document.getElementById('cer-f-'+f).className = 'lc-ftab '+cls;
+  cerRender(); cerRenderCurve();
 }
 
 function cerSort(col) {
-    if (cerSortCol === col) cerSortDir = cerSortDir === 'asc' ? 'desc' : 'asc';
-    else { cerSortCol = col; cerSortDir = 'asc'; }
-    cerRender();
+  if (cerSortCol===col) cerSortDir=cerSortDir==='asc'?'desc':'asc';
+  else { cerSortCol=col; cerSortDir='asc'; }
+  document.querySelectorAll('#cer-table thead th').forEach(th=>{
+    th.classList.remove('sort-asc','sort-desc');
+    if(th.dataset.col===col)th.classList.add('sort-'+cerSortDir);
+  });
+  cerRender();
 }
 
+function cerRender() {
+  const tbody = document.getElementById('cer-tbody');
+  let rows = cerData.filter(b => cerFilter==='all'||b.tipo===cerFilter);
+  rows.sort((a,b)=>{
+    let va=a[cerSortCol],vb=b[cerSortCol];
+    if(typeof va==='string')return cerSortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
+    return cerSortDir==='asc'?va-vb:vb-va;
+  });
+  if (!rows.length) { tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray)">Sin datos</td></tr>'; return; }
+  
+  const fmtV = v => v>=0?`<span style="color:var(--green)">+${v.toFixed(2)}%</span>`:`<span style="color:var(--red)">${v.toFixed(2)}%</span>`;
+  const fmtD = d => new Date(d+'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'});
+  const tirColor = v => v > 4 ? 'color:var(--green);font-weight:700' : v > 0 ? 'color:var(--amber);font-weight:700' : 'color:var(--red);font-weight:700';
+  
+  tbody.innerHTML = rows.map(b=>`<tr>
+    <td><div class="lc-ticker-wrap">
+      <span class="lc-ticker">${b.ticker}</span>
+    </div></td>
+    <td style="color:var(--white2);font-size:11px">${b.name}</td>
+    <td style="color:var(--blue3)">${fmtD(b.venc)}</td>
+    <td style="color:var(--gray);font-family:var(--mono)">${b.dias}d</td>
+    <td class="lc-price">${b.price.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+    <td>${fmtV(b.varPct)}</td>
+    <td style="color:var(--cyan);font-family:var(--mono)">${b.macD.toFixed(2)}</td>
+    <td style="${tirColor(b.tirReal)};font-size:13px;font-family:var(--mono)">${b.tirReal.toFixed(2)}%</td>
+  </tr>`).join('');
+}
+
+function cerRenderCurve() {
+  const canvas = document.getElementById('cer-curve-canvas'); if (!canvas) return;
+  let pts = cerData.filter(b=>cerFilter==='all'||b.tipo===cerFilter).map(b=>({x:b.macD, y:b.tirReal, ticker:b.ticker, tipo:b.tipo}));
+  if (!pts.length) return;
+  pts.sort((a,b)=>a.x-b.x);
+
+  const fills  = pts.map(b=>b.tipo==='corto'?'rgba(91,141,239,.9)':'rgba(240,180,41,.9)');
+  const borders = pts.map(b=>b.tipo==='corto'?'#2a5abf':'#8a6820');
+  
+  if(cerCurveChart){cerCurveChart.destroy();cerCurveChart=null;}
+  cerCurveChart=new Chart(canvas.getContext('2d'),{type:'scatter',data:{datasets:[
+    {type:'scatter',label:'CER',data:pts.map(b=>({x:b.x,y:b.y})),backgroundColor:fills,borderColor:borders,borderWidth:1.5,pointRadius:7,
+      datalabels:{display:true,align:'top',color:'#c8d8f0',font:{family:'monospace',size:9},formatter:(v,c)=>pts[c.dataIndex].ticker}}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+}
+
+cerFetchCER();
 cerFetch();
+
+document.querySelectorAll('.nav-dropdown-btn').forEach(btn=>{
+  btn.addEventListener('click',function(e){
+    e.stopPropagation();
+    const dd=this.closest('.nav-dropdown');
+    const isOpen=dd.classList.contains('open');
+    document.querySelectorAll('.nav-dropdown').forEach(d=>d.classList.remove('open'));
+    document.querySelectorAll('.nav-dropdown-btn').forEach(b=>b.classList.remove('open'));
+    if(!isOpen){dd.classList.add('open');this.classList.add('open');}
+  });
+});
+document.addEventListener('click',()=>document.querySelectorAll('.nav-dropdown').forEach(d=>d.classList.remove('open')));
 </script>
 </body>
 </html>
