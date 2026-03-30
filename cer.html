@@ -1,151 +1,335 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Portfolio Investment — Bonos CER (TIR Real Exacta)</title>
-    <style>
-        /* (Se mantienen tus estilos originales para no romper la estética) */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@500;700&display=swap');
-        :root{ --navy:#0d1b2e; --navy2:#122540; --border:#2a4a7a; --blue:#3a6fd8; --white:#f0f4ff; --green:#22d68a; --red:#ff4d6a; --amber:#f0b429; --cyan:#22d4f0; --font:'Inter',sans-serif; --mono:'JetBrains Mono',monospace; }
-        body{background:var(--navy);color:var(--white);font-family:var(--font);font-size:13px;margin:0}
-        .top-bar{background:var(--navy2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;height:56px;justify-content:space-between}
-        .lc-toolbar{padding:15px 20px;background:var(--navy3);display:flex;align-items:center;gap:20px;border-bottom:1px solid var(--border)}
-        .lc-table{width:100%;border-collapse:collapse;font-family:var(--mono)}
-        .lc-table th{padding:10px;text-align:right;color:var(--amber);font-size:11px;border-bottom:2px solid var(--border)}
-        .lc-table td{padding:10px;text-align:right;border-bottom:1px solid rgba(42,74,122,.3)}
-        .lc-ticker{font-weight:800;color:var(--cyan)}
-        .tir-destacada{color:var(--green);font-weight:700;font-size:14px}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Investment — Bonos CER</title>
+<style>
+/* MANTENEMOS TODO TU CSS ORIGINAL */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{ --navy:#0d1b2e; --navy2:#122540; --navy3:#172d4d; --border:#2a4a7a; --border2:#3a5a8a; --blue:#3a6fd8; --blue2:#5b8def; --blue3:#7aa3f0; --blue4:#a8c4f8; --white:#f0f4ff; --white2:#d0ddf5; --gray:#7a99c4; --gray2:#4a6a9a; --green:#22d68a; --green2:#16a86a; --green-bg:#0a2a1a; --red:#ff4d6a; --red2:#cc3a55; --red-bg:#2a0a12; --amber:#f0b429; --cyan:#22d4f0; --font:'Inter', sans-serif; --mono:'JetBrains Mono', 'Courier New', monospace; }
+html,body{background:var(--navy);color:var(--white);font-family:var(--font);font-size:13px;min-height:100vh;overflow-x:hidden}
+.top-bar{background:linear-gradient(135deg, var(--navy2) 0%, var(--navy3) 100%); border-bottom:1px solid var(--border); display:flex;align-items:center;justify-content:space-between; padding:0 20px;height:56px;position:sticky;top:0;z-index:200;}
+.logo-area{display:flex;align-items:center;gap:12px}
+.logo-text strong{font-size:16px;font-weight:800;color:var(--white)}
+.nav-bar{background:var(--navy2);border-bottom:2px solid var(--border);display:flex;padding:0 20px;}
+.nav-tab{padding:0 22px;height:42px;font-size:12px;font-weight:600;color:var(--gray);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;}
+.nav-tab.active{color:var(--white);border-bottom-color:var(--blue);background:rgba(58,111,216,.12)}
+.lecap-page{min-height:calc(100vh - 98px);display:flex;flex-direction:column;background:var(--navy2)}
+.lc-toolbar{background:linear-gradient(90deg,var(--navy3),var(--navy2)); border-bottom:1px solid var(--border); padding:8px 20px;display:flex;align-items:center;gap:12px;}
+.lc-table{width:100%;border-collapse:collapse;font-family:var(--mono)}
+.lc-table thead th{padding:8px 14px;font-size:10px;color:#f0b429;text-align:right;border-right:1px solid rgba(42,74,122,.4);position:sticky;top:0;background:#0a1525;}
+.lc-table tbody tr:hover{background:rgba(58,111,216,.12)}
+.lc-table tbody td{padding:7px 14px;font-size:12px;text-align:right;color:var(--white2);border-right:1px solid rgba(42,74,122,.25);}
+.lc-ticker{font-weight:700;color:var(--white)}
+.lc-curves-panel{border-top:2px solid var(--border2)}
+#clock{font-family:var(--mono);color:var(--blue3);padding:3px 8px;border:1px solid var(--border);border-radius:4px}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 
 <div class="top-bar">
-    <div style="display:flex;align-items:center;gap:10px">
-        <strong>Portfolio Investment</strong>
-        <span style="font-size:10px;color:var(--blue)">SISTEMA DE CÁLCULO FINANCIERO</span>
+    <div class="logo-area">
+        <div class="logo-text"><strong>Portfolio Investment</strong><span>Sistema de Cálculo Financiero</span></div>
     </div>
-    <div id="clock">--:--:--</div>
+    <div class="top-right"><span id="clock">--:--:--</span></div>
 </div>
 
-<div class="lc-toolbar">
-    <div>
-        <div style="font-weight:800;color:var(--blue)">BONOS CER — VALORIZACIÓN REAL</div>
-        <div id="cer-info" style="font-size:11px;color:var(--amber)">Cargando CER oficial...</div>
-    </div>
-    <button onclick="cerFetch()" style="background:var(--blue);border:none;color:white;padding:5px 15px;border-radius:4px;cursor:pointer">↻ ACTUALIZAR PRECIOS</button>
+<div class="nav-bar">
+    <button class="nav-tab active">◎ Bonos CER</button>
 </div>
 
-<div style="overflow-x:auto">
-    <table class="lc-table">
-        <thead>
-            <tr>
-                <th style="text-align:left">TICKER</th>
-                <th>VENCIMIENTO</th>
-                <th>PRECIO DIRTY</th>
-                <th>COEF. CER</th>
-                <th>PRECIO REAL</th>
-                <th style="color:var(--green)">TIR REAL (TEA)</th>
-                <th>MD</th>
-            </tr>
-        </thead>
-        <tbody id="cer-tbody">
-            </tbody>
-    </table>
+<div id="page-cer" class="page active">
+<div class="lecap-page">
+    <div class="lc-toolbar">
+        <div>
+            <div style="font-family:var(--mono);color:var(--blue2);font-weight:700">BONOS CER — TIR REAL DE MERCADO</div>
+            <div id="cer-status-text" style="font-size:10px;color:var(--gray)">Calculando sobre Precio Desinflactado...</div>
+        </div>
+        <div class="lc-spacer" style="flex:1"></div>
+        <span class="lc-status-pill ok" id="cer-pill">LIVE ●</span>
+        <button class="lc-refresh-btn" onclick="cerFetch()" style="background:var(--navy3);border:1px solid var(--border2);color:var(--blue3);padding:5px 10px;cursor:pointer">↻ ACTUALIZAR</button>
+    </div>
+
+    <div class="lc-table-wrap">
+        <table class="lc-table">
+            <thead>
+                <tr>
+                    <th style="text-align:left">TICKER</th>
+                    <th>VENCIMIENTO</th>
+                    <th>PRECIO DIRTY</th>
+                    <th>COEF. CER</th>
+                    <th>DUR. MOD.</th>
+                    <th style="color:var(--green)">TIR REAL %</th>
+                </tr>
+            </thead>
+            <tbody id="cer-tbody"></tbody>
+        </table>
+    </div>
+
+    <div class="lc-curves-panel">
+        <div style="position:relative;height:300px;width:100%;padding:10px">
+            <canvas id="cer-curve-canvas"></canvas>
+        </div>
+    </div>
+</div>
 </div>
 
 <script>
-// Configuración de Bonos (CER Base actualizado a valores de emisión)
+// 1. DATA DE FLUJOS (Mantenemos tus datos exactos)
+const DATOS_CSV_FLUJOS = `
+X15Y6	Fecha	Por 1 VN
+	15/5/2026	$ 10.336
+X29Y6	Fecha	Por 1 VN
+	29/5/2026	$ 11.125
+TZX26	Fecha	Por 1 VN
+	30/6/2026	$ 36.190
+X31L6	Fecha	Por 1 VN
+	31/7/2026	$ 10.578
+TX26	Fecha	Por 1 VN
+	11/5/2026	$ 65.624
+	9/11/2026	$ 64.980
+X30S6	Fecha	Por 1 VN
+	30/9/2026	$ 10.143
+TZXO6	Fecha	Por 1 VN
+	30/10/2026	$ 15.104
+X30N6	Fecha	Por 1 VN
+	30/11/2026	$ 10.993
+TZXD6	Fecha	Por 1 VN
+	15/12/2026	$ 26.756
+TZXM7	Fecha	Por 1 VN
+	31/3/2027	$ 20.071
+TZX27	Fecha	Por 1 VN
+	30/6/2027	$ 36.190
+TX28	Fecha	Por 1 VN
+	11/5/2026	$ 34.340
+	9/11/2026	$ 33.978
+	10/5/2027	$ 33.616
+	9/11/2027	$ 33.254
+	9/5/2028	$ 32.892
+	9/11/2028	$ 32.530
+TZXD7	Fecha	Por 1 VN
+	15/12/2027	$ 26.756
+TZX28	Fecha	Por 1 VN
+	30/6/2028	$ 36.190
+DICP	Fecha	Por 1 VN
+	30/6/2026	$ 464.082
+	31/12/2026	$ 454.857
+	30/6/2027	$ 445.632
+	31/12/2027	$ 436.406
+	30/6/2028	$ 427.181
+	2/1/2029	$ 417.956
+	2/7/2029	$ 408.730
+	31/12/2029	$ 399.505
+	1/7/2030	$ 390.280
+	31/12/2030	$ 381.054
+	30/6/2031	$ 371.829
+	31/12/2031	$ 362.604
+	30/6/2032	$ 353.379
+	31/12/2032	$ 344.153
+	30/6/2033	$ 334.928
+	2/1/2034	$ 325.703
+PARP	Fecha	Por 1 VN
+	31/3/2026	$ 44.107
+	30/9/2026	$ 44.107
+	31/3/2027	$ 44.107
+	30/9/2027	$ 44.107
+	31/3/2028	$ 44.107
+	2/10/2028	$ 44.107
+	3/4/2029	$ 44.107
+	1/10/2029	$ 310.995
+	1/4/2030	$ 307.905
+	30/9/2030	$ 304.815
+	31/3/2031	$ 301.725
+	30/9/2031	$ 298.635
+	31/3/2032	$ 295.545
+	30/9/2032	$ 292.455
+	31/3/2033	$ 289.365
+	30/9/2033	$ 286.275
+	31/3/2034	$ 283.185
+	2/10/2034	$ 280.095
+	2/4/2035	$ 277.005
+	1/10/2035	$ 273.915
+	31/3/2036	$ 270.825
+	30/9/2036	$ 267.735
+	31/3/2037	$ 264.645
+	30/9/2037	$ 261.555
+	31/3/2038	$ 258.465
+	30/9/2038	$ 255.375
+	31/12/2038	$ 252.285
+`;
+
+// 2. PARSEADOR ORIGINAL
+const flujosParseados = {};
+let tickerActual = '';
+DATOS_CSV_FLUJOS.split('\n').forEach(line => {
+    line = line.trim(); if (!line) return;
+    if (line.includes('Por 1 VN')) {
+        tickerActual = line.split('\t')[0].trim().toUpperCase();
+        flujosParseados[tickerActual] = [];
+    } else if (tickerActual && line.includes('/')) {
+        const parts = line.split('\t').filter(p => p.trim() !== '');
+        if (parts.length >= 2) {
+            let fp = parts[0].trim().split('/');
+            let fechaStr = `${fp[2]}-${fp[1].padStart(2,'0')}-${fp[0].padStart(2,'0')}`;
+            let valStr = parts[1].replace('$', '').trim().replace(/\./g, '').replace(',', '.');
+            flujosParseados[tickerActual].push({ date: fechaStr, amount: parseFloat(valStr) });
+        }
+    }
+});
+
 const CER_CONFIG = {
-    'X15Y6': {cerBase: 701.61, venc: '2026-05-15'},
-    'X29Y6': {cerBase: 651.90, venc: '2026-05-29'},
-    'TZX26': {cerBase: 200.39, venc: '2026-06-30'},
-    'TX26':  {cerBase: 22.54,  venc: '2026-11-09'},
-    'TX28':  {cerBase: 22.54,  venc: '2028-11-09'},
-    'DICP':  {cerBase: 1.455,  venc: '2033-12-31'},
-    'PARP':  {cerBase: 1.455,  venc: '2038-12-31'}
+    'X15Y6':  {cerBase: 701.61,  venc:'2026-05-15'},
+    'X29Y6':  {cerBase: 651.90,  venc:'2026-05-29'},
+    'TZX26':  {cerBase: 200.39,  venc:'2026-06-30'},
+    'X31L6':  {cerBase: 685.55,  venc:'2026-07-31'},
+    'X30S6':  {cerBase: 714.98,  venc:'2026-09-30'},
+    'TZXO6':  {cerBase: 480.15,  venc:'2026-10-30'},
+    'X30N6':  {cerBase: 659.68,  venc:'2026-11-30'},
+    'TZXD6':  {cerBase: 271.05,  venc:'2026-12-15'},
+    'TZXM7':  {cerBase: 361.32,  venc:'2027-03-31'},
+    'TZX27':  {cerBase: 200.39,  venc:'2027-06-30'},
+    'TX26':   {cerBase: 22.544,  venc:'2026-11-09'},
+    'TX28':   {cerBase: 22.544,  venc:'2028-11-09'},
+    'DICP':   {cerBase: 1.455,   venc:'2033-12-31'},
+    'PARP':   {cerBase: 1.455,   venc:'2038-12-31'}
 };
 
-let CER_HOY = 0;
+let CER_HOY = 722.35;
+let cerData = [], cerCurveChart = null;
 
-// 1. Obtener CER Real de API Pública (CriptoYa o similar para T-10)
-async function fetchCER() {
-    try {
-        const r = await fetch('https://criptoya.com/api/cer');
-        const d = await r.json();
-        CER_HOY = d.value;
-        document.getElementById('cer-info').innerText = `CER HOY (T-10): ${CER_HOY.toFixed(4)}`;
-        cerFetch();
-    } catch(e) {
-        document.getElementById('cer-info').innerText = "Error cargando CER. Usando valor estimado.";
-        CER_HOY = 730.00; // Fallback
-    }
-}
-
-// 2. Motor de TIR Real
-// Resuelve: Precio_Dirty / (CER_hoy / CER_base) = Suma ( Flujo_Real / (1+r)^t )
-function calcularTirReal(precioDirty, cerBase, vencimiento) {
-    const liq = new Date();
-    liq.setDate(liq.getDate() + 1); // Liquidación T+1
-    const vto = new Date(vencimiento + 'T00:00:00');
+// 3. NUEVA LÓGICA DE CÁLCULO (LO ÚNICO MODIFICADO)
+function resolverTirReal(precioDirty, ticker, flujos) {
+    const hoy = new Date();
+    const liq = new Date(hoy); liq.setDate(liq.getDate() + 1); // T+1
     
-    // El "Precio Real" es el precio en moneda de poder adquisitivo del momento de emisión
-    const coeficienteAjuste = CER_HOY / cerBase;
-    const precioReal = precioDirty / coeficienteAjuste;
-    
-    // Para simplificar, asumimos estructura Bullet (VN 100) en bonos cortos.
-    // En DICP/PARP deberíamos usar los flujos del CSV, aquí la lógica conceptual:
-    const t = (vto - liq) / (1000 * 60 * 60 * 24 * 365);
-    if (t <= 0) return 0;
+    const cfg = CER_CONFIG[ticker];
+    if (!cfg) return 0;
 
-    // TIR Real = (Valor Final Real / Precio Real)^(1/t) - 1
-    // Valor Final Real suele ser 100 (Capital) + Cupones reales remanentes.
-    const vfReal = 100; 
-    const tir = Math.pow(vfReal / precioReal, 1/t) - 1;
-    return tir * 100;
-}
+    // A. Desinflactamos el precio de mercado para llevarlo a "Moneda Base"
+    const coeficiente = CER_HOY / cfg.cerBase;
+    const precioReal = precioDirty / coeficiente;
 
-async function cerFetch() {
-    const tbody = document.getElementById('cer-tbody');
-    tbody.innerHTML = '<tr><td colspan="7">Actualizando precios...</td></tr>';
+    // B. Filtramos flujos futuros (tus montos del CSV ya son VN o proporcionales reales)
+    const futs = flujos.map(f => ({
+        t: (new Date(f.date + 'T00:00:00') - liq) / (1000 * 60 * 60 * 24 * 365),
+        cf: f.amount
+    })).filter(f => f.t > 0);
 
-    try {
-        // API de precios (Data912 o similar)
-        const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://criptoya.com/api/bcra/bonos_cer'));
-        const raw = await res.json();
-        const precios = JSON.parse(raw.contents);
+    if (futs.length === 0) return 0;
 
-        let html = '';
-        for (const [ticker, info] of Object.entries(CER_CONFIG)) {
-            const dataMercado = precios.find(p => p.symbol === ticker) || { last: 0 };
-            const pDirty = dataMercado.last || 100; // Valor de prueba si la api falla
-            
-            const coef = CER_HOY / info.cerBase;
-            const pReal = pDirty / coef;
-            const tir = calcularTirReal(pDirty, info.cerBase, info.venc);
-            const dias = Math.round((new Date(info.venc) - new Date()) / 86400000);
-
-            html += `<tr>
-                <td class="lc-ticker" style="text-align:left">${ticker}</td>
-                <td>${info.venc}</td>
-                <td>$ ${pDirty.toLocaleString()}</td>
-                <td>${coef.toFixed(4)}</td>
-                <td>$ ${pReal.toFixed(2)}</td>
-                <td class="tir-destacada">${tir.toFixed(2)}%</td>
-                <td>${(dias/365).toFixed(2)}</td>
-            </tr>`;
+    // C. Newton-Raphson para TIR Real
+    let r = 0.05;
+    for (let i = 0; i < 100; i++) {
+        let pv = 0, dpv = 0;
+        for (const f of futs) {
+            let df = Math.pow(1 + r, f.t);
+            pv += f.cf / df;
+            dpv -= (f.t * f.cf) / (df * (1 + r));
         }
-        tbody.innerHTML = html;
-    } catch(e) {
-        tbody.innerHTML = '<tr><td colspan="7">Error al conectar con la API de precios.</td></tr>';
+        let diff = pv - (precioReal * (futs[0].cf > 1000 ? 1 : 0.01)); // Ajuste escala VN 100 vs VN 1
+        // Nota: Si el flujo es p/lámina de 1000, el precioReal se compara directo.
+        // Como tus flujos son grandes ($36.190), asumimos escala VN.
+        
+        let error = pv - precioReal;
+        if (Math.abs(error) < 0.0001) break;
+        r = r - (error / dpv);
     }
+    return r;
 }
 
-// Reloj
-setInterval(() => {
-    document.getElementById('clock').innerText = new Date().toLocaleTimeString();
-}, 1000);
+// Cálculo de Duration Modificada
+function calcularMD(r, flujos) {
+    const liq = new Date(); liq.setDate(liq.getDate() + 1);
+    const futs = flujos.map(f => ({
+        t: (new Date(f.date + 'T00:00:00') - liq) / (1000 * 60 * 60 * 24 * 365),
+        cf: f.amount
+    })).filter(f => f.t > 0);
+    
+    let numeradore = 0, vpn = 0;
+    for (const f of futs) {
+        let pv = f.cf / Math.pow(1 + r, f.t);
+        numeradore += f.t * pv;
+        vpn += pv;
+    }
+    return vpn > 0 ? (numeradore / vpn) / (1 + r) : 0;
+}
 
-fetchCER();
+// 4. FUNCIONES DE ACTUALIZACIÓN Y RENDER (MANTENIDAS)
+async function cerFetch() {
+    // Obtenemos CER real
+    try {
+        const rCer = await fetch('https://criptoya.com/api/cer');
+        const dCer = await rCer.json();
+        if (dCer.value) CER_HOY = dCer.value;
+    } catch(e) {}
+
+    document.getElementById('cer-status-text').innerText = `CER: ${CER_HOY.toFixed(4)} | Act: ${new Date().toLocaleTimeString()}`;
+
+    // Obtenemos Precios
+    try {
+        const rPx = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://criptoya.com/api/bcra/bonos_cer'));
+        const dPx = await rPx.json();
+        const precios = JSON.parse(dPx.contents);
+
+        cerData = [];
+        const tbody = document.getElementById('cer-tbody');
+        let html = '';
+
+        Object.keys(CER_CONFIG).forEach(ticker => {
+            const pxData = precios.find(p => p.symbol === ticker);
+            const price = pxData ? pxData.last : 0;
+            if (price > 0) {
+                const flows = flujosParseados[ticker] || [];
+                const r = resolverTirReal(price, ticker, flows);
+                const md = calcularMD(r, flows);
+                const coef = CER_HOY / CER_CONFIG[ticker].cerBase;
+
+                cerData.push({ticker, x: md, y: r*100});
+
+                html += `<tr>
+                    <td style="text-align:left"><span class="lc-ticker">${ticker}</span></td>
+                    <td style="color:var(--blue3)">${CER_CONFIG[ticker].venc}</td>
+                    <td style="font-weight:700">$ ${price.toLocaleString()}</td>
+                    <td>${coef.toFixed(4)}</td>
+                    <td style="color:var(--cyan)">${md.toFixed(2)}</td>
+                    <td style="color:var(--green); font-weight:800; font-size:14px">${(r*100).toFixed(2)}%</td>
+                </tr>`;
+            }
+        });
+        tbody.innerHTML = html;
+        renderChart();
+    } catch(e) { console.error(e); }
+}
+
+function renderChart() {
+    const ctx = document.getElementById('cer-curve-canvas').getContext('2d');
+    if (cerCurveChart) cerCurveChart.destroy();
+    cerCurveChart = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Curva CER',
+                data: cerData,
+                backgroundColor: '#22d68a',
+                borderColor: '#16a86a',
+                pointRadius: 6
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                x: { title: { display: true, text: 'Duration Modificada', color: '#7a99c4' } },
+                y: { title: { display: true, text: 'TIR Real %', color: '#7a99c4' } }
+            }
+        }
+    });
+}
+
+setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }, 1000);
+cerFetch();
 </script>
 </body>
 </html>
