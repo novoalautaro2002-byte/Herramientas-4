@@ -126,7 +126,7 @@ html,body{
 .pdf-btn.generating{opacity:.6;cursor:wait}
 
 /* ── PRICES ── */
-.price-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 14px 8px}
+.price-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:12px 14px 8px}
 .pc{background:var(--navy3);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px}
 .pc.hl{border-color:rgba(90,141,239,.4);background:rgba(58,111,216,.07)}
 .pc-sym{font-size:9px;font-weight:700;color:var(--blue3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
@@ -134,7 +134,8 @@ html,body{
 .pc-val.empty{color:var(--gray2);font-size:11px;font-weight:400}
 .pc-sub{font-size:8px;color:var(--gray2);margin-top:2px;letter-spacing:.06em;text-transform:uppercase}
 
-/* ── INPUT ── */
+.pc-tc-val{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--cyan);font-variant-numeric:tabular-nums}
+.pc-tc-val.empty{color:var(--gray2);font-size:11px;font-weight:400}
 .pi{
   background:var(--navy);border:1px solid var(--border2);
   color:var(--yellow);font-family:var(--mono);font-size:13px;font-weight:600;
@@ -285,10 +286,6 @@ html,body{
     <div class="card-hdr">
       <span class="ch-label">Calculadora · Tipo de Cambio</span>
       <div class="stabs">
-        <button class="stab on" id="btn-ci" onclick="setPlazo('CI')">CI</button>
-        <button class="stab"    id="btn-t1" onclick="setPlazo('T1')">T+1 · 24hs</button>
-      </div>
-      <div class="stabs">
         <button class="stab on" id="btn-mep" onclick="setModo('MEP')">MEP &nbsp;AL30D</button>
         <button class="stab"    id="btn-ccl" onclick="setModo('CCL')">CCL &nbsp;AL30C</button>
       </div>
@@ -302,12 +299,17 @@ html,body{
       <div class="pc hl">
         <div class="pc-sym">AL30 · ARS</div>
         <div class="pc-val empty" id="p-al30">—</div>
-        <div class="pc-sub" id="p-al30-sub">CI</div>
+        <div class="pc-sub">T+1 · 24hs</div>
       </div>
       <div class="pc hl">
-        <div class="pc-sym" id="sym-usd">AL30D · MEP</div>
+        <div class="pc-sym" id="sym-usd">AL30D · USD MEP</div>
         <div class="pc-val empty" id="p-usd">—</div>
-        <div class="pc-sub" id="p-usd-sub">CI</div>
+        <div class="pc-sub">T+1 · 24hs</div>
+      </div>
+      <div class="pc" style="border-color:rgba(34,212,240,.3);background:rgba(34,212,240,.05)">
+        <div class="pc-sym" id="sym-tc-chip">TC BRUTO · MEP</div>
+        <div class="pc-tc-val empty" id="p-tc-chip">—</div>
+        <div class="pc-sub">AL30 / AL30D</div>
       </div>
     </div>
 
@@ -410,12 +412,17 @@ html,body{
       <div class="pc hl">
         <div class="pc-sym">AL30D · USD MEP</div>
         <div class="pc-val empty" id="cj-al30d-disp">—</div>
-        <div class="pc-sub">CI</div>
+        <div class="pc-sub">T+1 · 24hs</div>
       </div>
       <div class="pc hl">
         <div class="pc-sym">AL30C · USD Cable</div>
         <div class="pc-val empty" id="cj-al30c-disp">—</div>
-        <div class="pc-sub">CI</div>
+        <div class="pc-sub">T+1 · 24hs</div>
+      </div>
+      <div class="pc" style="border-color:rgba(34,212,240,.3);background:rgba(34,212,240,.05)">
+        <div class="pc-sym">SPREAD · MEP/Cable</div>
+        <div class="pc-tc-val empty" id="cj-spread-chip">—</div>
+        <div class="pc-sub">AL30C / AL30D − 1</div>
       </div>
     </div>
 
@@ -542,9 +549,8 @@ const DDMM       = 0.0001;  // 0.0100% — NO editable
 const REFRESH_MS = 15000;   // 15 segundos
 
 const S = {
-  plazo:'CI', modo:'MEP',
+  modo:'MEP',
   commTC:0.60, commCanje:0.60, modalFor:'tc',
-  ci:{al30:null,al30d:null,al30c:null},
   t1:{al30:null,al30d:null,al30c:null},
   bcra:null   // se usa internamente para DDMM, no se muestra
 };
@@ -582,20 +588,17 @@ function switchSec(s){
 }
 
 /* ── CONTROLES ── */
-function setPlazo(p){
-  S.plazo=p;
-  el('btn-ci').classList.toggle('on',p==='CI');
-  el('btn-t1').classList.toggle('on',p==='T1');
-  const l=p==='CI'?'CI':'T+1·24hs';
-  setText('p-al30-sub',l);setText('p-usd-sub',l);
-  render();
-}
 function setModo(m){
   S.modo=m;
   el('btn-mep').classList.toggle('on',m==='MEP');
   el('btn-ccl').classList.toggle('on',m==='CCL');
   const isMEP=m==='MEP';
-  setText('sym-usd',    isMEP?'AL30D · MEP':'AL30C · Cable');
+  setText('sym-usd',     isMEP?'AL30D · USD MEP':'AL30C · USD Cable');
+  setText('sym-tc-chip', isMEP?'TC BRUTO · MEP':'TC BRUTO · CCL');
+  el('p-tc-chip').querySelector||(()=>{});
+  // sub del chip
+  const chipSub=el('p-tc-chip')?.parentElement?.querySelector?.('.pc-sub');
+  if(chipSub) chipSub.textContent=isMEP?'AL30 / AL30D':'AL30 / AL30C';
   setText('bk-sym',     isMEP?'AL30D':'AL30C');
   setText('usd-out-lbl',isMEP?'USD MEP recibidos (neto)':'USD Cable recibidos (neto)');
   setText('usd-in-lbl', isMEP?'USD MEP a convertir':'USD Cable a convertir');
@@ -635,62 +638,95 @@ function checkMarket(){
 }
 
 /* ── FETCH ── */
-async function pfetch(url,ms=6000){
+async function pfetch(url, ms=7000){
+  // 1. Directo (funciona cuando no hay CORS issues, ej: mismo dominio o API pública)
   try{
-    const r=await fetch(url,{signal:AbortSignal.timeout(ms),headers:{Accept:'application/json'}});
+    const r=await fetch(url,{signal:AbortSignal.timeout(ms),headers:{Accept:'application/json','Cache-Control':'no-cache'}});
     if(r.ok)return await r.json();
   }catch{}
+  // 2. corsproxy.io
+  try{
+    const p=`https://corsproxy.io/?${encodeURIComponent(url)}`;
+    const r=await fetch(p,{signal:AbortSignal.timeout(ms+3000)});
+    if(r.ok)return await r.json();
+  }catch{}
+  // 3. allorigins
   try{
     const p=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    const r=await fetch(p,{signal:AbortSignal.timeout(ms+4000)});
+    const r=await fetch(p,{signal:AbortSignal.timeout(ms+5000)});
     if(r.ok){const d=await r.json();return JSON.parse(d.contents)}
   }catch{}
   return null;
 }
 
-function extractPrice(data,sym){
+function extractPrice(data, sym){
   if(!data)return null;
   const su=sym.toUpperCase();
+  const PRICE_FIELDS=['ultimo','last','close','price','c','Cierre','venta','bid','ask','valor'];
+
+  function tryObj(it){
+    for(const f of PRICE_FIELDS){
+      const p=parseFloat(it[f]);
+      if(!isNaN(p)&&p>0)return p;
+    }
+    return null;
+  }
+
   if(Array.isArray(data)){
     for(const it of data){
-      const s=(it.simbolo||it.symbol||it.ticker||it.id||it.code||'').toUpperCase().replace(/\s/g,'');
-      if(s===su){const p=parseFloat(it.ultimo??it.last??it.close??it.price??it.c??0);return p>0?p:null}
+      const s=(it.simbolo||it.symbol||it.ticker||it.id||it.code||it.nombre||'')
+        .toUpperCase().replace(/\s|-/g,'');
+      if(s===su||s===su.replace(/-/g,'')){
+        const p=tryObj(it);
+        if(p) return p;
+      }
     }
-    for(const it of data){if(it.data)return extractPrice(it.data,sym)}
+    // buscar en arrays anidados
+    for(const it of data){
+      const sub=it.data||it.bonos||it.cotizaciones||it.results;
+      if(sub){const p=extractPrice(sub,sym);if(p)return p}
+    }
   }
-  if(data?.data)return extractPrice(data.data,sym);
-  if(data?.results)return extractPrice(data.results,sym);
-  if(data?.cotizaciones)return extractPrice(data.cotizaciones,sym);
-  if(data?.bonos)return extractPrice(data.bonos,sym);
-  if(data[su]){const it=data[su];const p=parseFloat(it.ultimo??it.last??it.close??0);return p>0?p:null}
+  // objeto wrapeado
+  for(const key of ['data','results','cotizaciones','bonos','items','values']){
+    if(data[key]){const p=extractPrice(data[key],sym);if(p)return p}
+  }
+  // keyed por símbolo directamente
+  if(data[su]){const p=tryObj(data[su]);if(p)return p}
+  if(data[sym]){const p=tryObj(data[sym]);if(p)return p}
   return null;
 }
 
-const EP_CI=[
-  'https://data912.com/api/v1/bonos/ci',
-  'https://data912.com/api/v1/cotizaciones/bonos/ci',
-  'https://data912.com/api/v1/paneles/bonos/ci',
-  'https://data912.com/api/v2/bonos?plazo=ci',
-  'https://data912.com/live/bonos/ci',
-  'https://data912.com/api/v1/bonos?plazo=CI',
-];
-const EP_T1=[
+// Endpoints data912 — en orden de probabilidad de éxito.
+// Solo T+1 (24hs). CI eliminado.
+const EP_BONDS=[
   'https://data912.com/api/v1/bonos/24hs',
-  'https://data912.com/api/v1/cotizaciones/bonos/24hs',
+  'https://data912.com/api/v1/bonos',
+  'https://data912.com/api/v2/bonos',
+  'https://data912.com/live/bonos',
   'https://data912.com/api/v1/paneles/bonos/24hs',
-  'https://data912.com/api/v2/bonos?plazo=24hs',
-  'https://data912.com/live/bonos/24hs',
+  'https://data912.com/api/v1/paneles/bonos',
+  'https://data912.com/api/v1/cotizaciones/bonos/24hs',
+  'https://data912.com/api/v1/cotizaciones/bonos',
   'https://data912.com/api/v1/bonos?plazo=24hs',
+  'https://data912.com/api/v1/bonos?plazo=T1',
 ];
 
-async function tryBonds(eps){
-  for(const url of eps){
+async function tryBonds(){
+  for(const url of EP_BONDS){
     try{
-      const d=await pfetch(url,5000);if(!d)continue;
-      const al30=extractPrice(d,'AL30'),al30d=extractPrice(d,'AL30D'),al30c=extractPrice(d,'AL30C');
-      if(al30||al30d||al30c)return{al30,al30d,al30c};
-    }catch{}
+      const d=await pfetch(url,6000);
+      if(!d)continue;
+      const al30=extractPrice(d,'AL30');
+      const al30d=extractPrice(d,'AL30D');
+      const al30c=extractPrice(d,'AL30C');
+      if(al30||al30d||al30c){
+        console.info('[data912] OK →',url,{al30,al30d,al30c});
+        return{al30,al30d,al30c};
+      }
+    }catch(e){console.warn('[data912] fail →',url,e?.message)}
   }
+  console.error('[data912] Todos los endpoints fallaron');
   return null;
 }
 async function fetchBCRA(){
@@ -700,10 +736,9 @@ async function fetchBCRA(){
 
 async function fetchAll(){
   setStatus('fetching');
-  const [ci,t1]=await Promise.all([tryBonds(EP_CI),tryBonds(EP_T1),fetchBCRA()]);
-  if(ci)Object.assign(S.ci,ci);
-  if(t1)Object.assign(S.t1,t1);else if(ci)Object.assign(S.t1,ci);
-  setStatus(S.ci.al30||S.t1.al30||S.ci.al30d?'live':'error');
+  const [bonds]=await Promise.all([tryBonds(),fetchBCRA()]);
+  if(bonds) Object.assign(S.t1,bonds);
+  setStatus(S.t1.al30||S.t1.al30d?'live':'error');
   render();
   setText('stime','Act.: '+new Date().toLocaleTimeString('es-AR'));
 }
@@ -715,18 +750,26 @@ function render(){checkMarket();renderTC();renderCanje()}
 let TCcache={}, CANJEcache={};
 
 function renderTC(){
-  const pz=S.plazo==='CI'?S.ci:S.t1;
-  const al30=pz.al30, alU=S.modo==='MEP'?pz.al30d:pz.al30c, bcra=S.bcra;
+  const al30=S.t1.al30, alU=S.modo==='MEP'?S.t1.al30d:S.t1.al30c, bcra=S.bcra;
   const comm=S.commTC/100;
-  const pl=S.plazo==='CI'?'CI':'T+1·24hs';
 
-  setText('tc-card-lbl',`TC Implícito · ${S.modo} (${S.plazo})`);
+  setText('tc-card-lbl',`TC Implícito · ${S.modo} (T+1 · 24hs)`);
   setText('bk-comm-pct',S.commTC.toFixed(2)+'%');
-  setText('p-al30-sub',pl);setText('p-usd-sub',pl);
 
-  flash('p-al30');flash('p-usd');
+  flash('p-al30');flash('p-usd');flash('p-tc-chip');
   setPcVal('p-al30',al30?fmtARS(al30):null);
   setPcVal('p-usd', alU ?fmtUSD(alU) :null);
+
+  // TC chip
+  const tcChipEl=el('p-tc-chip');
+  if(al30&&alU){
+    const bruto=al30/alU;
+    tcChipEl.textContent=fmt(bruto,4);
+    tcChipEl.className='pc-tc-val';
+  } else {
+    tcChipEl.textContent='—';
+    tcChipEl.className='pc-tc-val empty';
+  }
 
   if(al30&&alU&&bcra){
     const tcBruto=al30/alU;
@@ -740,8 +783,7 @@ function renderTC(){
     setText('bk-ddmm-ars', `+${fmt(dA/alU,4)} ARS/USD  (${fmtARS(dA)})`);
     setText('bk-ddmm-usd', `+${fmt(dU/alU,4)} ARS/USD  (${fmtARS(dU)})`);
     setText('bk-total',fmt(tcImpl,4));
-    // Guardar para PDF
-    TCcache={al30,alU,bcra,tcBruto,cA,dA,dU,tcImpl,comm:S.commTC,plazo:S.plazo,modo:S.modo};
+    TCcache={al30,alU,bcra,tcBruto,cA,dA,dU,tcImpl,comm:S.commTC,plazo:'T+1',modo:S.modo};
     calcArsToUsd();calcUsdToArs();
   } else {
     ['tc-implicito','tc-bruto-disp','bk-bruto','bk-comm','bk-ddmm-ars','bk-ddmm-usd','bk-total']
@@ -751,12 +793,25 @@ function renderTC(){
 }
 
 function renderCanje(){
-  const d=S.ci.al30d??S.t1.al30d, c=S.ci.al30c??S.t1.al30c, bcra=S.bcra;
+  const d=S.t1.al30d, c=S.t1.al30c, bcra=S.bcra;
   setText('cj-comm-pct',S.commCanje.toFixed(2)+'%');
   setPcVal('cj-al30d-disp',d?fmtUSD(d):null);
   setPcVal('cj-al30c-disp',c?fmtUSD(c):null);
   setText('cj-p-d',d?fmtUSD(d):'—');
   setText('cj-p-c',c?fmtUSD(c):'—');
+
+  // Spread chip
+  const chipEl=el('cj-spread-chip');
+  if(d&&c){
+    const spr=(c/d-1)*100;
+    chipEl.textContent=fmtPct(spr,4);
+    chipEl.className='pc-tc-val'+(spr>=0?' ':'')+(spr>=0?'':'');
+    chipEl.style.color=spr>=0?'var(--green)':'var(--red)';
+  } else {
+    chipEl.textContent='—';
+    chipEl.className='pc-tc-val empty';
+    chipEl.style.color='';
+  }
 
   if(d&&c&&bcra){
     const m2c=(c/d-1)*100, c2m=(d/c-1)*100;
@@ -777,11 +832,10 @@ function renderCanje(){
     const cV2=B*cc, cP2=grossM*cc;
     const dd3=nom*c*DDMM*bcra, dd4=nom*d*DDMM*bcra, ddU2=(dd3+dd4)/bcra;
     const netM=grossM-cP2-cV2*(d/c)-ddU2;
-    setText('cj-c2m-net','Neto (c/gastos): '+fmtPct((netM/B-1)*100,4));
-    // Guardar para PDF
     CANJEcache={d,c,bcra,m2c,c2m,netPct,netPctC2M:(netM/B-1)*100,
       commARS:(cV+cP)*bcra,ddmmARS:ddT,ddmmUSD:ddU,comm:S.commCanje,
       grossC,netC};
+    setText('cj-c2m-net','Neto (c/gastos): '+fmtPct((netM/B-1)*100,4));
     calcMepToCable();calcCableToMep();
   } else {
     ['cj-spread-g','cj-comm-v','cj-ddmm-v','cj-spread-n'].forEach(id=>setText(id,'—'));
@@ -792,8 +846,7 @@ function renderCanje(){
 
 /* ── CALCULADORAS TC ── */
 function getTCImpl(){
-  const pz=S.plazo==='CI'?S.ci:S.t1;
-  const al30=pz.al30, alU=S.modo==='MEP'?pz.al30d:pz.al30c, bcra=S.bcra;
+  const al30=S.t1.al30, alU=S.modo==='MEP'?S.t1.al30d:S.t1.al30c, bcra=S.bcra;
   if(!al30||!alU||!bcra)return null;
   const c=S.commTC/100;
   return (al30+al30*c+al30*DDMM+alU*DDMM*bcra)/alU;
@@ -810,7 +863,7 @@ function calcUsdToArs(){
 /* ── CALCULADORAS CANJE ── */
 function calcMepToCable(){
   const mep=parseFloat(el('calc-m2c-in').value);
-  const d=S.ci.al30d??S.t1.al30d, c=S.ci.al30c??S.t1.al30c, bcra=S.bcra;
+  const d=S.t1.al30d, c=S.t1.al30c, bcra=S.bcra;
   const det=el('detail-m2c');
   if(!mep||!d||!c||!bcra){
     setResult('calc-m2c-out',null);
@@ -826,7 +879,7 @@ function calcMepToCable(){
 }
 function calcCableToMep(){
   const cable=parseFloat(el('calc-c2m-in').value);
-  const d=S.ci.al30d??S.t1.al30d, c=S.ci.al30c??S.t1.al30c, bcra=S.bcra;
+  const d=S.t1.al30d, c=S.t1.al30c, bcra=S.bcra;
   const det=el('detail-c2m');
   if(!cable||!d||!c||!bcra){
     setResult('calc-c2m-out',null);
