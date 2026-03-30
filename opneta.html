@@ -156,6 +156,12 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 .form-control.mono {
   font-family: var(--mono);
 }
+.form-control:read-only {
+  background: var(--navy3);
+  color: var(--blue4);
+  cursor: not-allowed;
+  border-color: var(--border2);
+}
 
 .input-group {
   display: flex;
@@ -305,10 +311,10 @@ if(window!==window.top){
     </div>
 
     <div class="form-group" id="grp-tc" style="display: none;">
-      <label class="form-label">T.C. Oficial (BCRA A3500) para cobro DDMM</label>
+      <label class="form-label">T.C. Mayorista Automático (para cobro DDMM)</label>
       <div class="input-group">
         <span class="input-group-addon">$</span>
-        <input type="number" class="form-control mono" id="calc-tc" value="1050.00" step="any" oninput="actualizarCalculo()">
+        <input type="text" class="form-control mono" id="calc-tc" value="Cargando..." readonly>
       </div>
     </div>
 
@@ -373,6 +379,24 @@ if(window!==window.top){
 </div>
 
 <script>
+// Variable global para almacenar el Tipo de Cambio Mayorista
+let TCOFICIAL = 1050; // Fallback inicial
+
+// Fetch automático del Tipo de Cambio Mayorista
+async function fetchTCOficial() {
+  try {
+    const res = await fetch('https://dolarapi.com/v1/dolares/mayorista');
+    const data = await res.json();
+    if (data && data.venta) {
+      TCOFICIAL = data.venta;
+    }
+  } catch (error) {
+    console.warn('No se pudo obtener el T.C. Mayorista, usando fallback.', error);
+  }
+  document.getElementById('calc-tc').value = TCOFICIAL.toFixed(2);
+  actualizarCalculo();
+}
+
 // Cerrar dropdown al hacer click afuera
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.nav-dropdown')) {
@@ -399,7 +423,6 @@ function actualizarCalculo() {
   const moneda = document.getElementById('calc-moneda').value;
   const montoBruto = parseFloat(document.getElementById('calc-monto').value) || 0;
   const arancelPct = parseFloat(document.getElementById('calc-arancel').value) || 0;
-  const tcOficial = parseFloat(document.getElementById('calc-tc').value) || 1050;
   
   const config = CONDICIONES[tipo];
   const ddmmPct = config.ddmm;
@@ -439,8 +462,8 @@ function actualizarCalculo() {
 
   } else {
     // Operatoria en Dólares (DDMM y su IVA se pesifican al Oficial)
-    let ddmmArs = ddmm * tcOficial;
-    let ivaDdmmArs = ivaDdmm * tcOficial;
+    let ddmmArs = ddmm * TCOFICIAL;
+    let ivaDdmmArs = ivaDdmm * TCOFICIAL;
 
     let gastosUsd = arancel + ivaArancel;
     let gastosArs = ddmmArs + ivaDdmmArs;
@@ -464,7 +487,7 @@ function actualizarCalculo() {
     
     // Alerta de los fondos pesificados requeridos
     if (gastosArs > 0) {
-      document.getElementById('alert-tc').innerHTML = `⚠️ <strong>Nota de Liquidación:</strong> Al operar en dólares, los Derechos de Mercado e IVA correspondientes se pesifican al tipo de cambio oficial. Vas a requerir <strong>${formatCurrency(gastosArs, 'ARS')}</strong> adicionales en tu cuenta en pesos para cubrir ese débito.`;
+      document.getElementById('alert-tc').innerHTML = `⚠️ <strong>Nota de Liquidación:</strong> Al operar en dólares, los Derechos de Mercado e IVA correspondientes se pesifican al tipo de cambio oficial (<strong>$${TCOFICIAL.toFixed(2)}</strong>). Vas a requerir <strong>${formatCurrency(gastosArs, 'ARS')}</strong> adicionales en tu cuenta en pesos para cubrir ese débito.`;
       document.getElementById('alert-tc').style.display = 'block';
     } else {
       document.getElementById('alert-tc').style.display = 'none';
@@ -472,7 +495,10 @@ function actualizarCalculo() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', actualizarCalculo);
+// Iniciar aplicación
+document.addEventListener('DOMContentLoaded', () => {
+  fetchTCOficial(); // Obtiene el TC de la API y ejecuta actualizarCalculo()
+});
 </script>
 </body>
 </html>
