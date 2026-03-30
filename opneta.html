@@ -311,7 +311,7 @@ if(window!==window.top){
     </div>
 
     <div class="form-group" id="grp-tc" style="display: none;">
-      <label class="form-label">T.C. Mayorista Automático (para cobro DDMM)</label>
+      <label class="form-label">T.C. Mayorista Automático (para cobro DDMM e IVA)</label>
       <div class="input-group">
         <span class="input-group-addon">$</span>
         <input type="text" class="form-control mono" id="calc-tc" value="Cargando..." readonly>
@@ -440,15 +440,15 @@ function actualizarCalculo() {
   // Cálculos base
   let arancel = montoBruto * (arancelPct / 100);
   let ddmm = montoBruto * (ddmmPct / 100);
-  
-  let ivaArancel = aplicaIva ? (arancel * 0.21) : 0;
-  let ivaDdmm = aplicaIva ? (ddmm * 0.21) : 0;
 
   document.getElementById('res-bruto').innerText = formatCurrency(montoBruto, isUsd ? 'USD' : 'ARS');
   document.getElementById('res-arancel-pct').innerText = arancelPct;
 
   if (!isUsd) {
     // Operatoria 100% en Pesos
+    let ivaArancel = aplicaIva ? (arancel * 0.21) : 0;
+    let ivaDdmm = aplicaIva ? (ddmm * 0.21) : 0;
+    
     let gastosTotales = arancel + ddmm + ivaArancel + ivaDdmm;
     let neto = montoBruto - gastosTotales;
 
@@ -461,33 +461,39 @@ function actualizarCalculo() {
     document.getElementById('alert-tc').style.display = 'none';
 
   } else {
-    // Operatoria en Dólares (DDMM y su IVA se pesifican al Oficial)
+    // Operatoria en Dólares (DDMM y TODO el IVA se pesifican al Oficial)
     let ddmmArs = ddmm * TCOFICIAL;
-    let ivaDdmmArs = ivaDdmm * TCOFICIAL;
+    
+    // El IVA se calcula sobre los montos ya pesificados
+    let ivaArancelArs = aplicaIva ? (arancel * TCOFICIAL * 0.21) : 0;
+    let ivaDdmmArs = aplicaIva ? (ddmmArs * 0.21) : 0;
+    let totalIvaArs = ivaArancelArs + ivaDdmmArs;
 
-    let gastosUsd = arancel + ivaArancel;
-    let gastosArs = ddmmArs + ivaDdmmArs;
+    // Gastos puros en USD (solo el arancel, ya que el IVA se cobra en ARS)
+    let gastosUsd = arancel;
+    let gastosArs = ddmmArs + totalIvaArs;
 
     document.getElementById('res-arancel').innerHTML = formatCurrency(arancel, 'USD');
     
-    // Mostramos USD principal y ARS aclarado a la derecha
+    // DDMM: Mostramos USD principal y ARS aclarado a la derecha
     document.getElementById('res-ddmm').innerHTML = `${formatCurrency(ddmm, 'USD')} <span style="font-size:11px;color:var(--gray);margin-left:8px;">(${formatCurrency(ddmmArs, 'ARS')})</span>`;
     
-    let textoIva = formatCurrency(ivaArancel, 'USD');
-    if (ivaDdmmArs > 0) {
-      textoIva += ` <span style="font-size:11px;color:var(--gray);margin-left:8px;">(+ ${formatCurrency(ivaDdmmArs, 'ARS')})</span>`;
+    // IVA: Mostramos USD 0.00 y todo el cobro en ARS a la derecha
+    let textoIva = formatCurrency(0, 'USD');
+    if (aplicaIva && totalIvaArs > 0) {
+      textoIva += ` <span style="font-size:11px;color:var(--gray);margin-left:8px;">(+ ${formatCurrency(totalIvaArs, 'ARS')})</span>`;
     }
     document.getElementById('res-iva').innerHTML = textoIva;
     
     document.getElementById('res-gastos').innerHTML = `${formatCurrency(gastosUsd, 'USD')} <span style="font-size:11px;color:var(--gray);margin-left:8px;">(+ ${formatCurrency(gastosArs, 'ARS')})</span>`;
     
-    // El neto refleja únicamente lo afectado en la moneda origen (Monto Bruto USD - Gastos USD)
+    // El neto refleja únicamente lo debitado en USD
     let netoUsd = montoBruto - gastosUsd;
     document.getElementById('neto-compra').innerText = formatCurrency(netoUsd, 'USD');
     
     // Alerta de los fondos pesificados requeridos
     if (gastosArs > 0) {
-      document.getElementById('alert-tc').innerHTML = `⚠️ <strong>Nota de Liquidación:</strong> Al operar en dólares, los Derechos de Mercado e IVA correspondientes se pesifican al tipo de cambio oficial (<strong>$${TCOFICIAL.toFixed(2)}</strong>). Vas a requerir <strong>${formatCurrency(gastosArs, 'ARS')}</strong> adicionales en tu cuenta en pesos para cubrir ese débito.`;
+      document.getElementById('alert-tc').innerHTML = `⚠️ <strong>Nota de Liquidación:</strong> Al operar en dólares, los Derechos de Mercado y <strong>todo el IVA</strong> (incluyendo el de la comisión) se pesifican al tipo de cambio oficial (<strong>$${TCOFICIAL.toFixed(2)}</strong>). Vas a requerir <strong>${formatCurrency(gastosArs, 'ARS')}</strong> adicionales en tu cuenta en pesos para cubrir ese débito.`;
       document.getElementById('alert-tc').style.display = 'block';
     } else {
       document.getElementById('alert-tc').style.display = 'none';
