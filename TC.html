@@ -659,74 +659,45 @@ async function pfetch(url, ms=7000){
   return null;
 }
 
-function extractPrice(data, sym){
-  if(!data)return null;
-  const su=sym.toUpperCase();
-  const PRICE_FIELDS=['ultimo','last','close','price','c','Cierre','venta','bid','ask','valor'];
 
-  function tryObj(it){
-    for(const f of PRICE_FIELDS){
-      const p=parseFloat(it[f]);
-      if(!isNaN(p)&&p>0)return p;
-    }
-    return null;
-  }
 
-  if(Array.isArray(data)){
-    for(const it of data){
-      const s=(it.simbolo||it.symbol||it.ticker||it.id||it.code||it.nombre||'')
-        .toUpperCase().replace(/\s|-/g,'');
-      if(s===su||s===su.replace(/-/g,'')){
-        const p=tryObj(it);
-        if(p) return p;
-      }
-    }
-    // buscar en arrays anidados
-    for(const it of data){
-      const sub=it.data||it.bonos||it.cotizaciones||it.results;
-      if(sub){const p=extractPrice(sub,sym);if(p)return p}
+
+/*
+ * Endpoints data912 confirmados (fuente: github.com/arisbdar/rendimientos-ar):
+ *   /live/arg_bonds → bonos soberanos en USD (AL30D, AL30C, GD30D…) · campo "c" = último
+ *   /live/arg_notes → bonos en ARS (AL30, GD30…)                     · campo "c" = último
+ */
+const URL_BONDS = 'https://data912.com/live/arg_bonds';
+const URL_NOTES = 'https://data912.com/live/arg_notes';
+
+function findTicker(arr, ticker){
+  if(!Array.isArray(arr)) return null;
+  const t = ticker.toUpperCase().trim();
+  for(const it of arr){
+    const sym = (it.ticker||it.symbol||it.simbolo||it.id||it.code||'').toUpperCase().trim();
+    if(sym === t){
+      const p = parseFloat(it.c ?? it.ultimo ?? it.last ?? it.close ?? it.price ?? 0);
+      return p > 0 ? p : null;
     }
   }
-  // objeto wrapeado
-  for(const key of ['data','results','cotizaciones','bonos','items','values']){
-    if(data[key]){const p=extractPrice(data[key],sym);if(p)return p}
-  }
-  // keyed por símbolo directamente
-  if(data[su]){const p=tryObj(data[su]);if(p)return p}
-  if(data[sym]){const p=tryObj(data[sym]);if(p)return p}
   return null;
 }
 
-// Endpoints data912 — en orden de probabilidad de éxito.
-// Solo T+1 (24hs). CI eliminado.
-const EP_BONDS=[
-  'https://data912.com/api/v1/bonos/24hs',
-  'https://data912.com/api/v1/bonos',
-  'https://data912.com/api/v2/bonos',
-  'https://data912.com/live/bonos',
-  'https://data912.com/api/v1/paneles/bonos/24hs',
-  'https://data912.com/api/v1/paneles/bonos',
-  'https://data912.com/api/v1/cotizaciones/bonos/24hs',
-  'https://data912.com/api/v1/cotizaciones/bonos',
-  'https://data912.com/api/v1/bonos?plazo=24hs',
-  'https://data912.com/api/v1/bonos?plazo=T1',
-];
-
 async function tryBonds(){
-  for(const url of EP_BONDS){
-    try{
-      const d=await pfetch(url,6000);
-      if(!d)continue;
-      const al30=extractPrice(d,'AL30');
-      const al30d=extractPrice(d,'AL30D');
-      const al30c=extractPrice(d,'AL30C');
-      if(al30||al30d||al30c){
-        console.info('[data912] OK →',url,{al30,al30d,al30c});
-        return{al30,al30d,al30c};
-      }
-    }catch(e){console.warn('[data912] fail →',url,e?.message)}
+  const [bonds, notes] = await Promise.all([
+    pfetch(URL_BONDS, 7000),
+    pfetch(URL_NOTES, 7000),
+  ]);
+
+  const al30  = findTicker(notes, 'AL30');   // precio en ARS
+  const al30d = findTicker(bonds, 'AL30D');  // precio en USD MEP
+  const al30c = findTicker(bonds, 'AL30C');  // precio en USD Cable
+
+  if(al30 || al30d || al30c){
+    console.info('[data912] OK', {al30, al30d, al30c});
+    return { al30, al30d, al30c };
   }
-  console.error('[data912] Todos los endpoints fallaron');
+  console.error('[data912] Sin precios. bonds:', bonds?.slice?.(0,2), 'notes:', notes?.slice?.(0,2));
   return null;
 }
 async function fetchBCRA(){
@@ -737,8 +708,11 @@ async function fetchBCRA(){
 async function fetchAll(){
   setStatus('fetching');
   const [bonds]=await Promise.all([tryBonds(),fetchBCRA()]);
-  if(bonds) Object.assign(S.t1,bonds);
-  setStatus(S.t1.al30||S.t1.al30d?'live':'error');
+  if(bonds){
+    Object.assign(S.ci,bonds);
+    Object.assign(S.t1,bonds);
+  }
+  setStatus(S.ci.al30||S.ci.al30d?'live':'error');
   render();
   setText('stime','Act.: '+new Date().toLocaleTimeString('es-AR'));
 }
@@ -1190,7 +1164,7 @@ function exportCanjePdf(){
 checkMarket();
 fetchAll();
 setInterval(fetchAll, REFRESH_MS);
-setInterval(checkMarket, 60000);
+setInterval(checkMarket, 15000);
 </script>
 </body>
 </html>
