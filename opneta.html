@@ -64,7 +64,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 .nav-tab:hover{color:var(--blue3);background:rgba(58,111,216,.08)}
 .nav-tab.active{color:var(--white);border-bottom-color:var(--blue);background:rgba(58,111,216,.12)}
 
-/* ─── DROPDOWN NAV (Para mantener tu estructura original) ─── */
+/* ─── DROPDOWN NAV ─── */
 .nav-dropdown{position:relative;display:flex;align-items:stretch}
 .nav-dropdown-btn{
   display:flex;align-items:center;gap:7px;padding:0 18px;height:42px;
@@ -198,10 +198,11 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
   border-bottom: 1px dashed rgba(42,74,122,.4);
   font-family: var(--mono);
   font-size: 13px;
+  align-items: center;
 }
 .ticket-row:last-child { border-bottom: none; }
 .ticket-label { color: var(--gray); font-family: var(--font); font-size: 12px; }
-.ticket-val { color: var(--white2); font-weight: 500; }
+.ticket-val { color: var(--white2); font-weight: 500; text-align: right; }
 
 .ticket-divider {
   height: 2px;
@@ -216,8 +217,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
   padding: 16px;
   margin-top: 16px;
 }
-.net-box.compra { border-left: 4px solid var(--red); }
-.net-box.venta { border-left: 4px solid var(--green); }
+.net-box.compra { border-left: 4px solid var(--blue2); }
 
 .net-title {
   font-size: 11px;
@@ -233,9 +233,31 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
   color: var(--white);
 }
 
+.alert-ars {
+  font-size: 11px; 
+  color: var(--amber); 
+  margin-top: 10px; 
+  background: rgba(240,180,41,.1); 
+  padding: 8px 10px; 
+  border-radius: 4px; 
+  border: 1px solid rgba(240,180,41,.2);
+  line-height: 1.4;
+  display: none;
+}
 </style>
 </head>
 <body>
+
+<script>
+// FIX IFRAME: Oculta menús si la página se abre dentro de index.html
+if(window!==window.top){
+  document.addEventListener('DOMContentLoaded',function(){
+    var s=document.createElement('style');
+    s.textContent='.top-bar,.nav-bar{display:none!important}';
+    document.head.appendChild(s);
+  });
+}
+</script>
 
 <div class="top-bar">
   <div class="logo-area" onclick="location.href='index.html'">
@@ -248,7 +270,6 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 
 <div class="nav-bar">
   <button class="nav-tab" onclick="location.href='index.html'">◉ Resumen</button>
-  
   <div class="nav-dropdown">
     <button class="nav-dropdown-btn" onclick="this.parentElement.classList.toggle('open'); this.classList.toggle('open');">📊 Bonos ▼</button>
     <div class="nav-dropdown-menu">
@@ -256,7 +277,6 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
       <a class="nav-dropdown-item" href="cer.html"><span class="di-icon">◎</span> Bonos CER</a>
     </div>
   </div>
-
   <button class="nav-tab active">🧮 Calculadora de Neto</button>
 </div>
 
@@ -284,11 +304,19 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
       </select>
     </div>
 
+    <div class="form-group" id="grp-tc" style="display: none;">
+      <label class="form-label">T.C. Oficial (BCRA A3500) para cobro DDMM</label>
+      <div class="input-group">
+        <span class="input-group-addon">$</span>
+        <input type="number" class="form-control mono" id="calc-tc" value="1050.00" step="any" oninput="actualizarCalculo()">
+      </div>
+    </div>
+
     <div class="form-group">
       <label class="form-label">Monto Bruto Operado</label>
       <div class="input-group">
         <span class="input-group-addon" id="lbl-moneda">$</span>
-        <input type="number" class="form-control mono" id="calc-monto" value="1000000" step="any" oninput="actualizarCalculo()">
+        <input type="number" class="form-control mono" id="calc-monto" value="10000" step="any" oninput="actualizarCalculo()">
       </div>
     </div>
 
@@ -306,7 +334,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
   </div>
 
   <div class="calc-panel">
-    <div class="panel-title">Liquidación Estimada</div>
+    <div class="panel-title">Liquidación Neta Estimada</div>
     
     <div class="ticket-row">
       <span class="ticket-label">Monto Bruto</span>
@@ -321,7 +349,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
       <span class="ticket-val" id="res-ddmm" style="color: var(--amber)">0.00</span>
     </div>
     <div class="ticket-row" id="row-iva">
-      <span class="ticket-label">IVA (21% s/ comisiones)</span>
+      <span class="ticket-label">IVA (21% s/ comisiones y/o DDMM)</span>
       <span class="ticket-val" id="res-iva" style="color: var(--amber)">0.00</span>
     </div>
     
@@ -333,15 +361,11 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
     </div>
 
     <div class="net-box compra">
-      <div class="net-title">Si es Compra (Monto a Integrar)</div>
+      <div class="net-title">Monto Neto Operado (Compra)</div>
       <div class="net-amount" id="neto-compra">0.00</div>
-      <div style="font-size:10px; color:var(--gray); margin-top:4px;">Se suman los gastos al bruto.</div>
-    </div>
-
-    <div class="net-box venta">
-      <div class="net-title">Si es Venta (Monto a Cobrar)</div>
-      <div class="net-amount" id="neto-venta">0.00</div>
-      <div style="font-size:10px; color:var(--gray); margin-top:4px;">Se descuentan los gastos del bruto.</div>
+      <div style="font-size:10px; color:var(--gray); margin-top:4px;">Resultante de netear los gastos sobre el bruto.</div>
+      
+      <div class="alert-ars" id="alert-tc"></div>
     </div>
 
   </div>
@@ -349,7 +373,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 </div>
 
 <script>
-// Click afuera para cerrar dropdowns
+// Cerrar dropdown al hacer click afuera
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.nav-dropdown')) {
     document.querySelectorAll('.nav-dropdown').forEach(d => d.classList.remove('open'));
@@ -357,7 +381,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Configuración estricta de condiciones de mercado
+// Condiciones reglamentarias de Mercado
 const CONDICIONES = {
   'bonos':    { ddmm: 0.01,  iva: false },
   'letras':   { ddmm: 0.001, iva: false },
@@ -366,7 +390,7 @@ const CONDICIONES = {
 };
 
 function formatCurrency(val, mon) {
-  const sym = (mon === 'ARS') ? '$' : 'USD';
+  const sym = (mon === 'ARS') ? '$' : 'U$S';
   return sym + ' ' + val.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
@@ -375,43 +399,85 @@ function actualizarCalculo() {
   const moneda = document.getElementById('calc-moneda').value;
   const montoBruto = parseFloat(document.getElementById('calc-monto').value) || 0;
   const arancelPct = parseFloat(document.getElementById('calc-arancel').value) || 0;
+  const tcOficial = parseFloat(document.getElementById('calc-tc').value) || 1050;
   
   const config = CONDICIONES[tipo];
   const ddmmPct = config.ddmm;
   const aplicaIva = config.iva;
 
-  document.getElementById('lbl-moneda').innerText = (moneda === 'ARS') ? '$' : 'U$S';
+  // Actualizar UI
+  const isUsd = (moneda === 'MEP' || moneda === 'CABLE');
+  document.getElementById('grp-tc').style.display = isUsd ? 'block' : 'none';
+  document.getElementById('lbl-moneda').innerText = isUsd ? 'U$S' : '$';
   document.getElementById('lbl-ddmm-pct').innerText = ddmmPct + '%';
   document.getElementById('lbl-iva-status').innerText = aplicaIva ? '21% (+IVA)' : 'Exento';
   document.getElementById('lbl-iva-status').style.color = aplicaIva ? 'var(--red)' : 'var(--green)';
+  document.getElementById('row-iva').style.opacity = aplicaIva ? '1' : '0.4';
 
-  const gastoArancel = montoBruto * (arancelPct / 100);
-  const gastoDDMM = montoBruto * (ddmmPct / 100);
-  
-  let gastoIva = 0;
-  if (aplicaIva) {
-    gastoIva = (gastoArancel + gastoDDMM) * 0.21;
+  // Contabilidad desdoblada
+  let arancelUsd = 0, arancelArs = 0;
+  let ddmmUsd = 0, ddmmArs = 0;
+  let ivaArancelUsd = 0, ivaArancelArs = 0;
+  let ivaDdmmUsd = 0, ivaDdmmArs = 0;
+
+  if (!isUsd) { // Operatoría 100% en Pesos
+    arancelArs = montoBruto * (arancelPct / 100);
+    ddmmArs = montoBruto * (ddmmPct / 100);
+    if (aplicaIva) {
+      ivaArancelArs = arancelArs * 0.21;
+      ivaDdmmArs = ddmmArs * 0.21;
+    }
+  } else { // Operatoria en Dólares (con DDMM pesificados)
+    arancelUsd = montoBruto * (arancelPct / 100);
+    ddmmUsd = montoBruto * (ddmmPct / 100);
+    
+    // El derecho de mercado se pesifica al oficial
+    ddmmArs = ddmmUsd * tcOficial; 
+    
+    if (aplicaIva) {
+      ivaArancelUsd = arancelUsd * 0.21;
+      ivaDdmmArs = ddmmArs * 0.21; // El IVA del DDMM pesificado también se cobra en ARS
+    }
   }
-  
-  const totalGastos = gastoArancel + gastoDDMM + gastoIva;
-  const netoCompra = montoBruto + totalGastos;
-  const netoVenta = montoBruto - totalGastos;
 
-  document.getElementById('res-bruto').innerText = formatCurrency(montoBruto, moneda);
-  
+  const totalGastosUsd = arancelUsd + ivaArancelUsd;
+  const totalGastosArs = arancelArs + ddmmArs + ivaArancelArs + ivaDdmmArs;
+
+  // Render variables estáticas
+  document.getElementById('res-bruto').innerText = formatCurrency(montoBruto, isUsd ? 'USD' : 'ARS');
   document.getElementById('res-arancel-pct').innerText = arancelPct;
-  document.getElementById('res-arancel').innerText = formatCurrency(gastoArancel, moneda);
-  
-  document.getElementById('res-ddmm-pct').innerText = ddmmPct;
-  document.getElementById('res-ddmm').innerText = formatCurrency(gastoDDMM, moneda);
-  
-  document.getElementById('res-iva').innerText = formatCurrency(gastoIva, moneda);
-  document.getElementById('row-iva').style.opacity = aplicaIva ? '1' : '0.4'; 
-  
-  document.getElementById('res-gastos').innerText = formatCurrency(totalGastos, moneda);
 
-  document.getElementById('neto-compra').innerText = formatCurrency(netoCompra, moneda);
-  document.getElementById('neto-venta').innerText = formatCurrency(netoVenta, moneda);
+  // Render resultados desdoblados o simples
+  if (!isUsd) {
+    document.getElementById('res-arancel').innerHTML = formatCurrency(arancelArs, 'ARS');
+    document.getElementById('res-ddmm').innerHTML = formatCurrency(ddmmArs, 'ARS');
+    document.getElementById('res-iva').innerHTML = formatCurrency(ivaArancelArs + ivaDdmmArs, 'ARS');
+    document.getElementById('res-gastos').innerHTML = formatCurrency(totalGastosArs, 'ARS');
+    
+    document.getElementById('neto-compra').innerText = formatCurrency(montoBruto - totalGastosArs, 'ARS');
+    document.getElementById('alert-tc').style.display = 'none';
+  } else {
+    document.getElementById('res-arancel').innerHTML = formatCurrency(arancelUsd, 'USD');
+    
+    // Muestra impacto USD pero detalla la pesificación en gris
+    document.getElementById('res-ddmm').innerHTML = `${formatCurrency(ddmmUsd, 'USD')} <span style="font-size:10px;color:var(--gray)">(${formatCurrency(ddmmArs, 'ARS')})</span>`;
+    
+    let textIva = formatCurrency(ivaArancelUsd, 'USD');
+    if (ivaDdmmArs > 0) textIva += ` <span style="font-size:10px;color:var(--gray)">(+ ${formatCurrency(ivaDdmmArs, 'ARS')})</span>`;
+    document.getElementById('res-iva').innerHTML = textIva;
+    
+    document.getElementById('res-gastos').innerHTML = `${formatCurrency(totalGastosUsd, 'USD')} <span style="font-size:10px;color:var(--gray)">(+ ${formatCurrency(ddmmArs + ivaDdmmArs, 'ARS')})</span>`;
+    
+    document.getElementById('neto-compra').innerText = formatCurrency(montoBruto - totalGastosUsd, 'USD');
+    
+    const extraArs = ddmmArs + ivaDdmmArs;
+    if (extraArs > 0) {
+      document.getElementById('alert-tc').innerHTML = `⚠️ <strong>Liquidación Mixta:</strong> Necesitás saldo en tu cuenta en Pesos por <strong>${formatCurrency(extraArs, 'ARS')}</strong> adicionales para que el broker debite los DDMM y su IVA correspondiente a T.C. Oficial.`;
+      document.getElementById('alert-tc').style.display = 'block';
+    } else {
+      document.getElementById('alert-tc').style.display = 'none';
+    }
+  }
 }
 
 document.addEventListener('DOMContentLoaded', actualizarCalculo);
