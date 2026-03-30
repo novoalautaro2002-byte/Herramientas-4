@@ -667,134 +667,371 @@ function calcMepToCable(){
   blt.classList.add('show');
 }
 
-/* ── PDF HELPERS ── */
-function pdfHdr(doc,t1,t2,ts){
-  const W=doc.internal.pageSize.getWidth();
-  doc.setFillColor(13,27,46);doc.rect(0,0,W,42,'F');
-  doc.setFillColor(58,111,216);doc.rect(0,0,4,42,'F');
-  doc.setFontSize(14);doc.setTextColor(240,244,255);doc.setFont('helvetica','bold');doc.text('Portfolio Investment',12,16);
-  doc.setFontSize(9);doc.setTextColor(122,163,240);doc.setFont('helvetica','normal');doc.text('Calculadora ALyC · TC MEP / CCL',12,28);
-  doc.setFontSize(11);doc.setTextColor(34,212,240);doc.setFont('helvetica','bold');doc.text(t1,W-10,14,{align:'right'});
-  doc.setFontSize(9);doc.setTextColor(122,163,240);doc.setFont('helvetica','normal');doc.text(t2+' · '+ts,W-10,27,{align:'right'});
-  return 52;
-}
-function pdfSec(doc,txt,y){
-  const W=doc.internal.pageSize.getWidth();
-  doc.setFillColor(23,45,77);doc.rect(0,y,W,10,'F');
-  doc.setFontSize(7.5);doc.setTextColor(122,163,240);doc.setFont('helvetica','bold');doc.text(txt.toUpperCase(),8,y+7);
-  return y+16;
-}
-function pdfRow(doc,lbl,val,y,isTotal=false){
-  const W=doc.internal.pageSize.getWidth();if(y>775){doc.addPage();y=20;}
-  if(isTotal){
-    doc.setFillColor(13,27,46);doc.rect(0,y-1,W,13,'F');
-    doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(34,214,138);
-    doc.text(lbl,10,y+8);doc.text(val,W-10,y+8,{align:'right'});return y+17;
-  }
-  doc.setFontSize(9);doc.setFont('helvetica','normal');
-  doc.setTextColor(122,153,196);doc.text(lbl,10,y+6);
-  doc.setTextColor(208,221,245);doc.text(val,W-10,y+6,{align:'right'});return y+11;
-}
-function pdfDiv(doc,y){doc.setDrawColor(42,74,122);doc.setLineWidth(0.5);doc.line(8,y,doc.internal.pageSize.getWidth()-8,y);return y+8;}
-function pdfNote(doc,lines,y){doc.setFontSize(7.5);doc.setTextColor(74,106,154);doc.setFont('helvetica','normal');lines.forEach(l=>{doc.text(l,8,y);y+=10;});return y;}
+/* ══════════════════════════════════════════════════════════════════
+   PDF ENGINE  —  estilo boleto ALyC
+   ══════════════════════════════════════════════════════════════════ */
 
-/* ── PDF TC ── */
+// Paleta
+const PC={
+  navy  :[13,27,46],
+  navy2 :[18,37,64],
+  navy3 :[23,45,77],
+  blue  :[58,111,216],
+  blue2 :[42,84,170],
+  cyan  :[34,212,240],
+  green :[34,214,138],
+  amber :[240,180,41],
+  red   :[255,77,106],
+  white :[240,244,255],
+  white2:[208,221,245],
+  gray  :[122,153,196],
+  gray2 :[74,106,154],
+  line  :[42,74,122],
+  rowAlt:[16,32,56],
+};
+
+function P(doc){return{W:doc.internal.pageSize.getWidth(),H:doc.internal.pageSize.getHeight()};}
+function rgb(c){return c;}  // already [r,g,b]
+
+/* ── HEADER ─────────────────────────────────────────────────────── */
+function pdfHeader(doc,{titulo,subtitulo,fecha,hora,mercado,badges}){
+  const{W}=P(doc);
+  // banda navy principal
+  doc.setFillColor(...PC.navy);doc.rect(0,0,W,58,'F');
+  // borde inferior del header con degradado simulado
+  doc.setFillColor(...PC.navy3);doc.rect(0,54,W,4,'F');
+  // franja azul izquierda
+  doc.setFillColor(...PC.blue);doc.rect(0,0,5,58,'F');
+
+  // Logo text
+  doc.setFont('helvetica','bold');doc.setFontSize(14);
+  doc.setTextColor(...PC.white);doc.text('Portfolio Investment',14,18);
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);
+  doc.setTextColor(...PC.gray);doc.text('SISTEMA DE CÁLCULO FINANCIERO',14,29);
+
+  // Línea separadora vertical
+  doc.setDrawColor(...PC.blue2);doc.setLineWidth(0.5);
+  doc.line(W/2,6,W/2,48);
+
+  // Título derecho
+  doc.setFont('helvetica','bold');doc.setFontSize(13);
+  doc.setTextColor(...PC.cyan);doc.text(titulo,W-12,15,{align:'right'});
+  doc.setFont('helvetica','normal');doc.setFontSize(8);
+  doc.setTextColor(...PC.gray);
+  doc.text(fecha+' · '+hora+' · '+mercado,W-12,26,{align:'right'});
+
+  // Badges
+  let bx=W-12;
+  badges.forEach(b=>{
+    const bw=doc.getTextWidth(b.txt)+10;
+    bx-=bw+4;
+    doc.setFillColor(...b.bg);
+    doc.roundedRect(bx,32,bw,12,2,2,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(7.5);
+    doc.setTextColor(...b.fg);
+    doc.text(b.txt,bx+bw/2,40,{align:'center'});
+  });
+
+  return 68;
+}
+
+/* ── SUMMARY GRID (cajitas con label + valor) ────────────────────── */
+function pdfSummaryGrid(doc,fields,y){
+  // fields: [{label,value,accent?}]  — 3 por fila
+  const{W}=P(doc);
+  const M=14,GAP=6,COLS=3;
+  const cellW=(W-M*2-GAP*(COLS-1))/COLS;
+  const cellH=32;
+
+  for(let i=0;i<fields.length;i++){
+    const col=i%COLS,row=Math.floor(i/COLS);
+    const x=M+col*(cellW+GAP),cy=y+row*(cellH+5);
+    // fondo
+    doc.setFillColor(...PC.navy3);doc.roundedRect(x,cy,cellW,cellH,2,2,'F');
+    doc.setDrawColor(...PC.line);doc.setLineWidth(0.4);doc.roundedRect(x,cy,cellW,cellH,2,2,'S');
+    // label
+    doc.setFont('helvetica','normal');doc.setFontSize(6.5);
+    doc.setTextColor(...PC.gray);doc.text(fields[i].label.toUpperCase(),x+6,cy+9);
+    // valor
+    const valColor=fields[i].accent?PC.cyan:PC.white;
+    doc.setFont('helvetica','bold');doc.setFontSize(fields[i].big?13:10);
+    doc.setTextColor(...valColor);doc.text(fields[i].value,x+6,cy+24);
+  }
+  const rows=Math.ceil(fields.length/COLS);
+  return y+rows*(cellH+5)+4;
+}
+
+/* ── SECCIÓN CON HEADER ──────────────────────────────────────────── */
+function pdfSection(doc,txt,y){
+  const{W}=P(doc);
+  if(y>760){doc.addPage();y=20;}
+  doc.setFillColor(...PC.navy3);doc.rect(0,y,W,11,'F');
+  doc.setDrawColor(...PC.blue2);doc.setLineWidth(0.4);doc.line(0,y+11,W,y+11);
+  doc.setFillColor(...PC.blue);doc.rect(0,y,3,11,'F');
+  // espaciado entre letras manual
+  doc.setFont('helvetica','bold');doc.setFontSize(7.5);
+  doc.setTextColor(...PC.cyan);
+  doc.text(txt.toUpperCase(),9,y+7.5);
+  return y+17;
+}
+
+/* ── FILA NORMAL ─────────────────────────────────────────────────── */
+// tipo: 'normal'|'subtotal'|'total'|'info'
+// alt: alterna fondo ligeramente
+function pdfRow2(doc,lbl,rate,val,y,{tipo='normal',alt=false,indent=false}={}){
+  const{W}=P(doc);
+  if(y>770){doc.addPage();y=20;}
+  const H=tipo==='total'?18:tipo==='subtotal'?14:12;
+
+  if(tipo==='total'){
+    doc.setFillColor(...PC.navy);doc.rect(0,y,W,H,'F');
+    doc.setDrawColor(...PC.green);doc.setLineWidth(0.5);
+    doc.line(0,y,W,y);doc.line(0,y+H,W,y+H);
+    doc.setFont('helvetica','bold');doc.setFontSize(10);
+    doc.setTextColor(...PC.white);doc.text(lbl,12,y+12);
+    if(rate){doc.setTextColor(...PC.gray);doc.setFontSize(8);doc.text(rate,W/2,y+12,{align:'center'});}
+    doc.setFont('helvetica','bold');doc.setFontSize(11);
+    doc.setTextColor(...PC.green);doc.text(val,W-12,y+12,{align:'right'});
+    return y+H+1;
+  }
+  if(tipo==='subtotal'){
+    doc.setFillColor(20,38,66);doc.rect(0,y,W,H,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(8.5);
+    doc.setTextColor(...PC.white2);doc.text(lbl,12,y+9);
+    if(rate){doc.setTextColor(...PC.gray);doc.setFontSize(7.5);doc.text(rate,W/2,y+9,{align:'center'});}
+    doc.setFont('helvetica','bold');doc.setFontSize(9);
+    doc.setTextColor(...PC.white2);doc.text(val,W-12,y+9,{align:'right'});
+    return y+H+1;
+  }
+  // normal / info
+  if(alt){doc.setFillColor(...PC.rowAlt);doc.rect(0,y,W,H,'F');}
+  const lx=indent?20:12;
+  doc.setFont('helvetica','normal');doc.setFontSize(8.5);
+  doc.setTextColor(...PC.gray);doc.text(lbl,lx,y+8);
+  if(rate){doc.setTextColor(...PC.gray2);doc.setFontSize(7.5);doc.text(rate,W/2,y+8,{align:'center'});}
+  const isNeg=val.startsWith('−')||val.startsWith('-');
+  const isPos=!isNeg&&(val.startsWith('+')||tipo==='info');
+  const vc=isNeg?PC.red:isPos?PC.green:PC.white2;
+  doc.setFont('helvetica','bold');doc.setFontSize(8.5);
+  doc.setTextColor(...vc);doc.text(val,W-12,y+8,{align:'right'});
+  // línea divisora sutil
+  doc.setDrawColor(...PC.line);doc.setLineWidth(0.3);doc.line(12,y+H,W-12,y+H);
+  return y+H+1;
+}
+
+/* ── CAJA FINAL GRANDE ───────────────────────────────────────────── */
+function pdfFinalBox(doc,label,value,y){
+  const{W}=P(doc);
+  if(y>730){doc.addPage();y=20;}
+  doc.setFillColor(...PC.navy);doc.roundedRect(0,y,W,36,0,0,'F');
+  doc.setFillColor(...PC.navy3);doc.roundedRect(0,y,W,3,0,0,'F'); // top accent
+  doc.setFillColor(...PC.green);doc.rect(0,y,4,36,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(10);
+  doc.setTextColor(...PC.white);doc.text(label,14,y+22);
+  doc.setFont('helvetica','bold');doc.setFontSize(18);
+  doc.setTextColor(...PC.green);doc.text(value,W-14,y+24,{align:'right'});
+  return y+36+6;
+}
+
+/* ── FOOTER ──────────────────────────────────────────────────────── */
+function pdfFooter(doc,lines,ref){
+  const{W,H}=P(doc);
+  doc.setFillColor(...PC.navy3);doc.rect(0,H-24,W,24,'F');
+  doc.setDrawColor(...PC.line);doc.setLineWidth(0.4);doc.line(0,H-24,W,H-24);
+  doc.setFont('helvetica','normal');doc.setFontSize(6.5);
+  doc.setTextColor(...PC.gray2);
+  doc.text(lines.join('  ·  '),12,H-14);
+  doc.text(ref,W-12,H-14,{align:'right'});
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   EXPORT TC PDF
+   ══════════════════════════════════════════════════════════════════ */
 function exportTCpdf(tipo){
   const{jsPDF}=window.jspdf,t=TCcache;if(!t.tcBruto)return;
-  const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
-  const ts=new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const mkt=el('mh-txt').textContent||'—';
+  const now=new Date();
+  const fecha=now.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const hora =now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
   const comm=t.comm/100;
-  let y=pdfHdr(doc,tipo==='ars'?`Compra ${t.modo}`:`Venta ${t.modo}`,`Comisión: ${t.comm.toFixed(2)}%`,ts);
+  const isARS=tipo==='ars';
+  const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
 
-  y=pdfSec(doc,'Tasas de referencia',y);
-  y=pdfRow(doc,'TC Bruto (AL30 / '+(t.modo==='MEP'?'AL30D':'AL30C')+')',fmt(t.tcBruto,4),y);
-  y=pdfRow(doc,'TC Implícito Compra (ARS→USD)',fmt(t.tcBuy,4),y);
-  y=pdfRow(doc,'TC Implícito Venta  (USD→ARS)',fmt(t.tcSell,4),y);
-  y+=4;
+  // ── Header
+  let y=pdfHeader(doc,{
+    titulo:'TC MEP / CCL',
+    subtitulo:'',fecha,hora,mercado:mkt,
+    badges:[
+      {txt:isARS?'COMPRA':'VENTA',  bg:isARS?PC.blue:PC.amber,   fg:isARS?PC.white:[0,0,0]},
+      {txt:t.modo+' · AL30'+(t.modo==='MEP'?'D':'C'), bg:PC.navy3, fg:PC.white2},
+    ]
+  });
 
-  if(tipo==='ars'){
+  // ── Summary grid
+  if(isARS){
     const ars=parseFloat(el('calc-ars-in').value);if(!ars)return;
     const commARS=ars*comm,ddmmARS=ars*DDMM,usdBruto=(ars-commARS-ddmmARS)/t.tcBruto;
     const ddmmUSDars=usdBruto*DDMM*t.bcra,usdNeto=(ars-commARS-ddmmARS-ddmmUSDars)/t.tcBruto;
-    y=pdfSec(doc,'Punta ARS  —  venta de pesos',y);
-    y=pdfRow(doc,'ARS operados',fmtARS(ars),y);
-    y=pdfRow(doc,'Comisión '+t.comm.toFixed(2)+'% × ARS operados','−'+fmtARS(commARS),y);
-    y=pdfRow(doc,'DDMM 0.0100% × ARS operados','−'+fmtARS(ddmmARS),y);
-    y=pdfSec(doc,'Punta USD  —  compra de dólares',y);
-    y=pdfRow(doc,'USD '+t.modo+' bruto  (TC '+fmt(t.tcBruto,4)+')',fmtUSD(usdBruto),y);
-    y=pdfRow(doc,'DDMM 0.0100% × USD bruto × $'+fmt(t.bcra,2)+' BCRA','−'+fmtARS(ddmmUSDars),y);
-    y=pdfSec(doc,'Resultado',y);
-    y=pdfRow(doc,'TC efectivo aplicado',fmt(ars/usdNeto,4),y);
-    y=pdfRow(doc,'USD '+t.modo+' NETO RECIBIDOS',fmtUSD(usdNeto),y,true);
+    const tcEf=ars/usdNeto;
+    y=pdfSummaryGrid(doc,[
+      {label:'ARS operados',       value:fmtARS(ars),       big:true},
+      {label:'Instrumento',        value:t.modo+' (AL30/AL30'+(t.modo==='MEP'?'D':'C')+')',big:false},
+      {label:'TC oficial BCRA',    value:fmtARS(t.bcra),    big:false},
+      {label:'Comisión',           value:t.comm.toFixed(2)+'%',big:false},
+      {label:'TC bruto',           value:fmt(t.tcBruto,4),  big:false},
+      {label:'TC efectivo',        value:fmt(tcEf,4),        big:false,accent:true},
+    ],y);
+    y+=4;
+
+    y=pdfSection(doc,'Punta ARS  —  Venta de pesos',y);
+    y=pdfRow2(doc,'Monto base operado','',fmtARS(ars),y);
+    y=pdfRow2(doc,'Comisión '+t.comm.toFixed(2)+'%  (sobre ARS operados)',t.comm.toFixed(2)+'%','−'+fmtARS(commARS),y,{alt:true,indent:true});
+    y=pdfRow2(doc,'DDMM ALyC  (0.0100% sobre ARS operados)','0.0100%','−'+fmtARS(ddmmARS),y,{indent:true});
+    y=pdfRow2(doc,'Total costos punta ARS','','-'+fmtARS(commARS+ddmmARS),y,{tipo:'subtotal'});
+
+    y=pdfSection(doc,'Punta USD  —  Compra de dólares',y);
+    y=pdfRow2(doc,'USD '+t.modo+' bruto  (a TC bruto '+fmt(t.tcBruto,4)+')','',fmtUSD(usdBruto),y);
+    y=pdfRow2(doc,'DDMM ALyC  (0.0100% × USD bruto × TC oficial)','0.0100%','−'+fmtARS(ddmmUSDars),y,{alt:true,indent:true});
+
+    y=pdfSection(doc,'Resultado',y);
+    y=pdfRow2(doc,'TC bruto',           '',fmt(t.tcBruto,4),y,{tipo:'info'});
+    y=pdfRow2(doc,'TC implícito compra','',fmt(t.tcBuy,4),y,{alt:true,tipo:'info'});
+    y=pdfRow2(doc,'TC efectivo aplicado','',fmt(tcEf,4),y,{tipo:'info'});
+    y+=6;
+    y=pdfFinalBox(doc,'USD '+t.modo+' NETO RECIBIDOS',fmtUSD(usdNeto),y);
+    pdfFooter(doc,['CÁLCULO ORIENTATIVO · NO INCLUYE SELLADO NI RETENCIONES','Comisión sobre ARS operados. DDMM 0.0100% por punta. Exento IVA.'],
+      'data912.com · BYMA T+1');
+
   } else {
     const usd=parseFloat(el('calc-usd-in').value);if(!usd)return;
     const arsBruto=usd*t.tcBruto,commARS=arsBruto*comm,ddmmARS=arsBruto*DDMM;
     const ddmmUSDars=usd*DDMM*t.bcra,arsNeto=arsBruto-commARS-ddmmARS-ddmmUSDars;
-    y=pdfSec(doc,'Punta USD  —  venta de dólares',y);
-    y=pdfRow(doc,'USD '+t.modo+' operados',fmtUSD(usd),y);
-    y=pdfRow(doc,'DDMM 0.0100% × USD × $'+fmt(t.bcra,2)+' BCRA','−'+fmtARS(ddmmUSDars),y);
-    y=pdfSec(doc,'Punta ARS  —  compra de pesos',y);
-    y=pdfRow(doc,'ARS bruto  (TC '+fmt(t.tcBruto,4)+')',fmtARS(arsBruto),y);
-    y=pdfRow(doc,'Comisión '+t.comm.toFixed(2)+'% × ARS bruto','−'+fmtARS(commARS),y);
-    y=pdfRow(doc,'DDMM 0.0100% × ARS bruto','−'+fmtARS(ddmmARS),y);
-    y=pdfSec(doc,'Resultado',y);
-    y=pdfRow(doc,'TC efectivo aplicado',fmt(arsNeto/usd,4),y);
-    y=pdfRow(doc,'ARS NETOS A PAGAR',fmtARS(arsNeto),y,true);
+    const tcEf=arsNeto/usd;
+    y=pdfSummaryGrid(doc,[
+      {label:'USD '+t.modo+' operados', value:fmtUSD(usd),        big:true},
+      {label:'Instrumento',             value:t.modo+' (AL30/AL30'+(t.modo==='MEP'?'D':'C')+')',big:false},
+      {label:'TC oficial BCRA',         value:fmtARS(t.bcra),     big:false},
+      {label:'Comisión',                value:t.comm.toFixed(2)+'%',big:false},
+      {label:'TC bruto',                value:fmt(t.tcBruto,4),   big:false},
+      {label:'TC efectivo',             value:fmt(tcEf,4),         big:false,accent:true},
+    ],y);
+    y+=4;
+
+    y=pdfSection(doc,'Punta USD  —  Venta de dólares',y);
+    y=pdfRow2(doc,'USD '+t.modo+' operados','',fmtUSD(usd),y);
+    y=pdfRow2(doc,'DDMM ALyC  (0.0100% × USD × TC oficial '+fmt(t.bcra,2)+')','0.0100%','−'+fmtARS(ddmmUSDars),y,{alt:true,indent:true});
+
+    y=pdfSection(doc,'Punta ARS  —  Compra de pesos',y);
+    y=pdfRow2(doc,'ARS bruto  (a TC bruto '+fmt(t.tcBruto,4)+')','',fmtARS(arsBruto),y);
+    y=pdfRow2(doc,'Comisión '+t.comm.toFixed(2)+'%  (sobre ARS bruto)',t.comm.toFixed(2)+'%','−'+fmtARS(commARS),y,{alt:true,indent:true});
+    y=pdfRow2(doc,'DDMM ALyC  (0.0100% sobre ARS bruto)','0.0100%','−'+fmtARS(ddmmARS),y,{indent:true});
+    y=pdfRow2(doc,'Total costos punta ARS','','-'+fmtARS(commARS+ddmmARS+ddmmUSDars),y,{tipo:'subtotal'});
+
+    y=pdfSection(doc,'Resultado',y);
+    y=pdfRow2(doc,'TC bruto',            '',fmt(t.tcBruto,4),y,{tipo:'info'});
+    y=pdfRow2(doc,'TC implícito venta',  '',fmt(t.tcSell,4), y,{alt:true,tipo:'info'});
+    y=pdfRow2(doc,'TC efectivo aplicado','',fmt(tcEf,4),      y,{tipo:'info'});
+    y+=6;
+    y=pdfFinalBox(doc,'ARS NETOS A PAGAR',fmtARS(arsNeto),y);
+    pdfFooter(doc,['CÁLCULO ORIENTATIVO · NO INCLUYE SELLADO NI RETENCIONES','Comisión sobre ARS operados. DDMM 0.0100% por punta. Exento IVA.'],
+      'data912.com · BYMA T+1');
   }
-  y=pdfDiv(doc,y+6);
-  pdfNote(doc,['Comisión: '+t.comm.toFixed(2)+'% sobre ARS operados (punta ARS). DDMM: 0.0100% por punta.','Punta ARS: sobre ARS totales. Punta USD: en ARS al TC oficial BCRA $'+fmt(t.bcra,2)+'. Exento IVA.','Precios tiempo real: data912.com  ·  Portfolio Investment'],y);
-  doc.save(`TC_${t.modo}_${tipo==='ars'?'Compra':'Venta'}_${new Date().toISOString().slice(0,10)}.pdf`);
+  doc.save(`TC_${t.modo}_${isARS?'Compra':'Venta'}_${now.toISOString().slice(0,10)}.pdf`);
 }
 
-/* ── PDF CANJE ── */
+/* ══════════════════════════════════════════════════════════════════
+   EXPORT CANJE PDF
+   ══════════════════════════════════════════════════════════════════ */
 function exportCanjePdf(dir){
   const{jsPDF}=window.jspdf,t=CANJEcache;if(!t.d)return;
-  const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
-  const ts=new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  const label=dir==='c2m'?'Cable → MEP':'MEP → Cable';
+  const mkt=el('mh-txt').textContent||'—';
+  const now=new Date();
+  const fecha=now.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const hora =now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
   const cc=t.comm/100;
-  let y=pdfHdr(doc,'Canje '+label,'Comisión: '+t.comm.toFixed(2)+'%',ts);
+  const isC2M=dir==='c2m';
+  const label=isC2M?'Cable → MEP':'MEP → Cable';
+  const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
 
-  y=pdfSec(doc,'Precios de mercado (T+1)',y);
-  y=pdfRow(doc,'AL30D  (USD MEP)',fmtUSD(t.d),y);
-  y=pdfRow(doc,'AL30C  (USD Cable)',fmtUSD(t.c),y);
-  y=pdfRow(doc,'TC oficial BCRA',fmtARS(t.bcra),y);
-  y+=4;
+  // ── Header
+  let y=pdfHeader(doc,{
+    titulo:'CANJE '+label.toUpperCase(),
+    subtitulo:'',fecha,hora,mercado:mkt,
+    badges:[
+      {txt:'CANJE',           bg:PC.cyan,   fg:[0,0,0]},
+      {txt:isC2M?'CABLE → MEP':'MEP → CABLE', bg:PC.navy3, fg:PC.white2},
+    ]
+  });
 
-  if(dir==='c2m'){
+  if(isC2M){
     const cable=parseFloat(el('calc-c2m-in').value);if(!cable)return;
     const mepBruto=cable*(t.d/t.c),commUSD=mepBruto*cc,mepNeto=mepBruto-commUSD;
     const dd1=cable   *DDMM*t.bcra,dd2=mepBruto*DDMM*t.bcra;
     const spread=(mepNeto/cable-1)*100;
-    y=pdfSec(doc,'Punta Cable  —  venta de Cable',y);
-    y=pdfRow(doc,'USD Cable a canjear',fmtUSD(cable),y);
-    y=pdfRow(doc,'DDMM 0.0100% × USD Cable × $'+fmt(t.bcra,2)+' BCRA','−'+fmtARS(dd1),y);
-    y=pdfSec(doc,'Punta MEP  —  compra de MEP',y);
-    y=pdfRow(doc,'USD MEP bruto  (× '+fmt(t.d/t.c,6)+'  AL30D/AL30C)',fmtUSD(mepBruto),y);
-    y=pdfRow(doc,'Comisión '+t.comm.toFixed(2)+'% × USD MEP bruto','−USD '+fmt(commUSD,2),y);
-    y=pdfRow(doc,'DDMM 0.0100% × USD MEP bruto × $'+fmt(t.bcra,2)+' BCRA','−'+fmtARS(dd2),y);
-    y=pdfSec(doc,'Resultado',y);
-    y=pdfRow(doc,'Spread efectivo neto',fmtPct(spread,4),y);
-    y=pdfRow(doc,'USD MEP NETO RECIBIDOS',fmtUSD(mepNeto),y,true);
+
+    y=pdfSummaryGrid(doc,[
+      {label:'USD Cable a canjear', value:fmtUSD(cable),             big:true},
+      {label:'AL30D  (USD MEP)',    value:fmtUSD(t.d),               big:false},
+      {label:'AL30C  (USD Cable)',  value:fmtUSD(t.c),               big:false},
+      {label:'TC oficial BCRA',     value:fmtARS(t.bcra),            big:false},
+      {label:'Comisión (sobre MEP)',value:t.comm.toFixed(2)+'%',     big:false},
+      {label:'Spread efectivo neto',value:fmtPct(spread,4),          big:false,accent:true},
+    ],y);
+    y+=4;
+
+    y=pdfSection(doc,'Punta Cable  —  Venta de Cable',y);
+    y=pdfRow2(doc,'USD Cable a canjear','',fmtUSD(cable),y);
+    y=pdfRow2(doc,'DDMM ALyC  (0.0100% × USD Cable × TC oficial '+fmt(t.bcra,2)+')','0.0100%','−'+fmtARS(dd1),y,{alt:true,indent:true});
+
+    y=pdfSection(doc,'Punta MEP  —  Compra de MEP',y);
+    y=pdfRow2(doc,'USD MEP bruto  (× '+fmt(t.d/t.c,6)+'  ≙  AL30D/AL30C)','',fmtUSD(mepBruto),y);
+    y=pdfRow2(doc,'Comisión '+t.comm.toFixed(2)+'%  (sobre USD MEP bruto)',t.comm.toFixed(2)+'%','−USD '+fmt(commUSD,2),y,{alt:true,indent:true});
+    y=pdfRow2(doc,'DDMM ALyC  (0.0100% × USD MEP bruto × TC oficial '+fmt(t.bcra,2)+')','0.0100%','−'+fmtARS(dd2),y,{indent:true});
+
+    y=pdfSection(doc,'Resultado',y);
+    y=pdfRow2(doc,'Spread bruto Cable→MEP', '',fmtPct(t.c2m,4), y,{tipo:'info'});
+    y=pdfRow2(doc,'Comisión neta',          '','-'+t.comm.toFixed(2)+'%',y,{alt:true});
+    y=pdfRow2(doc,'Spread efectivo neto',   '',fmtPct(spread,4),y,{tipo:'info'});
+    y+=6;
+    y=pdfFinalBox(doc,'USD MEP NETO RECIBIDOS',fmtUSD(mepNeto),y);
+    pdfFooter(doc,['CÁLCULO ORIENTATIVO · NO INCLUYE SELLADO NI RETENCIONES','Comisión en USD sobre punta MEP. DDMM 0.0100% por pata → ARS al TC BCRA. Exento IVA.'],
+      'data912.com · AL30D/AL30C');
+
   } else {
     const mep=parseFloat(el('calc-m2c-in').value);if(!mep)return;
     const cableBruto=mep*(t.c/t.d),commUSD=cableBruto*cc,cableNeto=cableBruto-commUSD;
-    const dd1=mep       *DDMM*t.bcra,dd2=cableBruto*DDMM*t.bcra;
+    const dd1=mep*DDMM*t.bcra,dd2=cableBruto*DDMM*t.bcra;
     const spread=(cableNeto/mep-1)*100;
-    y=pdfSec(doc,'Punta MEP  —  venta de MEP',y);
-    y=pdfRow(doc,'USD MEP a canjear',fmtUSD(mep),y);
-    y=pdfRow(doc,'DDMM 0.0100% × USD MEP × $'+fmt(t.bcra,2)+' BCRA','−'+fmtARS(dd1),y);
-    y=pdfSec(doc,'Punta Cable  —  compra de Cable',y);
-    y=pdfRow(doc,'USD Cable bruto  (× '+fmt(t.c/t.d,6)+'  AL30C/AL30D)',fmtUSD(cableBruto),y);
-    y=pdfRow(doc,'Comisión '+t.comm.toFixed(2)+'% × USD Cable bruto','−USD '+fmt(commUSD,2),y);
-    y=pdfRow(doc,'DDMM 0.0100% × USD Cable bruto × $'+fmt(t.bcra,2)+' BCRA','−'+fmtARS(dd2),y);
-    y=pdfSec(doc,'Resultado',y);
-    y=pdfRow(doc,'Spread efectivo neto',fmtPct(spread,4),y);
-    y=pdfRow(doc,'USD Cable NETO RECIBIDOS',fmtUSD(cableNeto),y,true);
+
+    y=pdfSummaryGrid(doc,[
+      {label:'USD MEP a canjear',    value:fmtUSD(mep),              big:true},
+      {label:'AL30D  (USD MEP)',     value:fmtUSD(t.d),              big:false},
+      {label:'AL30C  (USD Cable)',   value:fmtUSD(t.c),              big:false},
+      {label:'TC oficial BCRA',      value:fmtARS(t.bcra),           big:false},
+      {label:'Comisión (sobre Cable)',value:t.comm.toFixed(2)+'%',   big:false},
+      {label:'Spread efectivo neto', value:fmtPct(spread,4),         big:false,accent:true},
+    ],y);
+    y+=4;
+
+    y=pdfSection(doc,'Punta MEP  —  Venta de MEP',y);
+    y=pdfRow2(doc,'USD MEP a canjear','',fmtUSD(mep),y);
+    y=pdfRow2(doc,'DDMM ALyC  (0.0100% × USD MEP × TC oficial '+fmt(t.bcra,2)+')','0.0100%','−'+fmtARS(dd1),y,{alt:true,indent:true});
+
+    y=pdfSection(doc,'Punta Cable  —  Compra de Cable',y);
+    y=pdfRow2(doc,'USD Cable bruto  (× '+fmt(t.c/t.d,6)+'  ≙  AL30C/AL30D)','',fmtUSD(cableBruto),y);
+    y=pdfRow2(doc,'Comisión '+t.comm.toFixed(2)+'%  (sobre USD Cable bruto)',t.comm.toFixed(2)+'%','−USD '+fmt(commUSD,2),y,{alt:true,indent:true});
+    y=pdfRow2(doc,'DDMM ALyC  (0.0100% × USD Cable bruto × TC oficial '+fmt(t.bcra,2)+')','0.0100%','−'+fmtARS(dd2),y,{indent:true});
+
+    y=pdfSection(doc,'Resultado',y);
+    y=pdfRow2(doc,'Spread bruto MEP→Cable', '',fmtPct(t.m2c,4), y,{tipo:'info'});
+    y=pdfRow2(doc,'Comisión neta',          '','-'+t.comm.toFixed(2)+'%',y,{alt:true});
+    y=pdfRow2(doc,'Spread efectivo neto',   '',fmtPct(spread,4),y,{tipo:'info'});
+    y+=6;
+    y=pdfFinalBox(doc,'USD Cable NETO RECIBIDOS',fmtUSD(cableNeto),y);
+    pdfFooter(doc,['CÁLCULO ORIENTATIVO · NO INCLUYE SELLADO NI RETENCIONES','Comisión en USD sobre punta Cable. DDMM 0.0100% por pata → ARS al TC BCRA. Exento IVA.'],
+      'data912.com · AL30D/AL30C');
   }
-  y=pdfDiv(doc,y+6);
-  pdfNote(doc,['Comisión: '+t.comm.toFixed(2)+'% sobre el punta resultante en USD (sin conversión a ARS).','DDMM: 0.0100% por pata en USD → ARS al TC oficial BCRA $'+fmt(t.bcra,2)+'. Exento IVA.','Precios tiempo real: data912.com  ·  Portfolio Investment'],y);
-  doc.save(`Canje_${dir==='c2m'?'Cable_a_MEP':'MEP_a_Cable'}_${new Date().toISOString().slice(0,10)}.pdf`);
+  doc.save(`Canje_${isC2M?'Cable_a_MEP':'MEP_a_Cable'}_${now.toISOString().slice(0,10)}.pdf`);
 }
 
 /* ── INIT ── */
