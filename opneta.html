@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Investment — Calculadora de Liquidación</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --navy:   #0d1b2e;
+  --navy2:  #122540;
+  --navy3:  #172d4d;
+  --border: #2a4a7a;
+  --border2:#3a5a8a;
+  --blue:   #3a6fd8;
+  --blue2:  #5b8def;
+  --blue3:  #7aa3f0;
+  --blue4:  #a8c4f8;
+  --white:  #f0f4ff;
+  --white2: #d0ddf5;
+  --gray:   #7a99c4;
+  --gray2:  #4a6a9a;
+  --green:  #22d68a;
+  --green2: #16a86a;
+  --red:    #ff4d6a;
+  --red2:   #cc3a55;
+  --amber:  #f0b429;
+  --font:   'Inter', sans-serif;
+  --mono:   'JetBrains Mono', 'Courier New', monospace;
+}
+
+html,body{background:var(--navy);color:var(--white);font-family:var(--font);font-size:13px;min-height:100vh;overflow-x:hidden}
+
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--navy2)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ─── TOP BAR & NAV ─── */
+.top-bar{
+  background:linear-gradient(135deg, var(--navy2) 0%, var(--navy3) 100%);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:56px;position:sticky;top:0;z-index:200;
+  box-shadow:0 2px 16px rgba(0,0,0,.4);
+}
+.logo-area{display:flex;align-items:center;gap:12px}
+.logo-text{display:flex;flex-direction:column;line-height:1.1}
+.logo-text strong{font-size:16px;font-weight:800;color:var(--white);letter-spacing:-.02em}
+.logo-text span{font-size:10px;font-weight:500;color:var(--blue3);letter-spacing:.08em;text-transform:uppercase}
+.nav-bar{
+  background:var(--navy2);border-bottom:2px solid var(--border);
+  display:flex;align-items:stretch;padding:0 20px;gap:0;
+}
+.nav-tab{
+  display:flex;align-items:center;gap:8px;padding:0 22px;height:42px;
+  font-family:var(--font);font-size:12px;font-weight:600;
+  letter-spacing:.04em;text-transform:uppercase;
+  color:var(--gray);border:none;background:none;
+  cursor:pointer;border-bottom:2px solid transparent;
+  margin-bottom:-2px;transition:all .15s;
+}
+.nav-tab.active{color:var(--white);border-bottom-color:var(--blue);background:rgba(58,111,216,.12)}
+
+/* ─── LAYOUT CALCULADORA ─── */
+.calc-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-width: 1000px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+@media (max-width: 768px) {
+  .calc-container { grid-template-columns: 1fr; }
+}
+
+.calc-panel {
+  background: var(--navy2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.2);
+}
+
+.panel-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue2);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+
+/* ─── FORMS ─── */
+.form-group {
+  margin-bottom: 16px;
+}
+.form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.form-control {
+  width: 100%;
+  background: var(--navy);
+  border: 1px solid var(--border);
+  color: var(--white);
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-family: var(--font);
+  font-size: 14px;
+  transition: border-color .15s;
+}
+.form-control:focus {
+  outline: none;
+  border-color: var(--blue2);
+}
+.form-control.mono {
+  font-family: var(--mono);
+}
+
+.input-group {
+  display: flex;
+  align-items: stretch;
+}
+.input-group-addon {
+  background: var(--navy3);
+  border: 1px solid var(--border);
+  border-right: none;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  color: var(--gray);
+  font-weight: 600;
+  border-radius: 4px 0 0 4px;
+}
+.input-group .form-control {
+  border-radius: 0 4px 4px 0;
+}
+
+/* ─── INFO BADGE ─── */
+.info-badge {
+  display: inline-block;
+  background: rgba(58,111,216,.1);
+  border: 1px solid var(--border);
+  color: var(--blue3);
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  margin-top: 8px;
+  width: 100%;
+}
+.info-badge span { font-family: var(--mono); font-weight: 600; color: var(--amber); }
+
+/* ─── RESULTS TICKET ─── */
+.ticket-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px dashed rgba(42,74,122,.4);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.ticket-row:last-child { border-bottom: none; }
+.ticket-label { color: var(--gray); font-family: var(--font); font-size: 12px; }
+.ticket-val { color: var(--white2); font-weight: 500; }
+
+.ticket-divider {
+  height: 2px;
+  background: var(--border);
+  margin: 16px 0;
+}
+
+.net-box {
+  background: var(--navy);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px;
+  margin-top: 16px;
+}
+.net-box.compra { border-left: 4px solid var(--red); }
+.net-box.venta { border-left: 4px solid var(--green); }
+
+.net-title {
+  font-size: 11px;
+  color: var(--gray);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 4px;
+}
+.net-amount {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="logo-area">
+    <div class="logo-text">
+      <strong>Portfolio Investment</strong>
+      <span>Sistema de Cálculo Financiero</span>
+    </div>
+  </div>
+</div>
+
+<div class="nav-bar">
+  <button class="nav-tab" onclick="location.href='#'">◉ Resumen</button>
+  <button class="nav-tab" onclick="location.href='#'">📊 Bonos CER</button>
+  <button class="nav-tab active">🧮 Calculadora de Neto</button>
+</div>
+
+<div class="calc-container">
+  
+  <div class="calc-panel">
+    <div class="panel-title">Parámetros de Operación</div>
+    
+    <div class="form-group">
+      <label class="form-label">Instrumento</label>
+      <select class="form-control" id="calc-tipo" onchange="actualizarCalculo()">
+        <option value="bonos">Bonos Soberanos</option>
+        <option value="letras">Letras</option>
+        <option value="acciones">Acciones / Cedears</option>
+        <option value="ons">Obligaciones Negociables (ON)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Moneda de Liquidación</label>
+      <select class="form-control" id="calc-moneda" onchange="actualizarCalculo()">
+        <option value="ARS">Pesos (ARS)</option>
+        <option value="MEP">Dólar MEP (USD)</option>
+        <option value="CABLE">Dólar Cable (USD)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Monto Bruto Operado</label>
+      <div class="input-group">
+        <span class="input-group-addon" id="lbl-moneda">$</span>
+        <input type="number" class="form-control mono" id="calc-monto" value="1000000" step="any" oninput="actualizarCalculo()">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Arancel (Comisión del Broker)</label>
+      <div class="input-group">
+        <input type="number" class="form-control mono" id="calc-arancel" value="0.5" step="0.01" oninput="actualizarCalculo()">
+        <span class="input-group-addon" style="border-radius: 0 4px 4px 0; border-right: 1px solid var(--border); border-left: none;">%</span>
+      </div>
+    </div>
+
+    <div class="info-badge" id="info-ddmm">
+      Der. de Mercado (DDMM): <span id="lbl-ddmm-pct">0.01%</span> | IVA: <span id="lbl-iva-status">Exento</span>
+    </div>
+  </div>
+
+  <div class="calc-panel">
+    <div class="panel-title">Liquidación Estimada</div>
+    
+    <div class="ticket-row">
+      <span class="ticket-label">Monto Bruto</span>
+      <span class="ticket-val" id="res-bruto">0.00</span>
+    </div>
+    <div class="ticket-row">
+      <span class="ticket-label">Arancel Broker (<span id="res-arancel-pct">0.5</span>%)</span>
+      <span class="ticket-val" id="res-arancel" style="color: var(--amber)">0.00</span>
+    </div>
+    <div class="ticket-row">
+      <span class="ticket-label">DD.MM (<span id="res-ddmm-pct">0.01</span>%)</span>
+      <span class="ticket-val" id="res-ddmm" style="color: var(--amber)">0.00</span>
+    </div>
+    <div class="ticket-row" id="row-iva">
+      <span class="ticket-label">IVA (21% s/ comisiones)</span>
+      <span class="ticket-val" id="res-iva" style="color: var(--amber)">0.00</span>
+    </div>
+    
+    <div class="ticket-divider"></div>
+    
+    <div class="ticket-row">
+      <span class="ticket-label" style="font-weight:700; color:var(--white)">Total Gastos</span>
+      <span class="ticket-val" id="res-gastos" style="color: var(--red)">0.00</span>
+    </div>
+
+    <div class="net-box compra">
+      <div class="net-title">Si es Compra (Monto a Integrar)</div>
+      <div class="net-amount" id="neto-compra">0.00</div>
+      <div style="font-size:10px; color:var(--gray); margin-top:4px;">Se suman los gastos al bruto.</div>
+    </div>
+
+    <div class="net-box venta">
+      <div class="net-title">Si es Venta (Monto a Cobrar)</div>
+      <div class="net-amount" id="neto-venta">0.00</div>
+      <div style="font-size:10px; color:var(--gray); margin-top:4px;">Se descuentan los gastos del bruto.</div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// Configuración estricta de condiciones de mercado
+const CONDICIONES = {
+  'bonos':    { ddmm: 0.01,  iva: false },
+  'letras':   { ddmm: 0.001, iva: false },
+  'acciones': { ddmm: 0.05,  iva: true  },
+  'ons':      { ddmm: 0.08,  iva: true  }
+};
+
+function formatCurrency(val, mon) {
+  const sym = (mon === 'ARS') ? '$' : 'USD';
+  return sym + ' ' + val.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function actualizarCalculo() {
+  // Obtener inputs
+  const tipo = document.getElementById('calc-tipo').value;
+  const moneda = document.getElementById('calc-moneda').value;
+  const montoBruto = parseFloat(document.getElementById('calc-monto').value) || 0;
+  const arancelPct = parseFloat(document.getElementById('calc-arancel').value) || 0;
+  
+  // Condicionales del instrumento
+  const config = CONDICIONES[tipo];
+  const ddmmPct = config.ddmm;
+  const aplicaIva = config.iva;
+
+  // Actualizar labels visuales de información
+  document.getElementById('lbl-moneda').innerText = (moneda === 'ARS') ? '$' : 'U$S';
+  document.getElementById('lbl-ddmm-pct').innerText = ddmmPct + '%';
+  document.getElementById('lbl-iva-status').innerText = aplicaIva ? '21% (+IVA)' : 'Exento';
+  document.getElementById('lbl-iva-status').style.color = aplicaIva ? 'var(--red)' : 'var(--green)';
+
+  // Matemática
+  const gastoArancel = montoBruto * (arancelPct / 100);
+  const gastoDDMM = montoBruto * (ddmmPct / 100);
+  
+  let gastoIva = 0;
+  if (aplicaIva) {
+    gastoIva = (gastoArancel + gastoDDMM) * 0.21;
+  }
+  
+  const totalGastos = gastoArancel + gastoDDMM + gastoIva;
+  
+  const netoCompra = montoBruto + totalGastos;
+  const netoVenta = montoBruto - totalGastos;
+
+  // Render en pantalla
+  document.getElementById('res-bruto').innerText = formatCurrency(montoBruto, moneda);
+  
+  document.getElementById('res-arancel-pct').innerText = arancelPct;
+  document.getElementById('res-arancel').innerText = formatCurrency(gastoArancel, moneda);
+  
+  document.getElementById('res-ddmm-pct').innerText = ddmmPct;
+  document.getElementById('res-ddmm').innerText = formatCurrency(gastoDDMM, moneda);
+  
+  document.getElementById('res-iva').innerText = formatCurrency(gastoIva, moneda);
+  document.getElementById('row-iva').style.opacity = aplicaIva ? '1' : '0.4'; // Dimm si está exento
+  
+  document.getElementById('res-gastos').innerText = formatCurrency(totalGastos, moneda);
+
+  document.getElementById('neto-compra').innerText = formatCurrency(netoCompra, moneda);
+  document.getElementById('neto-venta').innerText = formatCurrency(netoVenta, moneda);
+}
+
+// Init en primera carga
+document.addEventListener('DOMContentLoaded', actualizarCalculo);
+</script>
+</body>
+</html>
