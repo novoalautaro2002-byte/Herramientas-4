@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portfolio Investment — Bonos CER</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
 :root{
@@ -35,50 +35,43 @@
 }
 
 html,body{background:var(--navy);color:var(--white);font-family:var(--font);font-size:13px;min-height:100vh;overflow-x:hidden}
-
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:var(--navy2)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 
 /* ─── TOP BAR ─── */
 .top-bar{
-  background:linear-gradient(135deg, var(--navy2) 0%, var(--navy3) 100%);
+  background:linear-gradient(135deg,var(--navy2) 0%,var(--navy3) 100%);
   border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;
   padding:0 20px;height:56px;position:sticky;top:0;z-index:200;
   box-shadow:0 2px 16px rgba(0,0,0,.4);
 }
-.logo-area{display:flex;align-items:center;gap:12px}
 .logo-text{display:flex;flex-direction:column;line-height:1.1}
 .logo-text strong{font-size:16px;font-weight:800;color:var(--white);letter-spacing:-.02em}
 .logo-text span{font-size:10px;font-weight:500;color:var(--blue3);letter-spacing:.08em;text-transform:uppercase}
-.top-right{display:flex;align-items:center;gap:16px}
-.top-badge{font-size:10px;font-weight:600;color:var(--blue4);letter-spacing:.06em;font-family:var(--mono)}
-#clock{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--blue3);letter-spacing:.04em;
+#clock{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--blue3);
   background:var(--navy);padding:3px 8px;border:1px solid var(--border);border-radius:4px}
 
-/* ─── NAV TABS ─── */
+/* ─── NAV ─── */
 .nav-bar{
   background:var(--navy2);border-bottom:2px solid var(--border);
-  display:flex;align-items:stretch;padding:0 20px;gap:0;
+  display:flex;align-items:stretch;padding:0 20px;
 }
 .nav-tab{
   display:flex;align-items:center;gap:8px;padding:0 22px;height:42px;
-  font-family:var(--font);font-size:12px;font-weight:600;
-  letter-spacing:.04em;text-transform:uppercase;
-  color:var(--gray);border:none;background:none;
-  cursor:pointer;border-bottom:2px solid transparent;
-  margin-bottom:-2px;transition:all .15s;white-space:nowrap;
+  font-family:var(--font);font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--gray);border:none;background:none;cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;
 }
 .nav-tab:hover{color:var(--blue3);background:rgba(58,111,216,.08)}
 .nav-tab.active{color:var(--white);border-bottom-color:var(--blue);background:rgba(58,111,216,.12)}
-.nav-spacer{flex:1}
-.nav-meta{display:flex;align-items:center;gap:8px;padding:0 4px}
-.nav-meta-txt{font-size:10px;color:var(--gray2);letter-spacing:.06em;font-family:var(--mono)}
 
 /* ─── PAGE ─── */
 .page{display:block;min-height:calc(100vh - 98px)}
 .lecap-page{min-height:calc(100vh - 98px);display:flex;flex-direction:column;background:var(--navy2)}
+
+/* ─── TOOLBAR ─── */
 .lc-toolbar{
   background:linear-gradient(90deg,var(--navy3),var(--navy2));
   border-bottom:1px solid var(--border);
@@ -99,6 +92,8 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
   border:1px solid;letter-spacing:.06em;font-weight:600;
 }
 .lc-status-pill.ok{color:var(--green);border-color:var(--green2);background:var(--green-bg)}
+.lc-status-pill.err{color:var(--red);border-color:var(--red2);background:var(--red-bg)}
+.lc-status-pill.loading{color:var(--amber);border-color:var(--amber);background:rgba(240,180,41,.08)}
 
 .lc-filters{display:flex;gap:4px}
 .lc-ftab{
@@ -108,56 +103,174 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
   display:flex;align-items:center;transition:all .12s;
 }
 .lc-ftab.on{background:rgba(58,111,216,.2);color:var(--blue2);border-color:var(--blue)}
+
+/* ─── TABLE ─── */
 .lc-table-wrap{flex:1;overflow:auto}
 .lc-table{width:100%;border-collapse:collapse;font-family:var(--mono)}
 .lc-table thead th{
-  padding:8px 14px;font-size:10px;font-weight:700;
-  color:#f0b429;letter-spacing:.12em;text-transform:uppercase;
-  text-align:right;white-space:nowrap;border-bottom:2px solid var(--border);
-  position:sticky;top:0;background:#0a1525;z-index:2;
+  padding:8px 14px;font-size:10px;font-weight:700;color:var(--amber);
+  letter-spacing:.12em;text-transform:uppercase;text-align:right;white-space:nowrap;
+  border-bottom:2px solid var(--border);position:sticky;top:0;background:#0a1525;z-index:2;
 }
 .lc-table thead th:first-child{text-align:left}
-.lc-table tbody tr{border-bottom:1px solid rgba(42,74,122,.4);transition:background .1s}
-.lc-table tbody tr:hover{background:rgba(58,111,216,.12)}
-.lc-table tbody td{padding:7px 14px;font-size:12px;text-align:right;color:var(--white2);white-space:nowrap}
+.lc-table thead th:last-child{text-align:center;width:32px}
+
+.lc-table tbody tr.bond-row{
+  border-bottom:1px solid rgba(42,74,122,.4);
+  transition:background .1s;cursor:pointer;
+}
+.lc-table tbody tr.bond-row:hover{background:rgba(58,111,216,.12)}
+.lc-table tbody tr.bond-row.expanded{
+  background:rgba(58,111,216,.08);
+  border-bottom:none;
+}
+.lc-table tbody td{
+  padding:7px 14px;font-size:12px;text-align:right;color:var(--white2);white-space:nowrap;
+}
 .lc-table tbody td:first-child{text-align:left}
+
 .lc-ticker{font-weight:700;font-size:13px;color:var(--white);letter-spacing:.04em}
+.expand-chev{
+  display:inline-block;font-size:12px;color:var(--gray2);
+  transition:transform .2s ease;user-select:none;line-height:1;
+}
+.expand-chev.open{transform:rotate(180deg);color:var(--blue3)}
 
-.lc-curves-panel{display:flex;flex-direction:column;background:var(--navy2);border-top:2px solid var(--border2)}
-.lc-statusbar{background:var(--navy3);border-top:1px solid var(--border);display:flex;justify-content:space-between;padding:5px 16px;font-size:10px;font-family:var(--mono)}
+/* ─── CALCULATOR ROW ─── */
+.calc-row td{
+  padding:0;background:var(--navy);
+  border-bottom:2px solid var(--border2);
+}
+.calc-panel{
+  padding:16px 20px 20px;
+  display:flex;flex-direction:column;gap:14px;
+  animation:calcIn .2s ease;
+}
+@keyframes calcIn{
+  from{opacity:0;transform:translateY(-8px)}
+  to{opacity:1;transform:translateY(0)}
+}
 
+.calc-header{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:11px;font-weight:700;
+  color:var(--blue3);letter-spacing:.06em;
+}
+.calc-badge{
+  font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:4px;
+  font-weight:600;letter-spacing:.04em;
+}
+.badge-cer{background:rgba(240,180,41,.12);border:1px solid var(--amber);color:var(--amber)}
+.badge-factor{background:rgba(91,141,239,.12);border:1px solid var(--blue2);color:var(--blue2)}
+
+.calc-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr auto;
+  gap:12px;align-items:start;
+}
+
+/* ─── CALC BOXES ─── */
+.calc-box{
+  background:var(--navy3);border:1px solid var(--border);border-radius:6px;
+  padding:14px;display:flex;flex-direction:column;gap:10px;
+}
+.calc-box-title{
+  font-family:var(--mono);font-size:10px;font-weight:700;color:var(--amber);
+  letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px;
+}
+.calc-field{display:flex;flex-direction:column;gap:5px}
+.calc-field-label{
+  font-size:10px;color:var(--gray);letter-spacing:.06em;
+  text-transform:uppercase;font-family:var(--mono);
+}
+.pi-calc{
+  background:var(--navy);border:1px solid var(--border2);color:var(--white);
+  font-family:var(--mono);font-size:13px;font-weight:600;
+  padding:7px 10px;border-radius:4px;width:100%;outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.pi-calc:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(58,111,216,.2)}
+.pi-calc::placeholder{color:var(--gray2);font-weight:400}
+
+.calc-results{
+  display:grid;grid-template-columns:1fr 1fr;gap:6px;
+}
+.calc-result-item{
+  background:rgba(0,0,0,.25);border-radius:4px;padding:8px 10px;
+  display:flex;flex-direction:column;gap:3px;
+}
+.calc-result-label{
+  font-size:9px;color:var(--gray);letter-spacing:.08em;
+  text-transform:uppercase;font-family:var(--mono);
+}
+.calc-result-val{
+  font-family:var(--mono);font-size:14px;font-weight:700;color:var(--white);
+  transition:color .2s;
+}
+.calc-result-val.green{color:var(--green)}
+.calc-result-val.amber{color:var(--amber)}
+.calc-result-val.red{color:var(--red)}
+.calc-result-val.cyan{color:var(--cyan)}
+
+/* ─── CASHFLOW BOX ─── */
+.cf-box{
+  background:var(--navy3);border:1px solid var(--border);border-radius:6px;
+  padding:14px;min-width:210px;
+}
+.cf-box-title{
+  font-family:var(--mono);font-size:10px;font-weight:700;color:var(--amber);
+  letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;
+}
+.cf-scroll{max-height:188px;overflow-y:auto}
+.cf-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px}
+.cf-table th{
+  font-size:9px;color:var(--gray);letter-spacing:.08em;text-transform:uppercase;
+  padding:3px 6px;text-align:right;border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:var(--navy3);
+}
+.cf-table th:first-child{text-align:left}
+.cf-table td{padding:4px 6px;text-align:right;color:var(--white2);border-bottom:1px solid rgba(42,74,122,.2)}
+.cf-table td:first-child{text-align:left;color:var(--blue3)}
+.cf-table tbody tr:last-child td{border-bottom:none;color:var(--white);font-weight:600}
+
+/* ─── CURVE ─── */
+.lc-curves-panel{background:var(--navy2);border-top:2px solid var(--border2)}
+.lc-statusbar{
+  background:var(--navy3);border-top:1px solid var(--border);
+  display:flex;justify-content:space-between;padding:5px 16px;
+  font-size:10px;font-family:var(--mono);
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 </head>
 <body>
 
-<div class="top-bar">
-  <div class="logo-area">
-    <div class="logo-text"><strong>Portfolio Investment</strong><span>Sistema de Cálculo Financiero Exacto</span></div>
-  </div>
-  <div class="top-right"><span id="clock">--:--:--</span></div>
+<div class="top-bar" id="main-topbar">
+  <div class="logo-text"><strong>Portfolio Investment</strong><span>Sistema de Cálculo Financiero Exacto</span></div>
+  <span id="clock">--:--:--</span>
 </div>
 
-<div class="nav-bar">
+<div class="nav-bar" id="main-navbar">
   <button class="nav-tab">◉ Resumen</button>
   <button class="nav-tab active">📊 Bonos CER</button>
 </div>
 
 <div class="page">
   <div class="lecap-page">
+
     <div class="lc-toolbar">
       <div>
         <div class="lc-title">BONOS CER — TIR REAL EXACTA</div>
-        <div class="lc-sub">Iterando Cashflows sobre Precio Desinflactado</div>
+        <div class="lc-sub">Iterando Cashflows sobre Precio Desinflactado · Hacé clic en un bono para abrir la calculadora</div>
       </div>
       <div class="lc-filters">
-        <button class="lc-ftab on" id="f-all" onclick="cerSetFilter('all')">TODOS</button>
-        <button class="lc-ftab" id="f-corto" onclick="cerSetFilter('corto')">CORTO</button>
-        <button class="lc-ftab" id="f-largo" onclick="cerSetFilter('largo')">LARGO</button>
+        <button class="lc-ftab on" id="f-all"   onclick="cerSetFilter('all')">TODOS</button>
+        <button class="lc-ftab"    id="f-corto" onclick="cerSetFilter('corto')">CORTO</button>
+        <button class="lc-ftab"    id="f-largo" onclick="cerSetFilter('largo')">LARGO</button>
       </div>
       <div class="lc-spacer"></div>
-      <span class="lc-status-pill ok" id="cer-pill">LIVE ●</span>
+      <span class="lc-status-pill loading" id="cer-pill">CARGANDO…</span>
       <button class="lc-refresh-btn" onclick="cerFetch()">↻ ACTUALIZAR</button>
     </div>
 
@@ -171,35 +284,77 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
             <th>PRECIO DIRTY</th>
             <th>DUR. MOD.</th>
             <th style="color:var(--green)">TIR REAL %</th>
+            <th></th>
           </tr>
         </thead>
-        <tbody id="cer-tbody"></tbody>
+        <tbody id="cer-tbody">
+          <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--gray);font-family:var(--mono);font-size:11px">
+            Conectando con data912…
+          </td></tr>
+        </tbody>
       </table>
     </div>
 
     <div class="lc-curves-panel">
-      <div style="position:relative;height:350px;width:100%;padding:16px 32px">
+      <div style="position:relative;height:300px;width:100%;padding:16px 32px">
         <canvas id="cer-curve-canvas"></canvas>
       </div>
     </div>
 
     <div class="lc-statusbar">
       <span id="cer-last-upd" style="color:var(--gray)">—</span>
-      <span style="color:var(--blue3)" id="cer-source-info">Cálculos: Act/365, Liq T+1</span>
+      <span style="color:var(--blue3)" id="cer-source-info">Cálculos: Act/365 · Liq T+1</span>
     </div>
+
   </div>
 </div>
 
 <script>
-Chart.register(ChartDataLabels);
+// ════════════════════════════════════════════════════════════════
+// IFRAME DETECTION — oculta el doble header cuando está embebido
+// ════════════════════════════════════════════════════════════════
+(function() {
+  if (window.self !== window.top) {
+    document.getElementById('main-topbar').style.display = 'none';
+    document.getElementById('main-navbar').style.display = 'none';
+    document.querySelector('.page').style.minHeight = '100vh';
+  }
+})();
 
-setInterval(() => {
-    const n = new Date();
-    document.getElementById('clock').textContent = n.toLocaleTimeString();
-}, 1000);
+Chart.register(ChartDataLabels);
+setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('es-AR'); }, 1000);
 
 // ════════════════════════════════════════════════════════════════
-// 1. DATA DE FLUJOS (TU CALENDARIO INTACTO)
+// HELPERS
+// ════════════════════════════════════════════════════════════════
+async function pfetch(url) {
+  try {
+    const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (r.ok) return await r.json();
+  } catch(e) {}
+  try {
+    const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url), { signal: AbortSignal.timeout(10000) });
+    const d = await r.json();
+    return JSON.parse(d.contents);
+  } catch(e) { return null; }
+}
+
+function getTomorrow() {
+  const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()+1); return d;
+}
+
+function subtractBizDays(date, n) {
+  let d = new Date(date), c = 0;
+  while (c < n) { d.setDate(d.getDate()-1); if (d.getDay()!==0 && d.getDay()!==6) c++; }
+  return d;
+}
+
+function fmtDate(iso) {
+  const [y,m,dd] = iso.split('-'); return `${dd}/${m}/${y}`;
+}
+
+// ════════════════════════════════════════════════════════════════
+// 1. FLUJOS HARDCODEADOS (calendario intacto)
 // ════════════════════════════════════════════════════════════════
 const DATOS_CSV_FLUJOS = `
 X15Y6	Fecha	Por 1 VN
@@ -283,226 +438,470 @@ PARP	Fecha	Por 1 VN
 	31/12/2038	$ 252.285
 `;
 
-// TU PARSEADOR AUTOMÁTICO INTACTO
 const flujosParseados = {};
-let tickerActual = '';
+let _tickerActual = '';
 DATOS_CSV_FLUJOS.split('\n').forEach(line => {
-    line = line.trim();
-    if (!line) return;
-    if (line.includes('Por 1 VN')) {
-        tickerActual = line.split('\t')[0].trim().toUpperCase();
-        flujosParseados[tickerActual] = [];
-    } else if (tickerActual && line.includes('/')) {
-        const parts = line.split('\t').filter(p => p.trim() !== '');
-        if (parts.length >= 2) {
-            let fechaStr = parts[0].trim();
-            const fp = fechaStr.split('/');
-            if (fp.length === 3) fechaStr = `${fp[2]}-${fp[1].padStart(2,'0')}-${fp[0].padStart(2,'0')}`;
-            
-            let valStr = parts[1].replace('$', '').trim().replace(/\./g, '').replace(',', '.');
-            flujosParseados[tickerActual].push({ date: fechaStr, amount: parseFloat(valStr) });
-        }
+  line = line.trim(); if (!line) return;
+  if (line.includes('Por 1 VN')) {
+    _tickerActual = line.split('\t')[0].trim().toUpperCase();
+    flujosParseados[_tickerActual] = [];
+  } else if (_tickerActual && line.includes('/')) {
+    const parts = line.split('\t').filter(p => p.trim());
+    if (parts.length >= 2) {
+      let fs = parts[0].trim(); const fp = fs.split('/');
+      if (fp.length===3) fs = `${fp[2]}-${fp[1].padStart(2,'0')}-${fp[0].padStart(2,'0')}`;
+      const vs = parts[1].replace('$','').trim().replace(/\./g,'').replace(',','.');
+      flujosParseados[_tickerActual].push({ date: fs, amount: parseFloat(vs) });
     }
+  }
 });
 
-// Configuración de bonos.
 const CER_CONFIG = {
-  'X15Y6':  {name:'TZXY May-26A', tipo:'corto', venc:'2026-05-15', cerBase: 701.614},
-  'X29Y6':  {name:'TZXY May-26B', tipo:'corto', venc:'2026-05-29', cerBase: 651.8981},
-  'TZX26':  {name:'TZXY Jun-26',  tipo:'corto', venc:'2026-06-30', cerBase: 200.388},
-  'X31L6':  {name:'TZXY Jul-26',  tipo:'corto', venc:'2026-07-31', cerBase: 685.5506},
-  'X30S6':  {name:'TZXY Sep-26',  tipo:'corto', venc:'2026-09-30', cerBase: 714.9849},
-  'TZXO6':  {name:'TZXY Oct-26',  tipo:'corto', venc:'2026-10-30', cerBase: 480.1526},
-  'X30N6':  {name:'TZXY Nov-26',  tipo:'corto', venc:'2026-11-30', cerBase: 659.6789},
-  'TZXD6':  {name:'TZXY Dic-26',  tipo:'corto', venc:'2026-12-15', cerBase: 271.0476},
-  'TZXM7':  {name:'TZXY Mar-27',  tipo:'corto', venc:'2027-03-31', cerBase: 361.3176},
-  'TZX27':  {name:'TZXY Jun-27',  tipo:'corto', venc:'2027-06-30', cerBase: 200.388},
-  'TZXD7':  {name:'TZXY Dic-27',  tipo:'largo', venc:'2027-12-15', cerBase: 271.0476},
-  'TZX28':  {name:'TZXY Jun-28',  tipo:'largo', venc:'2028-06-30', cerBase: 200.388},
-  'TX26':   {name:'Boncer Nov-26', tipo:'corto', venc:'2026-11-09', cerBase: 22.544},
-  'TX28':   {name:'Boncer Nov-28', tipo:'largo', venc:'2028-11-09', cerBase: 22.544},
-  'DICP':   {name:'Discount Pesos', tipo:'largo', venc:'2033-12-31', cerBase: 1.4551},
-  'PARP':   {name:'Par Pesos', tipo:'largo', venc:'2038-12-31', cerBase: 1.4551}
+  'X15Y6': {name:'TZXY May-26A',  tipo:'corto', venc:'2026-05-15', cerBase:701.614},
+  'X29Y6': {name:'TZXY May-26B',  tipo:'corto', venc:'2026-05-29', cerBase:651.8981},
+  'TZX26': {name:'TZXY Jun-26',   tipo:'corto', venc:'2026-06-30', cerBase:200.388},
+  'X31L6': {name:'TZXY Jul-26',   tipo:'corto', venc:'2026-07-31', cerBase:685.5506},
+  'X30S6': {name:'TZXY Sep-26',   tipo:'corto', venc:'2026-09-30', cerBase:714.9849},
+  'TZXO6': {name:'TZXY Oct-26',   tipo:'corto', venc:'2026-10-30', cerBase:480.1526},
+  'X30N6': {name:'TZXY Nov-26',   tipo:'corto', venc:'2026-11-30', cerBase:659.6789},
+  'TZXD6': {name:'TZXY Dic-26',   tipo:'corto', venc:'2026-12-15', cerBase:271.0476},
+  'TZXM7': {name:'TZXY Mar-27',   tipo:'corto', venc:'2027-03-31', cerBase:361.3176},
+  'TZX27': {name:'TZXY Jun-27',   tipo:'corto', venc:'2027-06-30', cerBase:200.388},
+  'TZXD7': {name:'TZXY Dic-27',   tipo:'largo', venc:'2027-12-15', cerBase:271.0476},
+  'TZX28': {name:'TZXY Jun-28',   tipo:'largo', venc:'2028-06-30', cerBase:200.388},
+  'TX26':  {name:'Boncer Nov-26', tipo:'corto', venc:'2026-11-09', cerBase:22.544},
+  'TX28':  {name:'Boncer Nov-28', tipo:'largo', venc:'2028-11-09', cerBase:22.544},
+  'DICP':  {name:'Discount Pesos',tipo:'largo', venc:'2033-12-31', cerBase:1.4551},
+  'PARP':  {name:'Par Pesos',     tipo:'largo', venc:'2038-12-31', cerBase:1.4551}
 };
 
-let CER_HOY = 722.35; // Valor T-10 de referencia
-let cerData = [];
+let CER_HOY   = 722.35;
+let cerData   = [];
 let cerFilter = 'all';
 let cerCurveChart = null;
+let openCalc  = null;
 
 // ════════════════════════════════════════════════════════════════
-// MOTOR DE NORMALIZACIÓN DE FLUJOS (TU LÓGICA CORREGIDA)
+// 2. FETCH CER — T-10 días hábiles antes de liquidación
 // ════════════════════════════════════════════════════════════════
-function cerGetFlujosEstructura(ticker, fechaLiquidacion) {
-  const today = fechaLiquidacion;
-  const cfg = CER_CONFIG[ticker];
-  if (!cfg) return [];
+async function fetchCERValue() {
+  const liq  = getTomorrow();
+  const t10  = subtractBizDays(liq, 10);
+  const t10s = t10.toISOString().split('T')[0];
 
-  if (flujosParseados[ticker] && flujosParseados[ticker].length > 0) {
-      const flujosFuturos = flujosParseados[ticker].filter(p => new Date(p.date+'T00:00:00') > today);
-      if (flujosFuturos.length > 0) {
-          const totalAmount = flujosFuturos.reduce((sum, f) => sum + f.amount, 0);
-          
-          // ACÁ ESTABA EL ERROR EN TU CÓDIGO ORIGINAL:
-          // Forzabas "const sumaReal = 100;" para todos los bonos.
-          // Le asignamos el valor residual real a los que pagan cupones:
-          let sumaReal = 100; 
-          if (ticker === 'TX26') sumaReal = 40.6;         // 40% capital residual + intereses reales
-          else if (ticker === 'TX28') sumaReal = 83.625;  // 60% capital residual + intereses reales
-          else if (ticker === 'DICP') sumaReal = 186.5;   // Capital residual real + cupones
-          else if (ticker === 'PARP') sumaReal = 160.0;   
+  // Source 1: ArgentinaDatos
+  try {
+    const d = await pfetch('https://api.argentinadatos.com/v1/finanzas/indices/cer');
+    if (d && d.length) {
+      const hit = [...d].reverse().find(r => r.fecha <= t10s);
+      if (hit && hit.valor > 0)           { CER_HOY = hit.valor; return; }
+      if (d[d.length-1].valor > 0)        { CER_HOY = d[d.length-1].valor; return; }
+    }
+  } catch(e) {}
 
-          return flujosFuturos.map(f => ({
-              date: f.date,
-              cf: (f.amount / totalAmount) * sumaReal
-          }));
-      }
+  // Source 2: BCRA estadísticas (variable 30 = CER)
+  try {
+    const desde = subtractBizDays(t10, 5).toISOString().split('T')[0];
+    const d = await pfetch(`https://api.bcra.gob.ar/estadisticas/v3/datosvariable/30/${desde}/${t10s}`);
+    if (d && d.results && d.results.length) {
+      CER_HOY = d.results[d.results.length - 1].valor;
+      return;
+    }
+  } catch(e) {}
+
+  // Fallback: valor hardcodeado
+  // CER_HOY permanece 722.35
+}
+
+// ════════════════════════════════════════════════════════════════
+// 3. MOTOR FINANCIERO (TIR Real Newton-Raphson)
+// ════════════════════════════════════════════════════════════════
+function getFlujosNorm(ticker, fechaLiq) {
+  const cfg = CER_CONFIG[ticker]; if (!cfg) return [];
+  const raw = flujosParseados[ticker];
+  if (raw && raw.length) {
+    const fut = raw.filter(p => new Date(p.date+'T00:00:00') > fechaLiq);
+    if (fut.length) {
+      const total = fut.reduce((s, f) => s + f.amount, 0);
+      let suma = 100;
+      if (ticker==='TX26') suma=40.6;
+      else if (ticker==='TX28') suma=83.625;
+      else if (ticker==='DICP') suma=186.5;
+      else if (ticker==='PARP') suma=160.0;
+      return fut.map(f => ({ date:f.date, cf:(f.amount/total)*suma, rawAmt:f.amount }));
+    }
   }
-
-  // Fallback
-  if (new Date(cfg.venc+'T00:00:00') > today) return [{ date: cfg.venc, cf: 100 }];
+  if (new Date(cfg.venc+'T00:00:00') > fechaLiq) return [{date:cfg.venc, cf:100, rawAmt:100}];
   return [];
 }
 
-function cerCalcularPrecioReal(ticker, pricePesos) {
-    const cfg = CER_CONFIG[ticker];
-    if (!cfg) return 0;
-    const factorCER = CER_HOY / cfg.cerBase;
-    return pricePesos / factorCER; 
+function getFactorCER(ticker) { return CER_HOY / CER_CONFIG[ticker].cerBase; }
+
+function precioRealFromPesos(ticker, pesos) { return pesos / getFactorCER(ticker); }
+
+function solveTIR(precioReal, flows, fechaLiq) {
+  if (precioReal<=0 || !flows.length) return 0;
+  const futs = flows.map(f => ({
+    t: (new Date(f.date+'T00:00:00') - fechaLiq) / 31557600000,
+    cf: f.cf
+  })).filter(f => f.t>0);
+  let r = 0.05;
+  for (let i=0; i<300; i++) {
+    let pv=0, dpv=0;
+    for (const f of futs) { const df=Math.pow(1+r,f.t); pv+=f.cf/df; dpv-=(f.t*f.cf)/(df*(1+r)); }
+    const diff=pv-precioReal; if (Math.abs(diff)<1e-12) break;
+    r -= diff/dpv;
+    if (r<-0.99) r=-0.5; if (r>10) r=2;
+  }
+  return r;
 }
 
-function cerSolveReal(precioReal, flows, fechaLiq) {
-    if (precioReal <= 0 || !flows.length) return 0;
-
-    const futs = flows.map(f => ({
-        t: (new Date(f.date + 'T00:00:00') - fechaLiq) / (1000 * 60 * 60 * 24 * 365),
-        cf: f.cf
-    })).filter(f => f.t > 0);
-
-    let r = 0.05; 
-    for (let i = 0; i < 300; i++) {
-        let pv = 0; let dpv = 0;
-        for (const f of futs) {
-            const df = Math.pow(1 + r, f.t);
-            pv += f.cf / df;
-            dpv -= (f.t * f.cf) / (df * (1 + r));
-        }
-        const diff = pv - precioReal; 
-        if (Math.abs(diff) < 1e-12) break;
-        const step = diff / dpv;
-        r -= step;
-        if (r < -0.99) r = -0.5; if (r > 10) r = 2; 
-    }
-    return r; 
+function solveMacD(tea, flows, fechaLiq) {
+  const futs = flows.map(f => ({
+    t:(new Date(f.date+'T00:00:00')-fechaLiq)/31557600000, cf:f.cf
+  })).filter(f=>f.t>0);
+  let sPV=0, sTPV=0;
+  for (const f of futs) { const pv=f.cf/Math.pow(1+tea,f.t); sPV+=pv; sTPV+=f.t*pv; }
+  return sPV>0 ? sTPV/sPV : 0;
 }
 
-function cerMacDuration(teaDecimal, flows, fechaLiq) {
-    const futs = flows.map(f => ({
-        t: (new Date(f.date + 'T00:00:00') - fechaLiq) / (1000 * 60 * 60 * 24 * 365),
-        cf: f.cf
-    })).filter(f => f.t > 0);
-    
-    let sPV = 0, sTPV = 0;
-    for (const f of futs) {
-        const pv = f.cf / Math.pow(1 + teaDecimal, f.t);
-        sPV += pv; sTPV += f.t * pv;
-    }
-    return sPV > 0 ? sTPV / sPV : 0;
+function precioFromTIR(ticker, tirDec, flows, fechaLiq) {
+  const futs = flows.map(f => ({
+    t:(new Date(f.date+'T00:00:00')-fechaLiq)/31557600000, cf:f.cf
+  })).filter(f=>f.t>0);
+  const pReal = futs.reduce((s,f) => s + f.cf/Math.pow(1+tirDec, f.t), 0);
+  return pReal * getFactorCER(ticker);
 }
 
+// ════════════════════════════════════════════════════════════════
+// 4. FETCH DE PRECIOS REALES (data912)
+// ════════════════════════════════════════════════════════════════
 async function cerFetch() {
-    const hoy = new Date(); hoy.setHours(0,0,0,0);
-    const fechaLiq = new Date(hoy); fechaLiq.setDate(fechaLiq.getDate() + 1); // T+1
+  const pill = document.getElementById('cer-pill');
+  pill.textContent = 'CARGANDO…'; pill.className = 'lc-status-pill loading';
 
-    // Simulación de precios (Acá conectá tu API data912)
-    const mockPrices = {
-        'X15Y6': 104.50, 'X29Y6': 112.90, 'TZX26': 368.40, 'X31L6': 108.10,
-        'X30S6': 102.65, 'TZXO6': 151.70, 'X30N6': 110.20, 'TZXD6': 267.25,
-        'TZXM7': 196.25, 'TZX27': 348.50, 'TZXD7': 246.20, 'TZX28': 308.40,
-        'TX26': 1314.00, 'TX28': 1915.00, 'DICP': 48570.00, 'PARP': 32690.00
-    };
+  await fetchCERValue();
 
-    cerData = [];
-    for (const [ticker, cfg] of Object.entries(CER_CONFIG)) {
-        const precio = mockPrices[ticker];
-        if (!precio) continue;
+  const fechaLiq = getTomorrow();
+  let priceMap = {};
 
-        const flujos = cerGetFlujosEstructura(ticker, fechaLiq);
-        if (!flujos.length) continue;
+  try {
+    const bonds = await pfetch('https://data912.com/live/arg_bonds');
+    if (bonds && bonds.length) bonds.forEach(b => { if (b.t && b.c) priceMap[b.t] = b.c; });
+  } catch(e) {}
 
-        const precioReal = cerCalcularPrecioReal(ticker, precio);
-        const teaDecimal = cerSolveReal(precioReal, flujos, fechaLiq);
-        const macD = cerMacDuration(teaDecimal, flujos, fechaLiq);
+  // También intentar arg_notes por si algo aparece ahí
+  try {
+    const notes = await pfetch('https://data912.com/live/arg_notes');
+    if (notes && notes.length) notes.forEach(b => { if (b.t && b.c && !priceMap[b.t]) priceMap[b.t] = b.c; });
+  } catch(e) {}
 
-        cerData.push({
-            ticker, ...cfg,
-            price: precio,
-            macD: macD,
-            tirReal: teaDecimal * 100
-        });
-    }
+  cerData = [];
+  for (const [ticker, cfg] of Object.entries(CER_CONFIG)) {
+    const precio = priceMap[ticker]; if (!precio) continue;
+    const flows = getFlujosNorm(ticker, fechaLiq); if (!flows.length) continue;
+    const pReal = precioRealFromPesos(ticker, precio);
+    const tea   = solveTIR(pReal, flows, fechaLiq);
+    const macD  = solveMacD(tea, flows, fechaLiq);
+    cerData.push({ ticker, ...cfg, price:precio, macD, tirReal:tea*100 });
+  }
 
-    document.getElementById('cer-last-upd').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-AR');
-    renderTable();
-    renderCurve();
+  const ok = cerData.length > 0;
+  pill.textContent = ok ? 'LIVE ●' : 'ERROR ✕';
+  pill.className   = 'lc-status-pill ' + (ok ? 'ok' : 'err');
+  document.getElementById('cer-last-upd').textContent =
+    'Actualizado: ' + new Date().toLocaleTimeString('es-AR') +
+    ' · CER T-10: ' + CER_HOY.toFixed(4);
+  document.getElementById('cer-source-info').textContent =
+    `Cálculos: Act/365 · Liq T+1 · ${cerData.length} bonos cargados`;
+
+  openCalc = null;
+  renderTable();
+  renderCurve();
 }
 
+// ════════════════════════════════════════════════════════════════
+// 5. RENDER TABLE + FILAS CALCULADORA
+// ════════════════════════════════════════════════════════════════
 function renderTable() {
-    const tbody = document.getElementById('cer-tbody');
-    let rows = cerData.filter(b => cerFilter === 'all' || b.tipo === cerFilter);
-    rows.sort((a,b) => new Date(a.venc) - new Date(b.venc));
-    
-    tbody.innerHTML = rows.map(b => `<tr>
-        <td><span class="lc-ticker">${b.ticker}</span></td>
-        <td style="color:var(--white2);font-size:11px">${b.name}</td>
-        <td style="color:var(--blue3)">${b.venc}</td>
-        <td>$ ${b.price.toLocaleString('es-AR',{minimumFractionDigits:2})}</td>
-        <td style="color:var(--cyan);font-family:var(--mono)">${b.macD.toFixed(2)}</td>
-        <td style="font-weight:bold; color:${b.tirReal > 4 ? 'var(--green)' : b.tirReal > 0 ? 'var(--amber)' : 'var(--red)'}">
-            ${b.tirReal.toFixed(2)}%
-        </td>
-    </tr>`).join('');
+  const tbody = document.getElementById('cer-tbody');
+  let rows = cerData.filter(b => cerFilter==='all' || b.tipo===cerFilter);
+  rows.sort((a,b) => new Date(a.venc)-new Date(b.venc));
+
+  const fechaLiq = getTomorrow();
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--gray);font-family:var(--mono);font-size:11px">Sin datos disponibles</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(b => {
+    const tirColor = b.tirReal>4?'var(--green)':b.tirReal>0?'var(--amber)':'var(--red)';
+    const factor   = getFactorCER(b.ticker);
+    const pReal    = b.price / factor;
+    const macD     = b.macD;
+    const dmod     = macD / (1 + b.tirReal/100);
+    const flows    = getFlujosNorm(b.ticker, fechaLiq);
+
+    // Cashflow rows para el panel
+    const cfRows = flows.map(f => {
+      const t  = (new Date(f.date+'T00:00:00') - fechaLiq) / 31557600000;
+      const pv = t>0 ? f.cf / Math.pow(1+b.tirReal/100, t) : 0;
+      return `<tr>
+        <td>${fmtDate(f.date)}</td>
+        <td>${f.cf.toFixed(4)}</td>
+        <td style="color:var(--cyan)">${isFinite(pv)&&pv>0 ? pv.toFixed(4) : '—'}</td>
+      </tr>`;
+    }).join('');
+
+    return `
+    <tr class="bond-row" id="row-${b.ticker}" onclick="toggleCalc('${b.ticker}')">
+      <td><span class="lc-ticker">${b.ticker}</span></td>
+      <td style="color:var(--white2);font-size:11px">${b.name}</td>
+      <td style="color:var(--blue3)">${b.venc}</td>
+      <td>$ ${b.price.toLocaleString('es-AR',{minimumFractionDigits:2})}</td>
+      <td style="color:var(--cyan)">${dmod.toFixed(2)}</td>
+      <td style="font-weight:700;color:${tirColor}">${b.tirReal.toFixed(2)}%</td>
+      <td style="text-align:center"><span class="expand-chev" id="chev-${b.ticker}">▾</span></td>
+    </tr>
+    <tr class="calc-row" id="calc-${b.ticker}" style="display:none">
+      <td colspan="7">
+        <div class="calc-panel">
+          <!-- Header -->
+          <div class="calc-header">
+            <span>📊 ${b.ticker} &mdash; ${b.name}</span>
+            <span class="calc-badge badge-cer">CER T-10: ${CER_HOY.toFixed(4)}</span>
+            <span class="calc-badge badge-factor">Factor CER: ${factor.toFixed(4)}</span>
+            <span class="calc-badge" style="background:rgba(34,212,240,.08);border:1px solid var(--cyan);color:var(--cyan)">
+              Venc: ${fmtDate(b.venc.replace(/-/g,(m,i)=>i===4||i===7?'-':'-'))}
+            </span>
+          </div>
+          <!-- Grid de calculadoras -->
+          <div class="calc-grid">
+
+            <!-- Panel 1: Precio → TIR -->
+            <div class="calc-box">
+              <div class="calc-box-title">💰 Precio → Rendimiento</div>
+              <div class="calc-field">
+                <div class="calc-field-label">Precio Dirty (ARS)</div>
+                <input type="number" step="0.01" class="pi-calc" id="inp-p-${b.ticker}"
+                  value="${b.price.toFixed(2)}" placeholder="${b.price.toFixed(2)}"
+                  oninput="calcP2T('${b.ticker}')">
+              </div>
+              <div class="calc-results">
+                <div class="calc-result-item">
+                  <div class="calc-result-label">TIR Real (TEA)</div>
+                  <div class="calc-result-val ${b.tirReal>4?'green':b.tirReal>0?'amber':'red'}" id="r-tir-${b.ticker}">${b.tirReal.toFixed(4)}%</div>
+                </div>
+                <div class="calc-result-item">
+                  <div class="calc-result-label">Precio Real</div>
+                  <div class="calc-result-val cyan" id="r-preal-${b.ticker}">${pReal.toFixed(4)}</div>
+                </div>
+                <div class="calc-result-item">
+                  <div class="calc-result-label">Mac. Duration</div>
+                  <div class="calc-result-val" id="r-mac-${b.ticker}">${macD.toFixed(4)} a</div>
+                </div>
+                <div class="calc-result-item">
+                  <div class="calc-result-label">Dur. Modificada</div>
+                  <div class="calc-result-val amber" id="r-dmod-${b.ticker}">${dmod.toFixed(4)} a</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel 2: TIR → Precio -->
+            <div class="calc-box">
+              <div class="calc-box-title">📈 Rendimiento → Precio</div>
+              <div class="calc-field">
+                <div class="calc-field-label">TIR Real (% TEA)</div>
+                <input type="number" step="0.0001" class="pi-calc" id="inp-t-${b.ticker}"
+                  value="${b.tirReal.toFixed(4)}" placeholder="${b.tirReal.toFixed(4)}"
+                  oninput="calcT2P('${b.ticker}')">
+              </div>
+              <div class="calc-results">
+                <div class="calc-result-item">
+                  <div class="calc-result-label">Precio Dirty (ARS)</div>
+                  <div class="calc-result-val green" id="r-precio-${b.ticker}">$ ${b.price.toLocaleString('es-AR',{minimumFractionDigits:2})}</div>
+                </div>
+                <div class="calc-result-item">
+                  <div class="calc-result-label">Precio Real</div>
+                  <div class="calc-result-val cyan" id="r-preal2-${b.ticker}">${pReal.toFixed(4)}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel 3: Cashflows -->
+            <div class="cf-box">
+              <div class="cf-box-title">📋 Cashflows Normalizados</div>
+              <div class="cf-scroll">
+                <table class="cf-table">
+                  <thead>
+                    <tr><th>FECHA</th><th style="text-align:right">CF</th><th style="text-align:right">PV</th></tr>
+                  </thead>
+                  <tbody>${cfRows}</tbody>
+                </table>
+              </div>
+            </div>
+
+          </div><!-- /calc-grid -->
+        </div><!-- /calc-panel -->
+      </td>
+    </tr>`;
+  }).join('');
 }
 
+// ════════════════════════════════════════════════════════════════
+// 6. TOGGLE CALCULADORA
+// ════════════════════════════════════════════════════════════════
+function toggleCalc(ticker) {
+  const calcRow = document.getElementById('calc-'+ticker);
+  const chev    = document.getElementById('chev-'+ticker);
+  const bondRow = document.getElementById('row-'+ticker);
+  if (!calcRow) return;
+  const isOpen  = calcRow.style.display !== 'none';
+
+  // Cerrar el anterior
+  if (openCalc && openCalc !== ticker) {
+    const prev = document.getElementById('calc-'+openCalc);
+    const prevC = document.getElementById('chev-'+openCalc);
+    const prevR = document.getElementById('row-'+openCalc);
+    if (prev)  prev.style.display = 'none';
+    if (prevC) prevC.classList.remove('open');
+    if (prevR) prevR.classList.remove('expanded');
+  }
+
+  calcRow.style.display = isOpen ? 'none' : 'table-row';
+  chev.classList.toggle('open', !isOpen);
+  bondRow.classList.toggle('expanded', !isOpen);
+  openCalc = isOpen ? null : ticker;
+}
+
+// ════════════════════════════════════════════════════════════════
+// 7. CALCULADORA BIDIRECCIONAL EN VIVO
+// ════════════════════════════════════════════════════════════════
+function calcP2T(ticker) {
+  const inpEl = document.getElementById('inp-p-'+ticker);
+  if (!inpEl) return;
+  const precio = parseFloat(inpEl.value);
+  if (isNaN(precio) || precio <= 0) return;
+
+  const fechaLiq = getTomorrow();
+  const flows    = getFlujosNorm(ticker, fechaLiq);
+  const pReal    = precioRealFromPesos(ticker, precio);
+  const tea      = solveTIR(pReal, flows, fechaLiq);
+  const macD     = solveMacD(tea, flows, fechaLiq);
+  const dmod     = macD / (1 + tea);
+  const tirPct   = tea * 100;
+
+  const tirEl  = document.getElementById('r-tir-'+ticker);
+  const prEl   = document.getElementById('r-preal-'+ticker);
+  const macEl  = document.getElementById('r-mac-'+ticker);
+  const dmodEl = document.getElementById('r-dmod-'+ticker);
+
+  if (tirEl) {
+    tirEl.textContent = tirPct.toFixed(4)+'%';
+    tirEl.className = 'calc-result-val '+(tirPct>4?'green':tirPct>0?'amber':'red');
+  }
+  if (prEl)   prEl.textContent   = pReal.toFixed(4);
+  if (macEl)  macEl.textContent  = macD.toFixed(4)+' a';
+  if (dmodEl) dmodEl.textContent = dmod.toFixed(4)+' a';
+
+  // Sincronizar input TIR (sin disparar loop)
+  const inpT = document.getElementById('inp-t-'+ticker);
+  if (inpT && document.activeElement !== inpT) inpT.value = tirPct.toFixed(4);
+}
+
+function calcT2P(ticker) {
+  const inpEl = document.getElementById('inp-t-'+ticker);
+  if (!inpEl) return;
+  const tirPct = parseFloat(inpEl.value);
+  if (isNaN(tirPct)) return;
+
+  const fechaLiq  = getTomorrow();
+  const flows     = getFlujosNorm(ticker, fechaLiq);
+  const precioPes = precioFromTIR(ticker, tirPct/100, flows, fechaLiq);
+  const pReal     = precioPes / getFactorCER(ticker);
+
+  const pEl   = document.getElementById('r-precio-'+ticker);
+  const pr2El = document.getElementById('r-preal2-'+ticker);
+  if (pEl)   pEl.textContent   = '$ '+precioPes.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if (pr2El) pr2El.textContent = pReal.toFixed(4);
+
+  // Sincronizar input precio (sin disparar loop)
+  const inpP = document.getElementById('inp-p-'+ticker);
+  if (inpP && document.activeElement !== inpP) inpP.value = precioPes.toFixed(2);
+}
+
+// ════════════════════════════════════════════════════════════════
+// 8. CURVA DE RENDIMIENTOS
+// ════════════════════════════════════════════════════════════════
 function renderCurve() {
-    const canvas = document.getElementById('cer-curve-canvas');
-    let pts = cerData.filter(b => cerFilter === 'all' || b.tipo === cerFilter);
-    if (!pts.length) return;
+  const canvas = document.getElementById('cer-curve-canvas');
+  const pts    = cerData.filter(b => cerFilter==='all' || b.tipo===cerFilter);
+  if (!pts.length) return;
+  if (cerCurveChart) cerCurveChart.destroy();
 
-    if (cerCurveChart) cerCurveChart.destroy();
-    cerCurveChart = new Chart(canvas.getContext('2d'), {
-        type: 'scatter',
-        data: {
-            datasets: [{
-                data: pts.map(b => ({ x: b.macD, y: b.tirReal })),
-                backgroundColor: pts.map(b => b.tipo === 'corto' ? '#5b8def' : '#f0b429'),
-                borderColor: '#fff',
-                pointRadius: 6,
-                datalabels: {
-                    display: true, align: 'top', color: '#c8d8f0', 
-                    font: { family: 'monospace', size: 10 },
-                    formatter: (v, ctx) => pts[ctx.dataIndex].ticker
-                }
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { title: { display: true, text: 'Duration (Años)', color: '#7a99c4'} },
-                y: { title: { display: true, text: 'TIR Real (%)', color: '#7a99c4'} }
-            }
+  cerCurveChart = new Chart(canvas.getContext('2d'), {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        data: pts.map(b => ({ x: b.macD/(1+b.tirReal/100), y: b.tirReal })),
+        backgroundColor: pts.map(b => b.tipo==='corto'?'#5b8def':'#f0b429'),
+        borderColor: 'rgba(255,255,255,.3)',
+        borderWidth: 1,
+        pointRadius: 7,
+        pointHoverRadius: 9,
+        datalabels: {
+          display: true, align: 'top', offset: 4,
+          color: '#c8d8f0',
+          font: { family: 'JetBrains Mono, monospace', size: 10, weight: '600' },
+          formatter: (v, ctx) => pts[ctx.dataIndex].ticker
         }
-    });
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const b = pts[ctx.dataIndex];
+              return [`${b.ticker} — ${b.name}`, `TIR Real: ${b.tirReal.toFixed(2)}%`, `Dur. Mod.: ${(b.macD/(1+b.tirReal/100)).toFixed(2)} a`];
+            }
+          },
+          backgroundColor: '#122540', borderColor: '#3a5a8a', borderWidth: 1,
+          titleColor: '#7aa3f0', bodyColor: '#d0ddf5', padding: 10,
+          titleFont: { family: 'JetBrains Mono, monospace', size: 11 },
+          bodyFont:  { family: 'JetBrains Mono, monospace', size: 11 }
+        }
+      },
+      scales: {
+        x: {
+          title: { display:true, text:'Duration Modificada (Años)', color:'#7a99c4', font:{size:11} },
+          grid:  { color:'rgba(42,74,122,.3)' },
+          ticks: { color:'#7a99c4', font:{family:'JetBrains Mono, monospace', size:10} }
+        },
+        y: {
+          title: { display:true, text:'TIR Real % (TEA)', color:'#7a99c4', font:{size:11} },
+          grid:  { color:'rgba(42,74,122,.3)' },
+          ticks: { color:'#7a99c4', font:{family:'JetBrains Mono, monospace', size:10},
+                   callback: v => v.toFixed(1)+'%' }
+        }
+      }
+    }
+  });
 }
 
+// ════════════════════════════════════════════════════════════════
+// 9. FILTROS
+// ════════════════════════════════════════════════════════════════
 function cerSetFilter(f) {
-    cerFilter = f;
-    document.querySelectorAll('.lc-ftab').forEach(btn => btn.classList.remove('on'));
-    document.getElementById('f-' + f).classList.add('on');
-    renderTable(); renderCurve();
+  cerFilter = f; openCalc = null;
+  document.querySelectorAll('.lc-ftab').forEach(b => b.classList.remove('on'));
+  document.getElementById('f-'+f).classList.add('on');
+  renderTable(); renderCurve();
 }
 
+// ─── INIT ────────────────────────────────────────────────────────
 cerFetch();
 </script>
 </body>
