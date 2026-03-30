@@ -141,6 +141,7 @@ html,body{height:100%;overflow:hidden}
       <button class="nav-dropdown-item" onclick="showPage('tc')">    <span class="di-icon">💸</span> TC / Canje</button>
       <button class="nav-dropdown-item" onclick="showPage('cauc')">  <span class="di-icon">⬡</span> Cauciones</button>
       <button class="nav-dropdown-item" onclick="showPage('dcto')">  <span class="di-icon">◈</span> Descuento de Cheques</button>
+      <button class="nav-dropdown-item" onclick="showPage('opneta')">  <span class="di-icon">◈</span> Operación Neta</button>
     </div>
   </div>
 
@@ -175,11 +176,12 @@ html,body{height:100%;overflow:hidden}
   <iframe class="page-frame"        id="frame-cer"         src="cer.html"          title="Bonos CER"></iframe>
   <iframe class="page-frame"        id="frame-dolarlinked" src="dolarlinked.html"  title="Dólar Linked"></iframe>
   <iframe class="page-frame"        id="frame-arb"         src="arbitraje.html"    title="Arbitraje"></iframe>
+  <iframe class="page-frame"        id="frame-opneta"      src="opneta.html"       title="Operación Neta"></iframe>
 </div>
 
 <script>
 const PAGE_IDS = ["resumen", "tc", "cauc", "dcto", "lecap", "bonos", "cer", "dolarlinked", "arb"];
-const CALC_GROUP  = ['tc','cauc','dcto'];
+const CALC_GROUP  = ['tc','cauc','dcto','opneta'];
 const BONOS_GROUP = ['lecap','bonos','cer','dolarlinked'];
 const ESTRAT_GROUP= ['arb'];
 
