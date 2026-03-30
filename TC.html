@@ -45,10 +45,8 @@ html,body{
 ::-webkit-scrollbar-track{background:var(--navy2)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 
-/* ── SHELL ── */
 .shell{max-width:1000px;margin:0 auto;padding:14px 16px 32px;display:flex;flex-direction:column;gap:12px}
 
-/* ── PAGE HEADER ── */
 .page-hdr{
   display:flex;align-items:center;gap:10px;padding:10px 14px;
   background:linear-gradient(90deg,var(--navy3),var(--navy2));
@@ -75,7 +73,6 @@ html,body{
 .mh-dot.open{background:var(--green);box-shadow:0 0 8px rgba(34,214,138,.5);animation:blink 2.5s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
 
-/* ── MAIN TABS ── */
 .main-tabs{display:flex;border-bottom:2px solid var(--border);gap:0}
 .mtab{
   display:flex;align-items:center;gap:7px;padding:0 22px;height:40px;
@@ -86,11 +83,9 @@ html,body{
 .mtab:hover{color:var(--blue3);background:rgba(58,111,216,.07)}
 .mtab.active{color:var(--white);border-bottom-color:var(--blue);background:rgba(58,111,216,.1)}
 
-/* ── SECTION ── */
 .sec{display:none}
 .sec.on{display:flex;flex-direction:column;gap:12px}
 
-/* ── CARD ── */
 .card{background:var(--navy2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
 .card-hdr{
   background:linear-gradient(90deg,var(--navy3),var(--navy2));
@@ -99,7 +94,6 @@ html,body{
 }
 .ch-label{font-size:9px;font-weight:700;color:var(--blue3);letter-spacing:.18em;text-transform:uppercase;margin-right:auto}
 
-/* ── STAB ── */
 .stabs{display:flex;gap:3px}
 .stab{
   background:var(--navy3);border:1px solid var(--border);
@@ -110,7 +104,6 @@ html,body{
 .stab:hover{color:var(--blue3);border-color:var(--blue2)}
 .stab.on{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 0 8px rgba(58,111,216,.35)}
 
-/* ── COMM + PDF BTN ── */
 .comm-btn, .pdf-btn{
   background:var(--navy3);border:1px solid var(--border);
   font-family:var(--font);font-size:10px;font-weight:600;
@@ -125,7 +118,6 @@ html,body{
 .pdf-btn:hover{color:var(--white);border-color:var(--blue2);background:rgba(58,111,216,.15)}
 .pdf-btn.generating{opacity:.6;cursor:wait}
 
-/* ── PRICES ── */
 .price-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:12px 14px 8px}
 .pc{background:var(--navy3);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px}
 .pc.hl{border-color:rgba(90,141,239,.4);background:rgba(58,111,216,.07)}
@@ -146,7 +138,6 @@ html,body{
 .pi::placeholder{color:var(--gray2);font-weight:400;font-size:11px}
 .pi::-webkit-inner-spin-button,.pi::-webkit-outer-spin-button{-webkit-appearance:none}
 
-/* ── CALC ── */
 .calc-body{padding:12px 14px;display:flex;flex-direction:column;gap:12px}
 .calc-row{display:grid;grid-template-columns:1fr 28px 1fr;align-items:end;gap:8px}
 .cf{display:flex;flex-direction:column;gap:5px}
@@ -167,7 +158,6 @@ html,body{
 }
 .calc-note strong{color:var(--gray)}
 
-/* ── TC RESULT ── */
 .tc-main{padding:14px 16px 10px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 .tc-big .lbl{font-size:9px;font-weight:700;color:var(--blue3);letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px}
 .tc-big .val{font-family:var(--mono);font-size:34px;font-weight:700;color:var(--cyan);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
@@ -175,7 +165,6 @@ html,body{
 .tc-side .lbl{font-size:9px;color:var(--gray2);text-transform:uppercase;letter-spacing:.1em}
 .tc-side .val{font-family:var(--mono);font-size:18px;color:var(--white2);font-weight:600;font-variant-numeric:tabular-nums}
 
-/* ── BREAKDOWN ── */
 .bk-table{width:100%;border-collapse:collapse;font-size:11px}
 .bk-table tr{border-top:1px solid rgba(42,74,122,.35)}
 .bk-table td{padding:6px 16px;line-height:1.4}
@@ -185,7 +174,6 @@ html,body{
 .bk-total td:first-child{color:var(--cyan);font-weight:700;font-size:12px}
 .bk-total td:last-child{color:var(--cyan);font-weight:700;font-size:13px}
 
-/* ── DDMM NOTE ── */
 .ddmm-note{
   margin:0 14px 14px;
   background:rgba(240,180,41,.04);border:1px solid rgba(240,180,41,.18);
@@ -194,7 +182,6 @@ html,body{
 }
 .ddmm-note strong{color:var(--white2)}
 
-/* ── CANJE RATES ── */
 .canje-rates{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 14px 10px}
 .cr{background:var(--navy3);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 12px;text-align:center}
 .cr-lbl{font-size:9px;font-weight:700;color:var(--gray);letter-spacing:.12em;text-transform:uppercase;margin-bottom:2px}
@@ -204,7 +191,6 @@ html,body{
 .cr-sub{font-size:9px;color:var(--gray2);margin-top:3px}
 .cr-net{font-size:11px;font-family:var(--mono);color:var(--amber);font-weight:600;margin-top:6px}
 
-/* ── STATUS ── */
 .status-bar{
   display:flex;align-items:center;gap:8px;padding:7px 14px;
   background:var(--navy2);border:1px solid var(--border);border-radius:var(--r);
@@ -217,7 +203,6 @@ html,body{
 .stxt{font-size:10px;color:var(--gray);font-family:var(--mono);letter-spacing:.04em}
 .stime{margin-left:auto;font-size:10px;color:var(--gray2);font-family:var(--mono)}
 
-/* ── MODAL ── */
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:9999}
 .modal{
   background:var(--navy3);border:1px solid var(--border2);border-top:2px solid var(--blue);
@@ -241,7 +226,6 @@ html,body{
 .mbtn-cancel{background:var(--navy2);color:var(--gray);border-color:var(--border)}
 .mbtn-cancel:hover{color:var(--white);border-color:var(--border2)}
 
-/* ── FLASH ── */
 .flash{animation:fl .28s ease}
 @keyframes fl{0%{opacity:.25}100%{opacity:1}}
 
@@ -276,7 +260,6 @@ html,body{
 </div>
 
 <div class="sec on" id="sec-tc">
-
   <div class="card">
     <div class="card-hdr">
       <span class="ch-label">Calculadora · Tipo de Cambio</span>
@@ -382,9 +365,9 @@ html,body{
       Cobrado siempre en <strong>ARS</strong> al TC oficial BCRA (Neg. Sec. PPT)
     </div>
   </div>
+</div>
 
-</div><div class="sec" id="sec-canje">
-
+<div class="sec" id="sec-canje">
   <div class="card">
     <div class="card-hdr">
       <span class="ch-label">Calculadora · Canje MEP / Cable</span>
@@ -495,14 +478,17 @@ html,body{
       ARS al TC oficial BCRA sobre cada punta en USD
     </div>
   </div>
+</div>
 
-</div><div class="status-bar">
+<div class="status-bar">
   <div class="sdot" id="sdot"></div>
   <span class="stxt" id="stxt">Inicializando...</span>
   <span class="stime" id="stime">—</span>
 </div>
 
-</div><div class="modal-ov" id="modal-ov" style="display:none" onclick="closeModalOv(event)">
+</div>
+
+<div class="modal-ov" id="modal-ov" style="display:none" onclick="closeModalOv(event)">
   <div class="modal">
     <h3 id="modal-ttl">Comisión</h3>
     <p id="modal-desc">Ingrese la comisión a cobrar sobre la operación (%).</p>
@@ -517,17 +503,16 @@ html,body{
 <script>
 'use strict';
 
-const DDMM       = 0.0001;  // 0.0100% — NO editable
-const REFRESH_MS = 15000;   // 15 segundos
+const DDMM       = 0.0001;
+const REFRESH_MS = 15000;
 
 const S = {
   modo:'MEP',
   commTC:0.60, commCanje:0.60, modalFor:'tc',
   t1:{al30:null,al30d:null,al30c:null},
-  bcra:null   // se usa internamente para DDMM
+  bcra:null
 };
 
-/* ── HELPERS ── */
 const el  = id => document.getElementById(id);
 const fmt = (n,d=2) => n==null||isNaN(n)?'—':
   n.toLocaleString('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -545,7 +530,6 @@ function setResult(id,v){
   e.textContent=v||'—';e.className='result-box'+((!v||v==='—')?' empty':'');
 }
 
-/* ── NAV ── */
 function goHome(){
   if(window.parent&&window.parent!==window)
     window.parent.postMessage({type:'nav',page:'index.html'},'*');
@@ -559,7 +543,6 @@ function switchSec(s){
   });
 }
 
-/* ── CONTROLES ── */
 function setModo(m){
   S.modo=m;
   el('btn-mep').classList.toggle('on',m==='MEP');
@@ -575,11 +558,9 @@ function setModo(m){
   render();
 }
 
-/* ── MODAL ── */
 function openModal(f){
   S.modalFor=f;
   el('modal-ttl').textContent  = f==='tc'?'Comisión · Tipo de Cambio':'Comisión · Canje';
-  el('modal-desc').textContent = 'Ingrese la comisión a cobrar sobre la operación (%).';
   el('modal-inp').value        = f==='tc'?S.commTC:S.commCanje;
   el('modal-ov').style.display='flex';
   setTimeout(()=>el('modal-inp').select(),50);
@@ -597,7 +578,6 @@ function confirmModal(){
   closeModal();render();
 }
 
-/* ── HORARIO ── */
 function checkMarket(){
   const ar=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Argentina/Buenos_Aires'}));
   const h=ar.getHours(),m=ar.getMinutes(),wd=ar.getDay();
@@ -606,7 +586,6 @@ function checkMarket(){
   setText('mh-txt',open?'ABIERTO':'CERRADO');
 }
 
-/* ── API FETCH (REPLICADA DE RESUMEN.HTML) ── */
 async function pfetch(url){
   try{const r=await fetch(url);if(r.ok)return r.json();}catch(e){}
   try{
@@ -622,20 +601,18 @@ async function pfetch(url){
 }
 
 async function sfetch(url){
-  try{
-    const r=await fetch(url);
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    return await r.json();
-  }catch(e){return null;}
+  const r=await fetch(url);
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  return r.json();
 }
 
-const extractBond=(arr,tk)=>{
-  if(!Array.isArray(arr))return null;
-  for(const b of arr){
-    const t=(b.ticker||b.symbol||b.t||'').trim().toUpperCase();
-    if(t!==tk)continue;
-    const v=parseFloat(b.price||b.c||b.ultimo||b.last||0);
-    return v>0?v:null;
+const extractBond = (arr, tk) => {
+  if (!Array.isArray(arr)) return null;
+  for (const b of arr) {
+    const t = (b.ticker || b.symbol || b.t || '').trim().toUpperCase();
+    if (t !== tk) continue;
+    const v = parseFloat(b.price || b.c || b.ultimo || b.last || 0);
+    return v > 0 ? v : null;
   }
   return null;
 };
@@ -643,22 +620,18 @@ const extractBond=(arr,tk)=>{
 async function fetchAll(){
   setStatus('fetching');
   
-  // Llamadas paralelas como en resumen.html
-  const [rBondsD912, rNotesD912, rOficial] = await Promise.allSettled([
+  const [rBonds, rOficial] = await Promise.allSettled([
     pfetch('https://data912.com/live/arg_bonds'),
-    pfetch('https://data912.com/live/arg_notes'),
     sfetch('https://dolarapi.com/v1/dolares/oficial')
   ]);
 
-  let bondArr = [], noteArr = [];
-  if(rBondsD912.status==='fulfilled' && rBondsD912.value){
-    const raw=rBondsD912.value; bondArr = Array.isArray(raw)?raw:(raw.data||raw.items||[]);
-  }
-  if(rNotesD912.status==='fulfilled' && rNotesD912.value){
-    const raw=rNotesD912.value; noteArr = Array.isArray(raw)?raw:(raw.data||raw.items||[]);
+  let bondArr = [];
+  if(rBonds.status === 'fulfilled' && rBonds.value){
+    const raw = rBonds.value;
+    bondArr = Array.isArray(raw) ? raw : (raw.data || raw.items || []);
   }
 
-  const al30  = extractBond(noteArr, 'AL30');
+  const al30  = extractBond(bondArr, 'AL30');
   const al30d = extractBond(bondArr, 'AL30D');
   const al30c = extractBond(bondArr, 'AL30C');
 
@@ -671,15 +644,14 @@ async function fetchAll(){
     setStatus('error');
   }
 
-  if(rOficial.status==='fulfilled' && rOficial.value){
+  if(rOficial.status === 'fulfilled' && rOficial.value){
     S.bcra = parseFloat(rOficial.value.venta || rOficial.value.compra || 0);
   }
 
   render();
-  setText('stime','Act.: '+new Date().toLocaleTimeString('es-AR'));
+  setText('stime', 'Act.: ' + new Date().toLocaleTimeString('es-AR'));
 }
 
-/* ── RENDER ── */
 function render(){checkMarket();renderTC();renderCanje()}
 
 let TCcache={}, CANJEcache={};
@@ -773,7 +745,6 @@ function renderCanje(){
   }
 }
 
-/* ── CALCULADORAS TC ── */
 function getTCImpl(){
   const al30=S.t1.al30, alU=S.modo==='MEP'?S.t1.al30d:S.t1.al30c, bcra=S.bcra;
   if(!al30||!alU||!bcra)return null;
@@ -789,7 +760,6 @@ function calcUsdToArs(){
   setResult('calc-usd-out',(v&&tc)?fmtARS(v*tc):null);
 }
 
-/* ── CALCULADORAS CANJE ── */
 function calcMepToCable(){
   const mep=parseFloat(el('calc-m2c-in').value);
   const d=S.t1.al30d, c=S.t1.al30c, bcra=S.bcra;
@@ -813,7 +783,6 @@ function calcCableToMep(){
   det.innerHTML=`<strong>Bruto:</strong> ${fmtUSD(gross)} &nbsp;·&nbsp; <strong>Comm:</strong> USD ${fmt(cV*(d/c)+cP,2)} &nbsp;·&nbsp; <strong>DDMM:</strong> ARS ${fmt(dd1+dd2,2)} &nbsp;·&nbsp; <strong>Neto:</strong> ${fmtUSD(net)}`;
 }
 
-/* ── STATUS ── */
 function setStatus(st){
   const dot=el('sdot'),txt=el('stxt');
   if(st==='live'){dot.className='sdot live';txt.textContent=`EN VIVO · data912.com · refresco cada ${REFRESH_MS/1000}s`}
@@ -821,7 +790,6 @@ function setStatus(st){
   else{dot.className='sdot err';txt.textContent='Sin datos · verificá endpoints'}
 }
 
-/* ── PDF LOGIC ── */
 function pdfHeader(doc, title, subtitle){
   const W = doc.internal.pageSize.getWidth();
   doc.setFillColor(17, 37, 64); doc.rect(0, 0, W, 38, 'F');
@@ -870,7 +838,6 @@ function exportCanjePdf(){
   doc.save(`Canje_MEP_Cable_${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
-/* ── INIT ── */
 checkMarket();
 fetchAll();
 setInterval(fetchAll, REFRESH_MS);
