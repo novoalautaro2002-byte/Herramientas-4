@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portfolio Investment — Bonos CER</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
 :root{
@@ -99,7 +99,6 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
   border:1px solid;letter-spacing:.06em;font-weight:600;
 }
 .lc-status-pill.ok{color:var(--green);border-color:var(--green2);background:var(--green-bg)}
-.lc-status-pill.err{color:var(--red);border-color:var(--red2);background:var(--red-bg)}
 
 .lc-filters{display:flex;gap:4px}
 .lc-ftab{
@@ -149,8 +148,8 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
   <div class="lecap-page">
     <div class="lc-toolbar">
       <div>
-        <div class="lc-title">BONOS CER — TIR REAL EXACTA (Newton-Raphson)</div>
-        <div class="lc-sub">Motor de flujos basado en condiciones de emisión ByMA</div>
+        <div class="lc-title">BONOS CER — TIR REAL EXACTA</div>
+        <div class="lc-sub">Iterando Cashflows sobre Precio Desinflactado</div>
       </div>
       <div class="lc-filters">
         <button class="lc-ftab on" id="f-all" onclick="cerSetFilter('all')">TODOS</button>
@@ -194,11 +193,117 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 <script>
 Chart.register(ChartDataLabels);
 
-// Reloj
 setInterval(() => {
     const n = new Date();
     document.getElementById('clock').textContent = n.toLocaleTimeString();
 }, 1000);
+
+// ════════════════════════════════════════════════════════════════
+// 1. DATA DE FLUJOS (TU CALENDARIO INTACTO)
+// ════════════════════════════════════════════════════════════════
+const DATOS_CSV_FLUJOS = `
+X15Y6	Fecha	Por 1 VN
+	15/5/2026	$ 10.336
+X29Y6	Fecha	Por 1 VN
+	29/5/2026	$ 11.125
+TZX26	Fecha	Por 1 VN
+	30/6/2026	$ 36.190
+X31L6	Fecha	Por 1 VN
+	31/7/2026	$ 10.578
+TX26	Fecha	Por 1 VN
+	11/5/2026	$ 65.624
+	9/11/2026	$ 64.980
+X30S6	Fecha	Por 1 VN
+	30/9/2026	$ 10.143
+TZXO6	Fecha	Por 1 VN
+	30/10/2026	$ 15.104
+X30N6	Fecha	Por 1 VN
+	30/11/2026	$ 10.993
+TZXD6	Fecha	Por 1 VN
+	15/12/2026	$ 26.756
+TZXM7	Fecha	Por 1 VN
+	31/3/2027	$ 20.071
+TZX27	Fecha	Por 1 VN
+	30/6/2027	$ 36.190
+TX28	Fecha	Por 1 VN
+	11/5/2026	$ 34.340
+	9/11/2026	$ 33.978
+	10/5/2027	$ 33.616
+	9/11/2027	$ 33.254
+	9/5/2028	$ 32.892
+	9/11/2028	$ 32.530
+TZXD7	Fecha	Por 1 VN
+	15/12/2027	$ 26.756
+TZX28	Fecha	Por 1 VN
+	30/6/2028	$ 36.190
+DICP	Fecha	Por 1 VN
+	30/6/2026	$ 464.082
+	31/12/2026	$ 454.857
+	30/6/2027	$ 445.632
+	31/12/2027	$ 436.406
+	30/6/2028	$ 427.181
+	2/1/2029	$ 417.956
+	2/7/2029	$ 408.730
+	31/12/2029	$ 399.505
+	1/7/2030	$ 390.280
+	31/12/2030	$ 381.054
+	30/6/2031	$ 371.829
+	31/12/2031	$ 362.604
+	30/6/2032	$ 353.379
+	31/12/2032	$ 344.153
+	30/6/2033	$ 334.928
+	2/1/2034	$ 325.703
+PARP	Fecha	Por 1 VN
+	31/3/2026	$ 44.107
+	30/9/2026	$ 44.107
+	31/3/2027	$ 44.107
+	30/9/2027	$ 44.107
+	31/3/2028	$ 44.107
+	2/10/2028	$ 44.107
+	3/4/2029	$ 44.107
+	1/10/2029	$ 310.995
+	1/4/2030	$ 307.905
+	30/9/2030	$ 304.815
+	31/3/2031	$ 301.725
+	30/9/2031	$ 298.635
+	31/3/2032	$ 295.545
+	30/9/2032	$ 292.455
+	31/3/2033	$ 289.365
+	30/9/2033	$ 286.275
+	31/3/2034	$ 283.185
+	2/10/2034	$ 280.095
+	2/4/2035	$ 277.005
+	1/10/2035	$ 273.915
+	31/3/2036	$ 270.825
+	30/9/2036	$ 267.735
+	31/3/2037	$ 264.645
+	30/9/2037	$ 261.555
+	31/3/2038	$ 258.465
+	30/9/2038	$ 255.375
+	31/12/2038	$ 252.285
+`;
+
+// TU PARSEADOR AUTOMÁTICO INTACTO
+const flujosParseados = {};
+let tickerActual = '';
+DATOS_CSV_FLUJOS.split('\n').forEach(line => {
+    line = line.trim();
+    if (!line) return;
+    if (line.includes('Por 1 VN')) {
+        tickerActual = line.split('\t')[0].trim().toUpperCase();
+        flujosParseados[tickerActual] = [];
+    } else if (tickerActual && line.includes('/')) {
+        const parts = line.split('\t').filter(p => p.trim() !== '');
+        if (parts.length >= 2) {
+            let fechaStr = parts[0].trim();
+            const fp = fechaStr.split('/');
+            if (fp.length === 3) fechaStr = `${fp[2]}-${fp[1].padStart(2,'0')}-${fp[0].padStart(2,'0')}`;
+            
+            let valStr = parts[1].replace('$', '').trim().replace(/\./g, '').replace(',', '.');
+            flujosParseados[tickerActual].push({ date: fechaStr, amount: parseFloat(valStr) });
+        }
+    }
+});
 
 // Configuración de bonos.
 const CER_CONFIG = {
@@ -206,9 +311,18 @@ const CER_CONFIG = {
   'X29Y6':  {name:'TZXY May-26B', tipo:'corto', venc:'2026-05-29', cerBase: 651.8981},
   'TZX26':  {name:'TZXY Jun-26',  tipo:'corto', venc:'2026-06-30', cerBase: 200.388},
   'X31L6':  {name:'TZXY Jul-26',  tipo:'corto', venc:'2026-07-31', cerBase: 685.5506},
+  'X30S6':  {name:'TZXY Sep-26',  tipo:'corto', venc:'2026-09-30', cerBase: 714.9849},
+  'TZXO6':  {name:'TZXY Oct-26',  tipo:'corto', venc:'2026-10-30', cerBase: 480.1526},
+  'X30N6':  {name:'TZXY Nov-26',  tipo:'corto', venc:'2026-11-30', cerBase: 659.6789},
+  'TZXD6':  {name:'TZXY Dic-26',  tipo:'corto', venc:'2026-12-15', cerBase: 271.0476},
+  'TZXM7':  {name:'TZXY Mar-27',  tipo:'corto', venc:'2027-03-31', cerBase: 361.3176},
+  'TZX27':  {name:'TZXY Jun-27',  tipo:'corto', venc:'2027-06-30', cerBase: 200.388},
+  'TZXD7':  {name:'TZXY Dic-27',  tipo:'largo', venc:'2027-12-15', cerBase: 271.0476},
+  'TZX28':  {name:'TZXY Jun-28',  tipo:'largo', venc:'2028-06-30', cerBase: 200.388},
   'TX26':   {name:'Boncer Nov-26', tipo:'corto', venc:'2026-11-09', cerBase: 22.544},
   'TX28':   {name:'Boncer Nov-28', tipo:'largo', venc:'2028-11-09', cerBase: 22.544},
-  'DICP':   {name:'Discount Pesos', tipo:'largo', venc:'2033-12-31', cerBase: 1.4551}
+  'DICP':   {name:'Discount Pesos', tipo:'largo', venc:'2033-12-31', cerBase: 1.4551},
+  'PARP':   {name:'Par Pesos', tipo:'largo', venc:'2038-12-31', cerBase: 1.4551}
 };
 
 let CER_HOY = 722.35; // Valor T-10 de referencia
@@ -216,52 +330,40 @@ let cerData = [];
 let cerFilter = 'all';
 let cerCurveChart = null;
 
-// MOTOR DE FLUJOS REALES (Reemplaza el CSV)
-// Construye los flujos exactos base 100 según el prospecto de emisión.
-function getFlujosReales(ticker, fechaLiq) {
-    const flows = [];
-    const add = (d, cf) => { 
-        if (new Date(d + 'T00:00:00') > fechaLiq) flows.push({ date: d, cf: cf }); 
-    };
+// ════════════════════════════════════════════════════════════════
+// MOTOR DE NORMALIZACIÓN DE FLUJOS (TU LÓGICA CORREGIDA)
+// ════════════════════════════════════════════════════════════════
+function cerGetFlujosEstructura(ticker, fechaLiquidacion) {
+  const today = fechaLiquidacion;
+  const cfg = CER_CONFIG[ticker];
+  if (!cfg) return [];
 
-    if (ticker.startsWith('X') || ticker.startsWith('TZX')) {
-        // Letras y Bonos Cero Cupón (Bullet 100% al final)
-        add(CER_CONFIG[ticker].venc, 100);
-    } 
-    else if (ticker === 'TX26') {
-        // Amortiza 20% semestral. Cupón 2% anual (1% semestral).
-        // Mayo 26: Amort 20 + 1% de 40 (residual) = 20.4
-        // Nov 26: Amort 20 + 1% de 20 (residual) = 20.2
-        add('2026-05-11', 20.40);
-        add('2026-11-09', 20.20);
-    } 
-    else if (ticker === 'TX28') {
-        // Amortiza 10% semestral. Cupón 2.25% anual (1.125% SA).
-        add('2026-05-11', 10.675);   // Amort 10 + (1.125% de 60)
-        add('2026-11-09', 10.5625);  // Amort 10 + (1.125% de 50)
-        add('2027-05-11', 10.450);   // Amort 10 + (1.125% de 40)
-        add('2027-11-09', 10.3375);  // Amort 10 + (1.125% de 30)
-        add('2028-05-11', 10.225);   // Amort 10 + (1.125% de 20)
-        add('2028-11-09', 10.1125);  // Amort 10 + (1.125% de 10)
-    } 
-    else if (ticker === 'DICP') {
-        // Amortiza 5% semestral sobre saldo capitalizado (factor 1.845 base 100 orig).
-        // Quedan 16 cuotas desde Jun-26. Cuota pura real = 9.225
-        // Cupón = 2.915% semestral sobre el saldo residual.
-        let residual = 147.60; // Saldo real restante (16 * 9.225)
-        const fechas = ['2026-06-30','2026-12-31','2027-06-30','2027-12-31','2028-06-30','2028-12-31','2029-06-30','2029-12-31','2030-06-30','2030-12-31','2031-06-30','2031-12-31','2032-06-30','2032-12-31','2033-06-30','2033-12-31'];
-        
-        for (let f of fechas) {
-            let cupon = residual * 0.02915;
-            add(f, 9.225 + cupon);
-            residual -= 9.225;
-        }
-    }
+  if (flujosParseados[ticker] && flujosParseados[ticker].length > 0) {
+      const flujosFuturos = flujosParseados[ticker].filter(p => new Date(p.date+'T00:00:00') > today);
+      if (flujosFuturos.length > 0) {
+          const totalAmount = flujosFuturos.reduce((sum, f) => sum + f.amount, 0);
+          
+          // ACÁ ESTABA EL ERROR EN TU CÓDIGO ORIGINAL:
+          // Forzabas "const sumaReal = 100;" para todos los bonos.
+          // Le asignamos el valor residual real a los que pagan cupones:
+          let sumaReal = 100; 
+          if (ticker === 'TX26') sumaReal = 40.6;         // 40% capital residual + intereses reales
+          else if (ticker === 'TX28') sumaReal = 83.625;  // 60% capital residual + intereses reales
+          else if (ticker === 'DICP') sumaReal = 186.5;   // Capital residual real + cupones
+          else if (ticker === 'PARP') sumaReal = 160.0;   
 
-    return flows;
+          return flujosFuturos.map(f => ({
+              date: f.date,
+              cf: (f.amount / totalAmount) * sumaReal
+          }));
+      }
+  }
+
+  // Fallback
+  if (new Date(cfg.venc+'T00:00:00') > today) return [{ date: cfg.venc, cf: 100 }];
+  return [];
 }
 
-// 1. Desinflactar el precio Dirty de pizarra.
 function cerCalcularPrecioReal(ticker, pricePesos) {
     const cfg = CER_CONFIG[ticker];
     if (!cfg) return 0;
@@ -269,7 +371,6 @@ function cerCalcularPrecioReal(ticker, pricePesos) {
     return pricePesos / factorCER; 
 }
 
-// 2. Resolver TIR Real iterando los flujos Reales contra el Precio Real (Algoritmo Newton-Raphson recuperado)
 function cerSolveReal(precioReal, flows, fechaLiq) {
     if (precioReal <= 0 || !flows.length) return 0;
 
@@ -292,10 +393,9 @@ function cerSolveReal(precioReal, flows, fechaLiq) {
         r -= step;
         if (r < -0.99) r = -0.5; if (r > 10) r = 2; 
     }
-    return r; // Devuelve tasa decimal
+    return r; 
 }
 
-// 3. Duration Macauly
 function cerMacDuration(teaDecimal, flows, fechaLiq) {
     const futs = flows.map(f => ({
         t: (new Date(f.date + 'T00:00:00') - fechaLiq) / (1000 * 60 * 60 * 24 * 365),
@@ -310,15 +410,16 @@ function cerMacDuration(teaDecimal, flows, fechaLiq) {
     return sPV > 0 ? sTPV / sPV : 0;
 }
 
-// LOOP PRINCIPAL
 async function cerFetch() {
     const hoy = new Date(); hoy.setHours(0,0,0,0);
     const fechaLiq = new Date(hoy); fechaLiq.setDate(fechaLiq.getDate() + 1); // T+1
 
-    // Simulación de precios API (Acá iría tu fetch real a data912)
+    // Simulación de precios (Acá conectá tu API data912)
     const mockPrices = {
         'X15Y6': 104.50, 'X29Y6': 112.90, 'TZX26': 368.40, 'X31L6': 108.10,
-        'TX26': 1314.00, 'TX28': 1915.00, 'DICP': 48570.00
+        'X30S6': 102.65, 'TZXO6': 151.70, 'X30N6': 110.20, 'TZXD6': 267.25,
+        'TZXM7': 196.25, 'TZX27': 348.50, 'TZXD7': 246.20, 'TZX28': 308.40,
+        'TX26': 1314.00, 'TX28': 1915.00, 'DICP': 48570.00, 'PARP': 32690.00
     };
 
     cerData = [];
@@ -326,7 +427,7 @@ async function cerFetch() {
         const precio = mockPrices[ticker];
         if (!precio) continue;
 
-        const flujos = getFlujosReales(ticker, fechaLiq);
+        const flujos = cerGetFlujosEstructura(ticker, fechaLiq);
         if (!flujos.length) continue;
 
         const precioReal = cerCalcularPrecioReal(ticker, precio);
