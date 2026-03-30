@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portfolio Investment — Calculadora de Liquidación</title>
+<title>Portfolio Investment — Operación Neta</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -236,9 +236,9 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 .alert-ars {
   font-size: 11px; 
   color: var(--amber); 
-  margin-top: 10px; 
+  margin-top: 12px; 
   background: rgba(240,180,41,.1); 
-  padding: 8px 10px; 
+  padding: 10px 12px; 
   border-radius: 4px; 
   border: 1px solid rgba(240,180,41,.2);
   line-height: 1.4;
@@ -249,7 +249,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 <body>
 
 <script>
-// FIX IFRAME: Oculta menús si la página se abre dentro de index.html
+// FIX IFRAME: Oculta menús propios si la página se abre dentro de index.html
 if(window!==window.top){
   document.addEventListener('DOMContentLoaded',function(){
     var s=document.createElement('style');
@@ -277,7 +277,7 @@ if(window!==window.top){
       <a class="nav-dropdown-item" href="cer.html"><span class="di-icon">◎</span> Bonos CER</a>
     </div>
   </div>
-  <button class="nav-tab active">🧮 Calculadora de Neto</button>
+  <button class="nav-tab active">◈ Operación Neta</button>
 </div>
 
 <div class="calc-container">
@@ -349,7 +349,7 @@ if(window!==window.top){
       <span class="ticket-val" id="res-ddmm" style="color: var(--amber)">0.00</span>
     </div>
     <div class="ticket-row" id="row-iva">
-      <span class="ticket-label">IVA (21% s/ comisiones y/o DDMM)</span>
+      <span class="ticket-label">IVA (21% s/ comisiones y DDMM)</span>
       <span class="ticket-val" id="res-iva" style="color: var(--amber)">0.00</span>
     </div>
     
@@ -361,9 +361,9 @@ if(window!==window.top){
     </div>
 
     <div class="net-box compra">
-      <div class="net-title">Monto Neto Operado (Compra)</div>
+      <div class="net-title">Monto Neto (Compra)</div>
       <div class="net-amount" id="neto-compra">0.00</div>
-      <div style="font-size:10px; color:var(--gray); margin-top:4px;">Resultante de netear los gastos sobre el bruto.</div>
+      <div style="font-size:10px; color:var(--gray); margin-top:4px;">Monto bruto operado menos los gastos.</div>
       
       <div class="alert-ars" id="alert-tc"></div>
     </div>
@@ -414,65 +414,57 @@ function actualizarCalculo() {
   document.getElementById('lbl-iva-status').style.color = aplicaIva ? 'var(--red)' : 'var(--green)';
   document.getElementById('row-iva').style.opacity = aplicaIva ? '1' : '0.4';
 
-  // Contabilidad desdoblada
-  let arancelUsd = 0, arancelArs = 0;
-  let ddmmUsd = 0, ddmmArs = 0;
-  let ivaArancelUsd = 0, ivaArancelArs = 0;
-  let ivaDdmmUsd = 0, ivaDdmmArs = 0;
+  // Cálculos base
+  let arancel = montoBruto * (arancelPct / 100);
+  let ddmm = montoBruto * (ddmmPct / 100);
+  
+  let ivaArancel = aplicaIva ? (arancel * 0.21) : 0;
+  let ivaDdmm = aplicaIva ? (ddmm * 0.21) : 0;
 
-  if (!isUsd) { // Operatoría 100% en Pesos
-    arancelArs = montoBruto * (arancelPct / 100);
-    ddmmArs = montoBruto * (ddmmPct / 100);
-    if (aplicaIva) {
-      ivaArancelArs = arancelArs * 0.21;
-      ivaDdmmArs = ddmmArs * 0.21;
-    }
-  } else { // Operatoria en Dólares (con DDMM pesificados)
-    arancelUsd = montoBruto * (arancelPct / 100);
-    ddmmUsd = montoBruto * (ddmmPct / 100);
-    
-    // El derecho de mercado se pesifica al oficial
-    ddmmArs = ddmmUsd * tcOficial; 
-    
-    if (aplicaIva) {
-      ivaArancelUsd = arancelUsd * 0.21;
-      ivaDdmmArs = ddmmArs * 0.21; // El IVA del DDMM pesificado también se cobra en ARS
-    }
-  }
-
-  const totalGastosUsd = arancelUsd + ivaArancelUsd;
-  const totalGastosArs = arancelArs + ddmmArs + ivaArancelArs + ivaDdmmArs;
-
-  // Render variables estáticas
   document.getElementById('res-bruto').innerText = formatCurrency(montoBruto, isUsd ? 'USD' : 'ARS');
   document.getElementById('res-arancel-pct').innerText = arancelPct;
 
-  // Render resultados desdoblados o simples
   if (!isUsd) {
-    document.getElementById('res-arancel').innerHTML = formatCurrency(arancelArs, 'ARS');
-    document.getElementById('res-ddmm').innerHTML = formatCurrency(ddmmArs, 'ARS');
-    document.getElementById('res-iva').innerHTML = formatCurrency(ivaArancelArs + ivaDdmmArs, 'ARS');
-    document.getElementById('res-gastos').innerHTML = formatCurrency(totalGastosArs, 'ARS');
+    // Operatoria 100% en Pesos
+    let gastosTotales = arancel + ddmm + ivaArancel + ivaDdmm;
+    let neto = montoBruto - gastosTotales;
+
+    document.getElementById('res-arancel').innerHTML = formatCurrency(arancel, 'ARS');
+    document.getElementById('res-ddmm').innerHTML = formatCurrency(ddmm, 'ARS');
+    document.getElementById('res-iva').innerHTML = formatCurrency(ivaArancel + ivaDdmm, 'ARS');
+    document.getElementById('res-gastos').innerHTML = formatCurrency(gastosTotales, 'ARS');
     
-    document.getElementById('neto-compra').innerText = formatCurrency(montoBruto - totalGastosArs, 'ARS');
+    document.getElementById('neto-compra').innerText = formatCurrency(neto, 'ARS');
     document.getElementById('alert-tc').style.display = 'none';
+
   } else {
-    document.getElementById('res-arancel').innerHTML = formatCurrency(arancelUsd, 'USD');
+    // Operatoria en Dólares (DDMM y su IVA se pesifican al Oficial)
+    let ddmmArs = ddmm * tcOficial;
+    let ivaDdmmArs = ivaDdmm * tcOficial;
+
+    let gastosUsd = arancel + ivaArancel;
+    let gastosArs = ddmmArs + ivaDdmmArs;
+
+    document.getElementById('res-arancel').innerHTML = formatCurrency(arancel, 'USD');
     
-    // Muestra impacto USD pero detalla la pesificación en gris
-    document.getElementById('res-ddmm').innerHTML = `${formatCurrency(ddmmUsd, 'USD')} <span style="font-size:10px;color:var(--gray)">(${formatCurrency(ddmmArs, 'ARS')})</span>`;
+    // Mostramos USD principal y ARS aclarado a la derecha
+    document.getElementById('res-ddmm').innerHTML = `${formatCurrency(ddmm, 'USD')} <span style="font-size:11px;color:var(--gray);margin-left:8px;">(${formatCurrency(ddmmArs, 'ARS')})</span>`;
     
-    let textIva = formatCurrency(ivaArancelUsd, 'USD');
-    if (ivaDdmmArs > 0) textIva += ` <span style="font-size:10px;color:var(--gray)">(+ ${formatCurrency(ivaDdmmArs, 'ARS')})</span>`;
-    document.getElementById('res-iva').innerHTML = textIva;
+    let textoIva = formatCurrency(ivaArancel, 'USD');
+    if (ivaDdmmArs > 0) {
+      textoIva += ` <span style="font-size:11px;color:var(--gray);margin-left:8px;">(+ ${formatCurrency(ivaDdmmArs, 'ARS')})</span>`;
+    }
+    document.getElementById('res-iva').innerHTML = textoIva;
     
-    document.getElementById('res-gastos').innerHTML = `${formatCurrency(totalGastosUsd, 'USD')} <span style="font-size:10px;color:var(--gray)">(+ ${formatCurrency(ddmmArs + ivaDdmmArs, 'ARS')})</span>`;
+    document.getElementById('res-gastos').innerHTML = `${formatCurrency(gastosUsd, 'USD')} <span style="font-size:11px;color:var(--gray);margin-left:8px;">(+ ${formatCurrency(gastosArs, 'ARS')})</span>`;
     
-    document.getElementById('neto-compra').innerText = formatCurrency(montoBruto - totalGastosUsd, 'USD');
+    // El neto refleja únicamente lo afectado en la moneda origen (Monto Bruto USD - Gastos USD)
+    let netoUsd = montoBruto - gastosUsd;
+    document.getElementById('neto-compra').innerText = formatCurrency(netoUsd, 'USD');
     
-    const extraArs = ddmmArs + ivaDdmmArs;
-    if (extraArs > 0) {
-      document.getElementById('alert-tc').innerHTML = `⚠️ <strong>Liquidación Mixta:</strong> Necesitás saldo en tu cuenta en Pesos por <strong>${formatCurrency(extraArs, 'ARS')}</strong> adicionales para que el broker debite los DDMM y su IVA correspondiente a T.C. Oficial.`;
+    // Alerta de los fondos pesificados requeridos
+    if (gastosArs > 0) {
+      document.getElementById('alert-tc').innerHTML = `⚠️ <strong>Nota de Liquidación:</strong> Al operar en dólares, los Derechos de Mercado e IVA correspondientes se pesifican al tipo de cambio oficial. Vas a requerir <strong>${formatCurrency(gastosArs, 'ARS')}</strong> adicionales en tu cuenta en pesos para cubrir ese débito.`;
       document.getElementById('alert-tc').style.display = 'block';
     } else {
       document.getElementById('alert-tc').style.display = 'none';
