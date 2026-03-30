@@ -82,6 +82,9 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 .page{display:none;min-height:calc(100vh - 98px)}
 .page.active{display:block}
 
+/* ════════════════════════════════════════
+   LECAP PAGE (estilos compartidos)
+════════════════════════════════════════ */
 .lecap-page{min-height:calc(100vh - 98px);display:flex;flex-direction:column;background:var(--navy2)}
 .lc-toolbar{
   background:linear-gradient(90deg,var(--navy3),var(--navy2));
@@ -208,6 +211,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 }
 .nav-dropdown-item .di-icon{font-size:13px;width:16px;text-align:center}
 
+/* standalone — page always visible */
 .page{display:block!important}
 
 </style>
@@ -263,12 +267,12 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
   <div class="lc-toolbar">
     <div>
       <div class="lc-title">BONOS CER — Ajuste por Inflación (TIR REAL Exacta)</div>
-      <div class="lc-sub">Cálculo de TIR Real comparando Precio Dirty vs Flujos Pesificados hoy</div>
+      <div class="lc-sub">Cálculo de TIR Real iterando flujos sobre Precio Desinflactado · CER T-10</div>
     </div>
     <div class="lc-filters">
       <button class="lc-ftab on"  id="cer-f-all"   onclick="cerSetFilter('all')">TODOS</button>
       <button class="lc-ftab"     id="cer-f-corto"  onclick="cerSetFilter('corto')">CORTO (≤2027)</button>
-      <button class="lc-ftab"     id="cer-f-largo"  onclick="cerSetFilter('largo')">LARGO (>2027)</button>
+      <button class="lc-ftab"     id="cer-f-largo"  onclick="cerSetFilter('largo')">LARGO (&gt;2027)</button>
     </div>
     <div class="lc-spacer"></div>
     <span class="lc-status-pill loading" id="cer-pill">CARGANDO...</span>
@@ -288,6 +292,9 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
         <th onclick="cerSort('tirReal')"data-col="tirReal" style="color:var(--green)">TIR REAL % <span class="sort-arrow"></span></th>
       </tr></thead>
       <tbody id="cer-tbody">
+        <tr class="lc-skel"><td colspan="8"><div class="lc-skel-bar" style="width:65%"></div></td></tr>
+        <tr class="lc-skel"><td colspan="8"><div class="lc-skel-bar" style="width:80%"></div></td></tr>
+        <tr class="lc-skel"><td colspan="8"><div class="lc-skel-bar" style="width:55%"></div></td></tr>
       </tbody>
     </table>
   </div>
@@ -309,7 +316,9 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
 </div>
 
 <script>
-// 1. DATA DE FLUJOS (Calendario CSV)
+// ════════════════════════════════════════════════════════════════
+// 1. DATA DE FLUJOS (Tu calendario exacto)
+// ════════════════════════════════════════════════════════════════
 const DATOS_CSV_FLUJOS = `
 X15Y6	Fecha	Por 1 VN
 	15/5/2026	$ 10.336
@@ -332,10 +341,6 @@ TZXD6	Fecha	Por 1 VN
 	15/12/2026	$ 26.756
 TZXM7	Fecha	Por 1 VN
 	31/3/2027	$ 20.071
-TZXA7	Fecha	Por 1 VN
-	30/4/2027	$ 11.000
-TZXY7	Fecha	Por 1 VN
-	31/5/2027	$ 11.200
 TZX27	Fecha	Por 1 VN
 	30/6/2027	$ 36.190
 TX28	Fecha	Por 1 VN
@@ -396,24 +401,32 @@ PARP	Fecha	Por 1 VN
 	31/12/2038	$ 252.285
 `;
 
+// Parseador Automático: Extrae la forma y fechas de cada flujo
 const flujosParseados = {};
 let tickerActual = '';
 DATOS_CSV_FLUJOS.split('\n').forEach(line => {
-    line = line.trim(); if (!line) return;
+    line = line.trim();
+    if (!line) return;
     if (line.includes('Por 1 VN')) {
         tickerActual = line.split('\t')[0].trim().toUpperCase();
         flujosParseados[tickerActual] = [];
     } else if (tickerActual && line.includes('/')) {
         const parts = line.split('\t').filter(p => p.trim() !== '');
         if (parts.length >= 2) {
-            let fp = parts[0].trim().split('/');
-            let fechaStr = `${fp[2]}-${fp[1].padStart(2,'0')}-${fp[0].padStart(2,'0')}`;
+            let fechaStr = parts[0].trim();
+            const fp = fechaStr.split('/');
+            if (fp.length === 3) fechaStr = `${fp[2]}-${fp[1].padStart(2,'0')}-${fp[0].padStart(2,'0')}`;
+            
             let valStr = parts[1].replace('$', '').trim().replace(/\./g, '').replace(',', '.');
             flujosParseados[tickerActual].push({ date: fechaStr, amount: parseFloat(valStr) });
         }
     }
 });
 
+
+// ════════════════════════════════════════
+//  GLOBAL Y HERRAMIENTAS
+// ════════════════════════════════════════
 function tick(){const n=new Date(),p=v=>String(v).padStart(2,'0');document.getElementById('clock').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;}
 tick();setInterval(tick,1000);
 
@@ -434,8 +447,17 @@ async function pfetch(url){
     if(!r2.ok)throw new Error('proxy HTTP '+r2.status);
     const d=await r2.json();return JSON.parse(d.contents);
   }catch(e){}
+  try{
+    const r3=await fetch('https://corsproxy.io/?'+encodeURIComponent(url));
+    if(r3.ok)return r3.json();
+  }catch(e){}
   throw new Error('unreachable: '+url);
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  BONOS CER — MATRIZ DE CONFIGURACIÓN BÁSICA
+// ═══════════════════════════════════════════════════════════════
+Chart.register(ChartDataLabels);
 
 const CER_CONFIG = {
   'X15Y6':  {name:'TZXY May-26A', tipo:'corto', venc:'2026-05-15', cerBase: 701.614},
@@ -444,7 +466,6 @@ const CER_CONFIG = {
   'X31L6':  {name:'TZXY Jul-26',  tipo:'corto', venc:'2026-07-31', cerBase: 685.5506},
   'X30S6':  {name:'TZXY Sep-26',  tipo:'corto', venc:'2026-09-30', cerBase: 714.9849},
   'TZXO6':  {name:'TZXY Oct-26',  tipo:'corto', venc:'2026-10-30', cerBase: 480.1526},
-  'TX26':   {name:'Boncer Nov-26', tipo:'corto', venc:'2026-11-09', cerBase: 22.544},
   'X30N6':  {name:'TZXY Nov-26',  tipo:'corto', venc:'2026-11-30', cerBase: 659.6789},
   'TZXD6':  {name:'TZXY Dic-26',  tipo:'corto', venc:'2026-12-15', cerBase: 271.0476},
   'TZXM7':  {name:'TZXY Mar-27',  tipo:'corto', venc:'2027-03-31', cerBase: 361.3176},
@@ -453,81 +474,185 @@ const CER_CONFIG = {
   'TZX27':  {name:'TZXY Jun-27',  tipo:'corto', venc:'2027-06-30', cerBase: 200.388},
   'TZXD7':  {name:'TZXY Dic-27',  tipo:'largo', venc:'2027-12-15', cerBase: 271.0476},
   'TZX28':  {name:'TZXY Jun-28',  tipo:'largo', venc:'2028-06-30', cerBase: 200.388},
+  'TX26':   {name:'Boncer Nov-26', tipo:'corto', venc:'2026-11-09', cerBase: 22.544},
   'TX28':   {name:'Boncer Nov-28', tipo:'largo', venc:'2028-11-09', cerBase: 22.544},
   'TX31':   {name:'Boncer Nov-31', tipo:'largo', venc:'2031-11-30', cerBase: 46.913},
   'DICP':   {name:'Discount Pesos', tipo:'largo', venc:'2033-12-31', cerBase: 1.4551},
   'PARP':   {name:'Par Pesos', tipo:'largo', venc:'2038-12-31', cerBase: 1.4551}
 };
 
-let CER_HOY = 724.54; 
+const CER_FALLBACK = {
+  'X15Y6':104.47,'X29Y6':112.94,'TZX26':368.40,'X31L6':108.10,'X30S6':102.65,
+  'TZXO6':151.70,'X30N6':110.20,'TZXD6':267.25,'TZXM7':196.25,'TZXA7':110.50,
+  'TZXY7':113.10,'TZX27':348.50,'TZXD7':246.20,'TZX28':308.40,
+  'TX26':1314.00,'TX28':1915.00,'TX31':1359.00,'DICP':48570.00,'PARP':32690.00,
+};
+
+let CER_HOY = 722.35; 
 let cerData = [], cerFilter = 'all', cerSortCol = 'venc', cerSortDir = 'asc';
 let cerCurveChart = null;
 
+// ════════════════════════════════════════════════════════════════
+// GENERADOR DE FLUJOS REALES NORMALIZADOS
+// Extrae la proporción de tus datos y mantiene el cálculo en base 100
+// ════════════════════════════════════════════════════════════════
+function cerGetFlujosEstructura(ticker, fechaLiquidacion) {
+  const today = fechaLiquidacion;
+  const cfg = CER_CONFIG[ticker];
+  if (!cfg) return [];
+
+  // Usamos el CSV para deducir fechas y pesos proporcionales de cada flujo
+  if (flujosParseados[ticker] && flujosParseados[ticker].length > 0) {
+      const flujosFuturos = flujosParseados[ticker].filter(p => new Date(p.date+'T00:00:00') > today);
+      if (flujosFuturos.length > 0) {
+          const totalAmount = flujosFuturos.reduce((sum, f) => sum + f.amount, 0);
+          
+          // La sumatoria de flujos reales de cualquier bono sano aproxima a 100 (capital).
+          // Al usar regla de 3, evitamos que un flujo proyectado nominal rompa el cálculo Real.
+          const sumaReal = 100; 
+
+          return flujosFuturos.map(f => ({
+              date: f.date,
+              cf: (f.amount / totalAmount) * sumaReal
+          }));
+      }
+  }
+
+  // Fallback por si te falta algún bono: asume Bullet al Vencimiento
+  if (new Date(cfg.venc+'T00:00:00') > today) {
+     return [{ date: cfg.venc, cf: 100 }];
+  }
+  return [];
+}
+
+// ════════════════════════════════════════════════════════════════
+// LÓGICA DE FETCH CER: TU API -> BCRA T-10 -> CRIPTOYA
+// ════════════════════════════════════════════════════════════════
 async function cerFetchCER() {
+  function set(val, src) { 
+    if (val > 0) { 
+      CER_HOY = val; 
+      document.getElementById('cer-source-info').innerHTML = `Precios: data912.com · CER: ${val.toFixed(2)} (${src}) · Liq T+1`;
+      if (cerData.length) { cerRender(); cerRenderCurve(); } 
+    } 
+  }
+
   try {
-    const r = await fetch('https://criptoya.com/api/cer');
+    const r = await fetch('/api/cer');
     if (r.ok) {
       const d = await r.json();
-      if (d?.value) { 
-        CER_HOY = parseFloat(d.value);
-        document.getElementById('cer-source-info').innerHTML = `Precios: data912.com · CER: ${CER_HOY.toFixed(2)} (CriptoYa) · Liq T+1`;
-      }
+      if (d?.cer) { set(parseFloat(d.cer), 'Tu API T-10'); return; }
     }
+  } catch(e) {}
+
+  try {
+    const bcraUrl = 'https://api.bcra.gob.ar/estadisticas/v4.0/Monetarias/30';
+    const data = await pfetch(bcraUrl); 
+    
+    let detalle = data?.results?.[0]?.detalle || data?.detalle;
+    if (detalle && detalle.length > 0) {
+      const hoy = new Date();
+      const t1 = getBusinessDaysAdd(hoy, 1);
+      const fc = new Date(t1);
+      fc.setDate(fc.getDate() - 14); // T-10 aproximado
+      const fcStr = fc.toISOString().split('T')[0];
+      
+      let cerT10 = null;
+      for (let i = 0; i < detalle.length; i++) {
+        if (detalle[i].fecha <= fcStr) { cerT10 = detalle[i]; break; }
+      }
+      if (!cerT10) cerT10 = detalle[detalle.length - 1]; 
+      if (cerT10 && cerT10.valor) { set(parseFloat(cerT10.valor), 'BCRA T-10'); return; }
+    }
+  } catch(e) { console.warn('Error calculando BCRA T-10 directo:', e); }
+
+  try { 
+    const r = await fetch('https://criptoya.com/api/cer'); 
+    if (r.ok) { 
+      const d = await r.json(); 
+      if (d?.value) { set(parseFloat(d.value), 'CriptoYa Fallback'); return; } 
+    } 
   } catch(e) {}
 }
 
 // ════════════════════════════════════════════════════════════════
-// MOTOR TIR REAL (Precio Dirty vs Flujos Nominales Proyectados)
+// MOTOR TIR REAL (Iterando flujos reales sobre Precio Desinflactado)
 // ════════════════════════════════════════════════════════════════
 
-function cerSolveReal(ticker, precioDirty, fechaLiquidacion) {
+function cerCalcularPrecioReal(ticker, pricePesos) {
   const cfg = CER_CONFIG[ticker];
-  const flowsNominales = flujosParseados[ticker];
-  if (!cfg || !flowsNominales || precioDirty <= 0) return 0;
-
-  const coeficienteHoy = CER_HOY / cfg.cerBase;
-  const objetivoPesos = precioDirty * 10; // Escala BYMA 100 -> Lámina 1000
-
-  const futs = flowsNominales.map(f => ({
-    t: (new Date(f.date + 'T00:00:00') - fechaLiquidacion) / 31536000000,
-    valorEnPesos: f.amount * coeficienteHoy 
-  })).filter(f => f.t > 0);
-
-  if (!futs.length) return 0;
-
-  let r = 0.05; 
-  for (let i = 0; i < 100; i++) {
-    let pv = 0, dpv = 0;
-    for (const f of futs) {
-      const df = Math.pow(1 + r, f.t);
-      pv += f.valorEnPesos / df;
-      dpv -= (f.t * f.valorEnPesos) / (df * (1 + r));
-    }
-    const diff = pv - objetivoPesos; 
-    if (Math.abs(diff) < 1e-8) break;
-    r = r - (diff / dpv);
-    if (r < -0.99) { r = -0.95; break; } 
-  }
-  return r; 
+  if (!cfg) return 0;
+  
+  // Precio Real (Se le saca el efecto CER al precio de pizarra para igualarlo a los flujos Base 100)
+  const ajusteCER = CER_HOY / cfg.cerBase;
+  return pricePesos / ajusteCER;
 }
 
-function cerMacDuration(ticker, teaDecimal, fechaLiquidacion) {
-  const cfg = CER_CONFIG[ticker];
-  const flowsNominales = flujosParseados[ticker];
-  if (!cfg || !flowsNominales) return 0;
-  const coeficienteHoy = CER_HOY / cfg.cerBase;
-  const futs = flowsNominales.map(f => ({
-    t: (new Date(f.date + 'T00:00:00') - fechaLiquidacion) / 31536000000,
-    valorEnPesos: f.amount * coeficienteHoy
+function cerSolveReal(precioReal, flows, fechaLiquidacion) {
+  if (precioReal <= 0 || !flows.length) return 0;
+
+  const futs = flows.map(f => ({
+    t: (new Date(f.date+'T00:00:00') - fechaLiquidacion) / (1000 * 60 * 60 * 24 * 365),
+    cf: f.cf
   })).filter(f => f.t > 0);
+
   if (!futs.length) return 0;
+
+  function f(r) {
+    let pv = 0;
+    for (const fl of futs) {
+      pv += fl.cf / Math.pow(1 + r, fl.t);
+    }
+    return pv - precioReal;
+  }
+
+  let low = -0.99;
+  let high = 2.0;
+  let mid;
+
+  let fLow = f(low);
+  let fHigh = f(high);
+
+  if (fLow * fHigh > 0) {
+    high = 5;
+    fHigh = f(high);
+    if (fLow * fHigh > 0) return 0;
+  }
+
+  for (let i = 0; i < 200; i++) {
+    mid = (low + high) / 2;
+    const fMid = f(mid);
+
+    if (Math.abs(fMid) < 1e-10) break;
+
+    if (fLow * fMid < 0) {
+      high = mid;
+      fHigh = fMid;
+    } else {
+      low = mid;
+      fLow = fMid;
+    }
+  }
+
+  return mid;
+}
+}
+
+function cerMacDuration(teaDecimal, flows, fechaLiquidacion) {
+  const futs = flows.map(f => ({
+    t: (new Date(f.date+'T00:00:00') - fechaLiquidacion) / (1000 * 60 * 60 * 24 * 365),
+    cf: f.cf
+  })).filter(f => f.t > 0);
+  
+  if (!futs.length) return 0;
+  if (futs.length === 1) return futs[0].t;
+
   let sPV = 0, sTPV = 0;
   for (const f of futs) {
-    const pv = f.valorEnPesos / Math.pow(1 + teaDecimal, f.t);
+    const pv = f.cf / Math.pow(1 + teaDecimal, f.t);
     sPV += pv; sTPV += f.t * pv;
   }
-  const macD = sPV > 0 ? sTPV / sPV : 0;
-  return macD / (1 + teaDecimal); // MD
+  return sPV > 0 ? sTPV / sPV : 0;
 }
 
 async function cerFetch() {
@@ -537,41 +662,63 @@ async function cerFetch() {
   pill.className = 'lc-status-pill loading'; pill.textContent = 'CARGANDO...';
 
   const hoy = new Date();
-  const fechaLiquidacion = getBusinessDaysAdd(hoy, 1); 
-  fechaLiquidacion.setHours(0,0,0,0);
+  hoy.setHours(0,0,0,0);
+  const fechaLiquidacion = getBusinessDaysAdd(hoy, 1); // T+1
 
   let apiPrices = {}, src = '';
   try {
-    const raw = await pfetch('https://criptoya.com/api/bcra/bonos_cer');
-    if (raw && raw.length > 0) {
-      raw.forEach(b => {
-        const tk = b.symbol.toUpperCase();
-        apiPrices[tk] = { price: b.last, varPct: b.variation || 0 };
+    const [rawBonds, rawNotes] = await Promise.all([
+      pfetch('https://data912.com/live/arg_bonds').catch(()=>null),
+      pfetch('https://data912.com/live/arg_notes').catch(()=>null),
+    ]);
+    const arr = [...((rawBonds?.data||rawBonds)||[]), ...((rawNotes?.data||rawNotes)||[])];
+    if (arr.length > 0) {
+      arr.forEach(b => {
+        const tk = (b.ticker||b.symbol||b.t||'').replace(/\s+/g,'').toUpperCase();
+        const price = parseFloat(b.c||b.ultimo||b.last||b.price||0);
+        const varPct = parseFloat(b.pct_change||b.variacion_pct||b.var||0);
+        if (tk && price > 0) apiPrices[tk] = { price, varPct };
       });
-      src = 'CriptoYa';
+      src = 'data912.com';
     }
   } catch(e) {}
 
+  if (!Object.keys(apiPrices).length) {
+    Object.entries(CER_FALLBACK).forEach(([tk,px]) => { apiPrices[tk] = {price:px,varPct:0}; });
+    src = 'referencia estática';
+    pill.textContent = '⚠ OFFLINE (ref.)';
+  }
+
   cerData = [];
   for (const ticker of Object.keys(CER_CONFIG)) {
-    let found = apiPrices[ticker];
+    let found = apiPrices[ticker] || apiPrices[ticker+'C'] || apiPrices[ticker+'D'];
+    if (!found && CER_FALLBACK[ticker]) found = { price: CER_FALLBACK[ticker], varPct: 0 };
     if (!found) continue;
 
-    const teaDecimal = cerSolveReal(ticker, found.price, fechaLiquidacion);
+    const flows = cerGetFlujosEstructura(ticker, fechaLiquidacion);
+    if (!flows.length) continue;
+
+    const precioReal = cerCalcularPrecioReal(ticker, found.price);
+    
+    const teaDecimal = cerSolveReal(precioReal, flows, fechaLiquidacion);
     const tirReal = teaDecimal * 100;
-    const modD = cerMacDuration(ticker, teaDecimal, fechaLiquidacion);
+    const macD = cerMacDuration(teaDecimal, flows, fechaLiquidacion);
+
     const dias = Math.max(1, Math.round((new Date(CER_CONFIG[ticker].venc+'T00:00:00')-fechaLiquidacion)/86400000));
 
     cerData.push({
       ticker, ...CER_CONFIG[ticker], price: found.price, varPct: found.varPct,
-      tirReal, macD: modD, dias
+      tirReal, macD, dias, flows
     });
   }
 
-  pill.className = 'lc-status-pill ok'; pill.textContent = 'LIVE ●';
+  if (cerData.length > 0 && src !== 'referencia estática') {
+    pill.className = 'lc-status-pill ok'; pill.textContent = 'LIVE ●';
+  }
   document.getElementById('cer-last-upd').textContent = '✓ '+new Date().toLocaleTimeString('es-AR')+' · '+src;
   btn.classList.remove('loading'); btn.textContent = '↻ ACTUALIZAR';
   cerRender(); cerRenderCurve();
+  setTimeout(cerFetch, 30000);
 }
 
 function cerSetFilter(f) {
@@ -600,16 +747,20 @@ function cerRender() {
     if(typeof va==='string')return cerSortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
     return cerSortDir==='asc'?va-vb:vb-va;
   });
+  if (!rows.length) { tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray)">Sin datos</td></tr>'; return; }
   
   const fmtV = v => v>=0?`<span style="color:var(--green)">+${v.toFixed(2)}%</span>`:`<span style="color:var(--red)">${v.toFixed(2)}%</span>`;
+  const fmtD = d => new Date(d+'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'});
   const tirColor = v => v > 4 ? 'color:var(--green);font-weight:700' : v > 0 ? 'color:var(--amber);font-weight:700' : 'color:var(--red);font-weight:700';
   
   tbody.innerHTML = rows.map(b=>`<tr>
-    <td><div class="lc-ticker-wrap"><span class="lc-ticker">${b.ticker}</span></div></td>
+    <td><div class="lc-ticker-wrap">
+      <span class="lc-ticker">${b.ticker}</span>
+    </div></td>
     <td style="color:var(--white2);font-size:11px">${b.name}</td>
-    <td style="color:var(--blue3)">${b.venc}</td>
+    <td style="color:var(--blue3)">${fmtD(b.venc)}</td>
     <td style="color:var(--gray);font-family:var(--mono)">${b.dias}d</td>
-    <td class="lc-price">${b.price.toLocaleString('es-AR',{minimumFractionDigits:2})}</td>
+    <td class="lc-price">${b.price.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
     <td>${fmtV(b.varPct)}</td>
     <td style="color:var(--cyan);font-family:var(--mono)">${b.macD.toFixed(2)}</td>
     <td style="${tirColor(b.tirReal)};font-size:13px;font-family:var(--mono)">${b.tirReal.toFixed(2)}%</td>
@@ -621,14 +772,19 @@ function cerRenderCurve() {
   let pts = cerData.filter(b=>cerFilter==='all'||b.tipo===cerFilter).map(b=>({x:b.macD, y:b.tirReal, ticker:b.ticker, tipo:b.tipo}));
   if (!pts.length) return;
   pts.sort((a,b)=>a.x-b.x);
+
+  const fills  = pts.map(b=>b.tipo==='corto'?'rgba(91,141,239,.9)':'rgba(240,180,41,.9)');
+  const borders = pts.map(b=>b.tipo==='corto'?'#2a5abf':'#8a6820');
+  
   if(cerCurveChart){cerCurveChart.destroy();cerCurveChart=null;}
   cerCurveChart=new Chart(canvas.getContext('2d'),{type:'scatter',data:{datasets:[
-    {type:'scatter',label:'CER',data:pts.map(b=>({x:b.x,y:b.y})),backgroundColor:'#22d68a',borderColor:'#16a86a',borderWidth:1.5,pointRadius:7,
+    {type:'scatter',label:'CER',data:pts.map(b=>({x:b.x,y:b.y})),backgroundColor:fills,borderColor:borders,borderWidth:1.5,pointRadius:7,
       datalabels:{display:true,align:'top',color:'#c8d8f0',font:{family:'monospace',size:9},formatter:(v,c)=>pts[c.dataIndex].ticker}}
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
 }
 
-cerFetchCER().then(() => cerFetch());
+cerFetchCER();
+cerFetch();
 
 document.querySelectorAll('.nav-dropdown-btn').forEach(btn=>{
   btn.addEventListener('click',function(e){
@@ -636,9 +792,11 @@ document.querySelectorAll('.nav-dropdown-btn').forEach(btn=>{
     const dd=this.closest('.nav-dropdown');
     const isOpen=dd.classList.contains('open');
     document.querySelectorAll('.nav-dropdown').forEach(d=>d.classList.remove('open'));
-    if(!isOpen)dd.classList.add('open');
+    document.querySelectorAll('.nav-dropdown-btn').forEach(b=>b.classList.remove('open'));
+    if(!isOpen){dd.classList.add('open');this.classList.add('open');}
   });
 });
+document.addEventListener('click',()=>document.querySelectorAll('.nav-dropdown').forEach(d=>d.classList.remove('open')));
 </script>
 </body>
 </html>
