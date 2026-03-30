@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora FX Pro - Portfolio Investment</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+        :root {
+            --bg: #070d17;
+            --card-bg: #0f172a;
+            --input-bg: #020617;
+            --border: #1e293b;
+            --accent: #3b82f6;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --green: #22c55e;
+            --red: #ef4444;
+            --amber: #f59e0b;
+            --font: 'Inter', sans-serif;
+            --mono: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: var(--bg); 
+            color: var(--text-main); 
+            font-family: var(--font); 
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* TOOLBAR */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .mode-selector {
+            display: flex;
+            background: var(--input-bg);
+            padding: 4px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .mode-btn {
+            padding: 8px 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: 0.2s;
+            text-transform: uppercase;
+        }
+
+        .mode-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .api-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--green);
+            animation: pulse-anim 2s infinite;
+        }
+
+        @keyframes pulse-anim {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        /* LAYOUT */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-title {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        /* INPUTS */
+        .inputs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+        label { font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; }
+        
+        select, input {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: var(--mono);
+            outline: none;
+        }
+
+        input:focus { border-color: var(--accent); }
+        input[type="number"] { color: var(--amber); }
+
+        /* RESULTADOS */
+        .result-hero {
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .hero-label { font-size: 10px; color: var(--accent); font-weight: 800; margin-bottom: 8px; }
+        .hero-val { font-family: var(--mono); font-size: 38px; font-weight: 800; }
+
+        .data-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
+        .data-table td { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .val { text-align: right; font-weight: 600; }
+        .red { color: var(--red); }
+        .green { color: var(--green); font-size: 16px; }
+
+        /* MARKET FOOTER */
+        .market-footer {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .m-tile {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .m-tk { font-size: 10px; font-weight: 800; color: var(--text-dim); }
+        .m-px { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--text-main); }
+        .m-plazo { font-size: 9px; color: var(--accent); font-weight: 700; }
+
+        @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <div class="toolbar">
+        <div class="mode-selector">
+            <button id="btn-tc" class="mode-btn active" onclick="setMode('TC')">Tipo de Cambio</button>
+            <button id="btn-canje" class="mode-btn" onclick="setMode('CANJE')">Canje de Moneda</button>
+        </div>
+        <div class="api-badge" id="api-status">
+            <div class="pulse"></div> <span>DATA912 T+1 LIVE</span>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <div class="card">
+            <div id="ui-tc">
+                <div class="section-title">Parámetros Operativos</div>
+                <div class="inputs-grid">
+                    <div class="input-group">
+                        <label>Conversión</label>
+                        <select id="target-tc" onchange="calculate()">
+                            <option value="mep">PESOS ➔ MEP (AL30D)</option>
+                            <option value="ccl">PESOS ➔ CABLE (AL30C)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Comisión AlyC (%)</label>
+                        <input type="number" id="comision" value="0.5" step="0.1" oninput="calculate()">
+                    </div>
+                    <div class="input-group" style="grid-column: span 2">
+                        <label>Capital a Invertir (ARS)</label>
+                        <input type="number" id="monto-ars" value="1000000" oninput="calculate()">
+                    </div>
+                </div>
+            </div>
+
+            <div id="ui-canje" style="display:none">
+                <div class="section-title">Parámetros de Canje</div>
+                <div class="inputs-grid">
+                    <div class="input-group">
+                        <label>Dirección</label>
+                        <select id="sentido-canje" onchange="calculate()">
+                            <option value="m-c">MEP a CABLE (D ➔ C)</option>
+                            <option value="c-m">CABLE a MEP (C ➔ D)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Comisión (%)</label>
+                        <input type="number" id="com-canje" value="0.5" step="0.1" oninput="calculate()">
+                    </div>
+                    <div class="input-group" style="grid-column: span 2">
+                        <label>Monto USD Origen</label>
+                        <input type="number" id="monto-usd" value="1000" oninput="calculate()">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="border-color: var(--accent);">
+            <div class="section-title">Liquidación Neta Estimada</div>
+            <div class="result-hero">
+                <div class="hero-label" id="main-label">TC IMPLÍCITO FINAL</div>
+                <div class="hero-val" id="res-main">$ 0.00</div>
+            </div>
+
+            <table class="data-table">
+                <tr><td>Inversión Total</td><td class="val" id="row-monto">0.00</td></tr>
+                <tr><td>Comisión + IVA (21%)</td><td class="val red" id="row-com">0.00</td></tr>
+                <tr><td>DDMM (0.01% Exento)</td><td class="val red" id="row-ddmm">0.00</td></tr>
+                <tr style="border-top: 1px solid var(--border);">
+                    <td style="padding-top:15px; font-weight:800; color:white">RECIBE NETO</td>
+                    <td class="val green" id="row-final" style="padding-top:15px">0.00</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="market-footer" id="market-display">
+        </div>
+
+    <script>
+        let prices = { al30: 0, al30d: 0, al30c: 0, oficial: 0 };
+        let mode = 'TC';
+
+        // Lógica de Proxy idéntica a bonos.html
+        async function pfetch(url){
+            try {
+                const response = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
+                const data = await response.json();
+                return JSON.parse(data.contents);
+            } catch (e) {
+                const rDirect = await fetch(url);
+                return await rDirect.json();
+            }
+        }
+
+        function setMode(m) {
+            mode = m;
+            document.getElementById('btn-tc').classList.toggle('active', m==='TC');
+            document.getElementById('btn-canje').classList.toggle('active', m==='CANJE');
+            document.getElementById('ui-tc').style.display = m==='TC' ? 'block' : 'none';
+            document.getElementById('ui-canje').style.display = m==='CANJE' ? 'block' : 'none';
+            document.getElementById('main-label').textContent = m==='TC' ? 'TC IMPLÍCITO FINAL' : 'RATIO CANJE NETO';
+            calculate();
+        }
+
+        async function fetchData() {
+            try {
+                // Endpoint fijo T+1 (arg_bonds usa 24hs por defecto en data912)
+                const data = await pfetch('https://data912.com/live/arg_bonds');
+                
+                const findPx = (sym) => {
+                    const item = data.find(i => i.symbol.trim().toUpperCase() === sym);
+                    return item ? parseFloat(item.c) : 0;
+                };
+
+                prices.al30 = findPx('AL30');
+                prices.al30d = findPx('AL30D');
+                prices.al30c = findPx('AL30C');
+
+                // Dólar Oficial
+                const fxData = await pfetch('https://data912.com/live/fx');
+                const ofi = fxData.find(i => i.symbol === 'USD_MAYORISTA' || i.symbol === 'USD_OFICIAL_BCRA3500');
+                prices.oficial = ofi ? parseFloat(ofi.c) : 865;
+
+                renderMarket();
+                calculate();
+            } catch(e) { console.error("API Error", e); }
+        }
+
+        function calculate() {
+            const ddmm_rate = 0.0001; // 0.01% PPT
+            if (prices.al30 <= 0 || prices.al30d <= 0) return;
+
+            if (mode === 'TC') {
+                const montoArs = parseFloat(document.getElementById('monto-ars').value) || 0;
+                const comRate = parseFloat(document.getElementById('comision').value) / 100;
+                const pUsd = document.getElementById('target-tc').value === 'mep' ? prices.al30d : prices.al30c;
+
+                // Gastos Compra
+                const comArs = montoArs * comRate * 1.21;
+                const ddmmArs = montoArs * ddmm_rate;
+                const netArs = montoArs - comArs - ddmmArs;
+                const nominales = netArs / (prices.al30 / 100);
+
+                // Gastos Venta (Pesificados al Oficial)
+                const brutoUsd = (nominales * pUsd) / 100;
+                const comUsdArs = (brutoUsd * comRate * 1.21) * prices.oficial;
+                const ddmmUsdArs = (brutoUsd * ddmm_rate) * prices.oficial;
+
+                const finalUsd = brutoUsd - (comUsdArs / prices.oficial) - (ddmmUsdArs / prices.oficial);
+                const tcFinal = montoArs / finalUsd;
+
+                document.getElementById('res-main').textContent = `$ ${tcFinal.toFixed(2)}`;
+                document.getElementById('row-monto').textContent = `$ ${montoArs.toLocaleString()}`;
+                document.getElementById('row-com').textContent = `$ ${(comArs + comUsdArs).toFixed(2)}`;
+                document.getElementById('row-ddmm').textContent = `$ ${(ddmmArs + ddmmUsdArs).toFixed(2)}`;
+                document.getElementById('row-final').textContent = `${finalUsd.toFixed(2)} USD`;
+            } else {
+                const montoUsd = parseFloat(document.getElementById('monto-usd').value) || 0;
+                const comRate = parseFloat(document.getElementById('com-canje').value) / 100;
+                const m2c = document.getElementById('sentido-canje').value === 'm-c';
+                const pIn = m2c ? prices.al30d : prices.al30c;
+                const pOut = m2c ? prices.al30c : prices.al30d;
+
+                const valorOpArs = (montoUsd * pIn / 100) * prices.oficial;
+                const gastosArs = (valorOpArs * (comRate * 1.21 + ddmm_rate)) * 2;
+                
+                const finalUsd = (montoUsd * pOut / pIn) - (gastosArs / prices.oficial);
+                const ratioNeto = ((finalUsd / montoUsd) - 1) * 100;
+
+                document.getElementById('res-main').textContent = `${ratioNeto.toFixed(2)}%`;
+                document.getElementById('row-monto').textContent = `${montoUsd.toFixed(2)} USD`;
+                document.getElementById('row-com').textContent = `$ ${(valorOpArs * comRate * 1.21 * 2).toFixed(2)} (ARS)`;
+                document.getElementById('row-ddmm').textContent = `$ ${(valorOpArs * ddmm_rate * 2).toFixed(2)} (ARS)`;
+                document.getElementById('row-final').textContent = `${finalUsd.toFixed(2)} USD`;
+            }
+        }
+
+        function renderMarket() {
+            const display = document.getElementById('market-display');
+            const data = [
+                { label: 'AL30 (Pesos)', val: `$${prices.al30.toLocaleString()}` },
+                { label: 'AL30D (MEP)', val: `u$s${prices.al30d.toFixed(2)}` },
+                { label: 'AL30C (Cable)', val: `u$s${prices.al30c.toFixed(2)}` },
+                { label: 'Oficial (BCRA)', val: `$${prices.oficial.toFixed(2)}` }
+            ];
+            display.innerHTML = data.map(i => `
+                <div class="m-tile">
+                    <span class="m-tk">${i.label}</span>
+                    <span class="m-px">${i.val}</span>
+                    <span class="m-plazo">LIQ. T+1</span>
+                </div>
+            `).join('');
+        }
+
+        fetchData();
+        setInterval(fetchData, 15000);
+    </script>
+</body>
+</html>
