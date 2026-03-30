@@ -210,9 +210,10 @@ html,body{
   background:var(--navy2);border:1px solid var(--border);border-radius:var(--r);
 }
 .sdot{width:7px;height:7px;border-radius:50%;background:var(--gray2);flex-shrink:0}
-.sdot.live{background:var(--green);box-shadow:0 0 6px rgba(34,214,138,.5);animation:blink 2.5s infinite}
+.sdot.live{background:var(--green);box-shadow:0 0 6px rgba(34,214,138,.5);animation:livePulse 2s ease-in-out infinite}
 .sdot.err{background:var(--red)}
-.sdot.fetching{background:var(--amber);animation:blink .9s infinite}
+.sdot.fetching{background:var(--amber);animation:livePulse 1s ease-in-out infinite}
+@keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
 .stxt{font-size:10px;color:var(--gray);font-family:var(--mono);letter-spacing:.04em}
 .stime{margin-left:auto;font-size:10px;color:var(--gray2);font-family:var(--mono)}
 
@@ -254,7 +255,6 @@ html,body{
 <body>
 <div class="shell">
 
-<!-- ══ HEADER ══════════════════════════════════════════════════ -->
 <div class="page-hdr">
   <button class="ph-back" onclick="goHome()">← Volver</button>
   <span class="ph-divider">|</span>
@@ -270,18 +270,13 @@ html,body{
   </div>
 </div>
 
-<!-- ══ TABS ════════════════════════════════════════════════════ -->
 <div class="main-tabs">
   <button class="mtab active" id="tab-tc"    onclick="switchSec('tc')">💱 &nbsp;Tipo de Cambio</button>
   <button class="mtab"        id="tab-canje" onclick="switchSec('canje')">🔄 &nbsp;Canje</button>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     TIPO DE CAMBIO
-══════════════════════════════════════════════════════════════ -->
 <div class="sec on" id="sec-tc">
 
-  <!-- CALCULADORA (arriba) -->
   <div class="card">
     <div class="card-hdr">
       <span class="ch-label">Calculadora · Tipo de Cambio</span>
@@ -294,7 +289,6 @@ html,body{
       </button>
     </div>
 
-    <!-- Precios -->
     <div class="price-row">
       <div class="pc hl">
         <div class="pc-sym">AL30 · ARS</div>
@@ -313,7 +307,6 @@ html,body{
       </div>
     </div>
 
-    <!-- Calculadoras -->
     <div class="calc-body">
       <div class="calc-row">
         <div class="cf">
@@ -344,7 +337,6 @@ html,body{
     </div>
   </div>
 
-  <!-- RESULTADOS (abajo) -->
   <div class="card">
     <div class="card-hdr">
       <span class="ch-label" id="tc-card-lbl">TC Implícito · MEP (CI)</span>
@@ -391,14 +383,8 @@ html,body{
     </div>
   </div>
 
-</div><!-- /sec-tc -->
+</div><div class="sec" id="sec-canje">
 
-<!-- ══════════════════════════════════════════════════════════
-     CANJE
-══════════════════════════════════════════════════════════════ -->
-<div class="sec" id="sec-canje">
-
-  <!-- CALCULADORAS CANJE (arriba) -->
   <div class="card">
     <div class="card-hdr">
       <span class="ch-label">Calculadora · Canje MEP / Cable</span>
@@ -407,7 +393,6 @@ html,body{
       </button>
     </div>
 
-    <!-- Precios -->
     <div class="price-row">
       <div class="pc hl">
         <div class="pc-sym">AL30D · USD MEP</div>
@@ -427,7 +412,6 @@ html,body{
     </div>
 
     <div class="calc-body">
-      <!-- MEP → Cable -->
       <div class="calc-row">
         <div class="cf">
           <div class="cf-lbl">USD MEP a canjear (→ Cable)</div>
@@ -445,7 +429,6 @@ html,body{
 
       <div class="calc-sep"></div>
 
-      <!-- Cable → MEP -->
       <div class="calc-row">
         <div class="cf">
           <div class="cf-lbl">USD Cable a canjear (→ MEP)</div>
@@ -463,7 +446,6 @@ html,body{
     </div>
   </div>
 
-  <!-- TASAS + DESGLOSE (abajo) -->
   <div class="card">
     <div class="card-hdr">
       <span class="ch-label">Tasas de Canje · AL30D / AL30C</span>
@@ -487,7 +469,6 @@ html,body{
       </div>
     </div>
 
-    <!-- Desglose base 10k -->
     <div class="card-hdr" style="margin-top:2px">
       <span class="ch-label">Desglose · Base USD 10.000 &nbsp;(MEP → Cable)</span>
     </div>
@@ -515,19 +496,13 @@ html,body{
     </div>
   </div>
 
-</div><!-- /sec-canje -->
-
-<!-- ══ STATUS ══════════════════════════════════════════════════ -->
-<div class="status-bar">
+</div><div class="status-bar">
   <div class="sdot" id="sdot"></div>
   <span class="stxt" id="stxt">Inicializando...</span>
   <span class="stime" id="stime">—</span>
 </div>
 
-</div><!-- /shell -->
-
-<!-- ══ MODAL ════════════════════════════════════════════════════ -->
-<div class="modal-ov" id="modal-ov" style="display:none" onclick="closeModalOv(event)">
+</div><div class="modal-ov" id="modal-ov" style="display:none" onclick="closeModalOv(event)">
   <div class="modal">
     <h3 id="modal-ttl">Comisión</h3>
     <p id="modal-desc">Ingrese la comisión a cobrar sobre la operación (%).</p>
@@ -539,9 +514,6 @@ html,body{
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     SCRIPT
-══════════════════════════════════════════════════════════════ -->
 <script>
 'use strict';
 
@@ -552,7 +524,7 @@ const S = {
   modo:'MEP',
   commTC:0.60, commCanje:0.60, modalFor:'tc',
   t1:{al30:null,al30d:null,al30c:null},
-  bcra:null   // se usa internamente para DDMM, no se muestra
+  bcra:null   // se usa internamente para DDMM
 };
 
 /* ── HELPERS ── */
@@ -595,8 +567,6 @@ function setModo(m){
   const isMEP=m==='MEP';
   setText('sym-usd',     isMEP?'AL30D · USD MEP':'AL30C · USD Cable');
   setText('sym-tc-chip', isMEP?'TC BRUTO · MEP':'TC BRUTO · CCL');
-  el('p-tc-chip').querySelector||(()=>{});
-  // sub del chip
   const chipSub=el('p-tc-chip')?.parentElement?.querySelector?.('.pc-sub');
   if(chipSub) chipSub.textContent=isMEP?'AL30 / AL30D':'AL30 / AL30C';
   setText('bk-sym',     isMEP?'AL30D':'AL30C');
@@ -626,7 +596,6 @@ function confirmModal(){
   }
   closeModal();render();
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 
 /* ── HORARIO ── */
 function checkMarket(){
@@ -637,82 +606,75 @@ function checkMarket(){
   setText('mh-txt',open?'ABIERTO':'CERRADO');
 }
 
-/* ── FETCH ── */
-async function pfetch(url, ms=7000){
-  // 1. Directo (funciona cuando no hay CORS issues, ej: mismo dominio o API pública)
+/* ── API FETCH (REPLICADA DE RESUMEN.HTML) ── */
+async function pfetch(url){
+  try{const r=await fetch(url);if(r.ok)return r.json();}catch(e){}
   try{
-    const r=await fetch(url,{signal:AbortSignal.timeout(ms),headers:{Accept:'application/json','Cache-Control':'no-cache'}});
-    if(r.ok)return await r.json();
-  }catch{}
-  // 2. corsproxy.io
+    const r2=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url));
+    if(!r2.ok)throw new Error('proxy HTTP '+r2.status);
+    const d=await r2.json();return JSON.parse(d.contents);
+  }catch(e){}
   try{
-    const p=`https://corsproxy.io/?${encodeURIComponent(url)}`;
-    const r=await fetch(p,{signal:AbortSignal.timeout(ms+3000)});
-    if(r.ok)return await r.json();
-  }catch{}
-  // 3. allorigins
-  try{
-    const p=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    const r=await fetch(p,{signal:AbortSignal.timeout(ms+5000)});
-    if(r.ok){const d=await r.json();return JSON.parse(d.contents)}
-  }catch{}
+    const r3=await fetch('https://corsproxy.io/?'+encodeURIComponent(url));
+    if(r3.ok)return r3.json();
+  }catch(e){}
   return null;
 }
 
+async function sfetch(url){
+  try{
+    const r=await fetch(url);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return await r.json();
+  }catch(e){return null;}
+}
 
-
-
-/*
- * Endpoints data912 confirmados (fuente: github.com/arisbdar/rendimientos-ar):
- *   /live/arg_bonds → bonos soberanos en USD (AL30D, AL30C, GD30D…) · campo "c" = último
- *   /live/arg_notes → bonos en ARS (AL30, GD30…)                     · campo "c" = último
- */
-const URL_BONDS = 'https://data912.com/live/arg_bonds';
-const URL_NOTES = 'https://data912.com/live/arg_notes';
-
-function findTicker(arr, ticker){
-  if(!Array.isArray(arr)) return null;
-  const t = ticker.toUpperCase().trim();
-  for(const it of arr){
-    const sym = (it.ticker||it.symbol||it.simbolo||it.id||it.code||'').toUpperCase().trim();
-    if(sym === t){
-      const p = parseFloat(it.c ?? it.ultimo ?? it.last ?? it.close ?? it.price ?? 0);
-      return p > 0 ? p : null;
-    }
+const extractBond=(arr,tk)=>{
+  if(!Array.isArray(arr))return null;
+  for(const b of arr){
+    const t=(b.ticker||b.symbol||b.t||'').trim().toUpperCase();
+    if(t!==tk)continue;
+    const v=parseFloat(b.price||b.c||b.ultimo||b.last||0);
+    return v>0?v:null;
   }
   return null;
-}
-
-async function tryBonds(){
-  const [bonds, notes] = await Promise.all([
-    pfetch(URL_BONDS, 7000),
-    pfetch(URL_NOTES, 7000),
-  ]);
-
-  const al30  = findTicker(notes, 'AL30');   // precio en ARS
-  const al30d = findTicker(bonds, 'AL30D');  // precio en USD MEP
-  const al30c = findTicker(bonds, 'AL30C');  // precio en USD Cable
-
-  if(al30 || al30d || al30c){
-    console.info('[data912] OK', {al30, al30d, al30c});
-    return { al30, al30d, al30c };
-  }
-  console.error('[data912] Sin precios. bonds:', bonds?.slice?.(0,2), 'notes:', notes?.slice?.(0,2));
-  return null;
-}
-async function fetchBCRA(){
-  try{const d=await pfetch('https://dolarapi.com/v1/dolares/oficial');if(d?.venta){S.bcra=+d.venta;return}}catch{}
-  try{const d=await pfetch('https://api.argentinadatos.com/v1/cotizaciones/dolares/oficial');if(d?.venta){S.bcra=+d.venta;return}}catch{}
-}
+};
 
 async function fetchAll(){
   setStatus('fetching');
-  const [bonds]=await Promise.all([tryBonds(),fetchBCRA()]);
-  if(bonds){
-    Object.assign(S.ci,bonds);
-    Object.assign(S.t1,bonds);
+  
+  // Llamadas paralelas como en resumen.html
+  const [rBondsD912, rNotesD912, rOficial] = await Promise.allSettled([
+    pfetch('https://data912.com/live/arg_bonds'),
+    pfetch('https://data912.com/live/arg_notes'),
+    sfetch('https://dolarapi.com/v1/dolares/oficial')
+  ]);
+
+  let bondArr = [], noteArr = [];
+  if(rBondsD912.status==='fulfilled' && rBondsD912.value){
+    const raw=rBondsD912.value; bondArr = Array.isArray(raw)?raw:(raw.data||raw.items||[]);
   }
-  setStatus(S.ci.al30||S.ci.al30d?'live':'error');
+  if(rNotesD912.status==='fulfilled' && rNotesD912.value){
+    const raw=rNotesD912.value; noteArr = Array.isArray(raw)?raw:(raw.data||raw.items||[]);
+  }
+
+  const al30  = extractBond(noteArr, 'AL30');
+  const al30d = extractBond(bondArr, 'AL30D');
+  const al30c = extractBond(bondArr, 'AL30C');
+
+  if(al30 || al30d || al30c){
+    S.t1.al30  = al30;
+    S.t1.al30d = al30d;
+    S.t1.al30c = al30c;
+    setStatus('live');
+  } else {
+    setStatus('error');
+  }
+
+  if(rOficial.status==='fulfilled' && rOficial.value){
+    S.bcra = parseFloat(rOficial.value.venta || rOficial.value.compra || 0);
+  }
+
   render();
   setText('stime','Act.: '+new Date().toLocaleTimeString('es-AR'));
 }
@@ -720,7 +682,6 @@ async function fetchAll(){
 /* ── RENDER ── */
 function render(){checkMarket();renderTC();renderCanje()}
 
-/* Cache de valores calculados para PDF */
 let TCcache={}, CANJEcache={};
 
 function renderTC(){
@@ -728,13 +689,11 @@ function renderTC(){
   const comm=S.commTC/100;
 
   setText('tc-card-lbl',`TC Implícito · ${S.modo} (T+1 · 24hs)`);
-  setText('bk-comm-pct',S.commTC.toFixed(2)+'%');
-
+  
   flash('p-al30');flash('p-usd');flash('p-tc-chip');
   setPcVal('p-al30',al30?fmtARS(al30):null);
   setPcVal('p-usd', alU ?fmtUSD(alU) :null);
 
-  // TC chip
   const tcChipEl=el('p-tc-chip');
   if(al30&&alU){
     const bruto=al30/alU;
@@ -768,22 +727,18 @@ function renderTC(){
 
 function renderCanje(){
   const d=S.t1.al30d, c=S.t1.al30c, bcra=S.bcra;
-  setText('cj-comm-pct',S.commCanje.toFixed(2)+'%');
   setPcVal('cj-al30d-disp',d?fmtUSD(d):null);
   setPcVal('cj-al30c-disp',c?fmtUSD(c):null);
   setText('cj-p-d',d?fmtUSD(d):'—');
   setText('cj-p-c',c?fmtUSD(c):'—');
 
-  // Spread chip
   const chipEl=el('cj-spread-chip');
   if(d&&c){
     const spr=(c/d-1)*100;
     chipEl.textContent=fmtPct(spr,4);
-    chipEl.className='pc-tc-val'+(spr>=0?' ':'')+(spr>=0?'':'');
     chipEl.style.color=spr>=0?'var(--green)':'var(--red)';
   } else {
     chipEl.textContent='—';
-    chipEl.className='pc-tc-val empty';
     chipEl.style.color='';
   }
 
@@ -839,14 +794,9 @@ function calcMepToCable(){
   const mep=parseFloat(el('calc-m2c-in').value);
   const d=S.t1.al30d, c=S.t1.al30c, bcra=S.bcra;
   const det=el('detail-m2c');
-  if(!mep||!d||!c||!bcra){
-    setResult('calc-m2c-out',null);
-    det.innerHTML='<strong>Incluye:</strong> spread MEP/Cable · comisión 2 puntas · DDMM 2 puntas en ARS';
-    return;
-  }
+  if(!mep||!d||!c||!bcra){ setResult('calc-m2c-out',null); return; }
   const cc=S.commCanje/100, nom=mep/d, gross=nom*c;
-  const cV=mep*cc, cP=gross*cc;
-  const dd1=nom*d*DDMM*bcra, dd2=nom*c*DDMM*bcra, ddU=(dd1+dd2)/bcra;
+  const cV=mep*cc, cP=gross*cc, dd1=nom*d*DDMM*bcra, dd2=nom*c*DDMM*bcra, ddU=(dd1+dd2)/bcra;
   const net=gross-cP-cV*(c/d)-ddU;
   setResult('calc-m2c-out',fmtUSD(net));
   det.innerHTML=`<strong>Bruto:</strong> ${fmtUSD(gross)} &nbsp;·&nbsp; <strong>Comm:</strong> USD ${fmt(cV*(c/d)+cP,2)} &nbsp;·&nbsp; <strong>DDMM:</strong> ARS ${fmt(dd1+dd2,2)} &nbsp;·&nbsp; <strong>Neto:</strong> ${fmtUSD(net)}`;
@@ -855,14 +805,9 @@ function calcCableToMep(){
   const cable=parseFloat(el('calc-c2m-in').value);
   const d=S.t1.al30d, c=S.t1.al30c, bcra=S.bcra;
   const det=el('detail-c2m');
-  if(!cable||!d||!c||!bcra){
-    setResult('calc-c2m-out',null);
-    det.innerHTML='<strong>Incluye:</strong> spread Cable/MEP · comisión 2 puntas · DDMM 2 puntas en ARS';
-    return;
-  }
+  if(!cable||!d||!c||!bcra){ setResult('calc-c2m-out',null); return; }
   const cc=S.commCanje/100, nom=cable/c, gross=nom*d;
-  const cV=cable*cc, cP=gross*cc;
-  const dd1=nom*c*DDMM*bcra, dd2=nom*d*DDMM*bcra, ddU=(dd1+dd2)/bcra;
+  const cV=cable*cc, cP=gross*cc, dd1=nom*c*DDMM*bcra, dd2=nom*d*DDMM*bcra, ddU=(dd1+dd2)/bcra;
   const net=gross-cP-cV*(d/c)-ddU;
   setResult('calc-c2m-out',fmtUSD(net));
   det.innerHTML=`<strong>Bruto:</strong> ${fmtUSD(gross)} &nbsp;·&nbsp; <strong>Comm:</strong> USD ${fmt(cV*(d/c)+cP,2)} &nbsp;·&nbsp; <strong>DDMM:</strong> ARS ${fmt(dd1+dd2,2)} &nbsp;·&nbsp; <strong>Neto:</strong> ${fmtUSD(net)}`;
@@ -873,291 +818,56 @@ function setStatus(st){
   const dot=el('sdot'),txt=el('stxt');
   if(st==='live'){dot.className='sdot live';txt.textContent=`EN VIVO · data912.com · refresco cada ${REFRESH_MS/1000}s`}
   else if(st==='fetching'){dot.className='sdot fetching';txt.textContent='Actualizando precios...'}
-  else{dot.className='sdot err';txt.textContent='Sin datos · verificá conexión o endpoints de data912.com'}
+  else{dot.className='sdot err';txt.textContent='Sin datos · verificá endpoints'}
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   PDF EXPORT — construido con jsPDF nativo (sin html2canvas)
-═══════════════════════════════════════════════════════════════ */
+/* ── PDF LOGIC ── */
 function pdfHeader(doc, title, subtitle){
   const W = doc.internal.pageSize.getWidth();
-
-  // Fondo header
-  doc.setFillColor(17, 37, 64);   // --navy2
-  doc.rect(0, 0, W, 38, 'F');
-
-  // Línea decorativa azul
-  doc.setFillColor(58, 111, 216); // --blue
-  doc.rect(0, 0, 4, 38, 'F');
-
-  // Logo texto
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(14);
-  doc.setTextColor(240, 244, 255);
-  doc.text('Portfolio Investment', 12, 14);
-
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(8);
-  doc.setTextColor(122, 163, 240);
-  doc.text('SISTEMA DE CÁLCULO FINANCIERO  ·  BYMA · MERVAL · MCE', 12, 21);
-
-  // Título operación (derecha)
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(11);
-  doc.setTextColor(34, 212, 240);
-  doc.text(title, W - 10, 13, {align:'right'});
-
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(8);
-  doc.setTextColor(122, 163, 240);
-  doc.text(subtitle, W - 10, 21, {align:'right'});
-
-  // Fecha/hora
-  const now = new Date();
-  const ts  = now.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'})
-             +' · '+now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  doc.setFontSize(7.5);
-  doc.setTextColor(74, 106, 154);
-  doc.text('Generado: '+ts, 12, 33);
-  doc.text('Fuente: data912.com + dolarapi.com', W - 10, 33, {align:'right'});
-
-  return 46; // y inicial para contenido
+  doc.setFillColor(17, 37, 64); doc.rect(0, 0, W, 38, 'F');
+  doc.setFillColor(58, 111, 216); doc.rect(0, 0, 4, 38, 'F');
+  doc.setFontSize(14); doc.setTextColor(240, 244, 255); doc.setFont('helvetica','bold'); doc.text('Portfolio Investment', 12, 14);
+  doc.setFontSize(11); doc.setTextColor(34, 212, 240); doc.text(title, W - 10, 13, {align:'right'});
+  return 46;
 }
 
 function pdfSectionTitle(doc, text, y){
   const W = doc.internal.pageSize.getWidth();
-  doc.setFillColor(23, 45, 77); // --navy3
-  doc.rect(0, y, W, 9, 'F');
-  doc.setFillColor(58, 111, 216);
-  doc.rect(0, y, 3, 9, 'F');
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(7.5);
-  doc.setTextColor(122, 163, 240);
-  doc.text(text.toUpperCase(), 8, y + 6);
+  doc.setFillColor(23, 45, 77); doc.rect(0, y, W, 9, 'F');
+  doc.setFontSize(7.5); doc.setTextColor(122, 163, 240); doc.text(text.toUpperCase(), 8, y + 6);
   return y + 14;
 }
 
-function pdfRow(doc, label, value, y, isTotal=false, highlight=false){
-  const W  = doc.internal.pageSize.getWidth();
-  const mx = 10;
-
+function pdfRow(doc, label, value, y, isTotal=false){
+  const W = doc.internal.pageSize.getWidth();
   if(isTotal){
-    doc.setFillColor(13, 27, 46);
-    doc.rect(0, y - 1, W, 10, 'F');
-    doc.setDrawColor(34, 212, 240);
-    doc.setLineWidth(0.3);
-    doc.line(mx, y - 1, W - mx, y - 1);
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(10);
-    doc.setTextColor(34, 212, 240);
-    doc.text(label, mx, y + 6);
-    doc.text(value, W - mx, y + 6, {align:'right'});
+    doc.setFillColor(13, 27, 46); doc.rect(0, y - 1, W, 10, 'F');
+    doc.setTextColor(34, 212, 240); doc.setFontSize(10); doc.text(label, 10, y + 6); doc.text(value, W - 10, y + 6, {align:'right'});
     return y + 14;
   }
-
-  if(highlight){
-    doc.setFillColor(23, 45, 77);
-    doc.rect(0, y - 1, W, 8, 'F');
-  }
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(9);
-  if(highlight){ doc.setTextColor(208, 221, 245); }
-  else          { doc.setTextColor(122, 153, 196); }
-  doc.text(label, mx, y + 5);
-  doc.setTextColor(208, 221, 245);
-  doc.setFont('helvetica','bold');
-  doc.text(value, W - mx, y + 5, {align:'right'});
+  doc.setFontSize(9); doc.setTextColor(122, 153, 196); doc.text(label, 10, y + 5);
+  doc.setTextColor(208, 221, 245); doc.text(value, W - 10, y + 5, {align:'right'});
   return y + 10;
 }
 
-function pdfNote(doc, text, y){
-  const W = doc.internal.pageSize.getWidth();
-  doc.setFillColor(30, 24, 8);
-  doc.rect(0, y, W, 14, 'F');
-  doc.setFillColor(240, 180, 41);
-  doc.rect(0, y, 2.5, 14, 'F');
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(7.5);
-  doc.setTextColor(240, 180, 41);
-  doc.text('DDMM Títulos Públicos:', 8, y + 5.5);
-  doc.setFont('helvetica','normal');
-  doc.setTextColor(160, 170, 190);
-  doc.text('0.0100% por punta · Exento IVA · Cobrado en ARS al TC oficial BCRA (Neg. Sec. PPT)', 8, y + 11);
-  return y + 19;
-}
-
-function pdfCalcResult(doc, label, input, result, y){
-  const W = doc.internal.pageSize.getWidth();
-  if(!input || input==='—') return y;
-  doc.setFillColor(18, 37, 64);
-  doc.rect(0, y, W, 12, 'F');
-  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(122,163,240);
-  doc.text(label, 10, y + 5);
-  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(34,214,138);
-  doc.text(result, W - 10, y + 8, {align:'right'});
-  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(74,106,154);
-  doc.text('Entrada: '+input, 10, y + 10);
-  return y + 16;
-}
-
-function pdfBigNumber(doc, label, value, y){
-  const W = doc.internal.pageSize.getWidth();
-  doc.setFillColor(13, 27, 46);
-  doc.rect(0, y, W, 28, 'F');
-  doc.setFillColor(58, 111, 216);
-  doc.rect(0, y, W, 1.5, 'F');
-  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(122,163,240);
-  doc.text(label, 10, y + 9);
-  doc.setFont('helvetica','bold');doc.setFontSize(22);doc.setTextColor(34,212,240);
-  doc.text(value, 10, y + 24);
-  return y + 34;
-}
-
-/* ── EXPORT TC PDF ── */
 function exportTCpdf(){
   const { jsPDF } = window.jspdf;
-  if(!jsPDF){alert('jsPDF no disponible');return}
-  const t=TCcache;
-  if(!t.tcImpl){alert('Esperá a que carguen los precios.');return}
-
-  const btn=el('pdf-tc-btn');
-  btn.classList.add('generating');
-  btn.textContent='⏳ Generando...';
-
-  setTimeout(()=>{
-    const doc = new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
-    const W   = doc.internal.pageSize.getWidth();
-    const sym = t.modo==='MEP'?'AL30D':'AL30C';
-    let y = pdfHeader(doc, `TC ${t.modo}`, `Plazo: ${t.plazo} · Comisión: ${t.comm.toFixed(2)}%`);
-
-    // Big number
-    y = pdfBigNumber(doc, 'TC IMPLÍCITO (todo incluido)', fmt(t.tcImpl,4), y);
-
-    // Precios
-    y = pdfSectionTitle(doc, 'Precios de Mercado · data912.com', y);
-    y = pdfRow(doc, 'AL30 (ARS) · '+t.plazo, fmtARS(t.al30), y, false, true);
-    y = pdfRow(doc, sym+' (USD) · '+t.plazo,  fmtUSD(t.alU),  y, false, true);
-
-    // Desglose
-    y = pdfSectionTitle(doc, 'Desglose TC Implícito', y);
-    y = pdfRow(doc, 'TC Bruto (AL30 / '+sym+')',                           fmt(t.tcBruto,4), y);
-    y = pdfRow(doc, `+ Comisión ${t.comm.toFixed(2)}% · punta ARS`,        `+${fmt(t.cA/t.alU,4)} ARS/USD  (${fmtARS(t.cA)})`, y);
-    y = pdfRow(doc, '+ DDMM 0.0100% · punta ARS',                          `+${fmt(t.dA/t.alU,4)} ARS/USD  (${fmtARS(t.dA)})`, y);
-    y = pdfRow(doc, '+ DDMM 0.0100% · punta USD→ARS (TC oficial)',          `+${fmt(t.dU/t.alU,4)} ARS/USD  (${fmtARS(t.dU)})`, y);
-    y = pdfRow(doc, 'TC IMPLÍCITO (todo incluido)', fmt(t.tcImpl,4), y, true);
-
-    // Calculadoras
-    const arsIn  = el('calc-ars-in').value;
-    const arsOut = el('calc-ars-out').textContent;
-    const usdIn  = el('calc-usd-in').value;
-    const usdOut = el('calc-usd-out').textContent;
-    const hasCa  = arsIn&&arsOut&&arsOut!=='—';
-    const hasCu  = usdIn&&usdOut&&usdOut!=='—';
-    if(hasCa||hasCu){
-      y = pdfSectionTitle(doc, 'Resultados Calculadora', y);
-      if(hasCa) y=pdfCalcResult(doc,'ARS → '+t.modo, fmtARS(+arsIn), arsOut, y);
-      if(hasCu) y=pdfCalcResult(doc,t.modo+' → ARS', fmtUSD(+usdIn), usdOut, y);
-    }
-
-    y = pdfNote(doc, '', y);
-
-    // Footer
-    doc.setDrawColor(42,74,122);doc.setLineWidth(0.5);
-    doc.line(10, y+5, W-10, y+5);
-    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(74,106,154);
-    doc.text('Portfolio Investment · Sistema de Cálculo Financiero · BYMA', 10, y+14);
-    doc.text('Documento generado automáticamente. No constituye asesoramiento financiero.', W-10, y+14, {align:'right'});
-
-    const fname=`TC_${t.modo}_${t.plazo}_${new Date().toISOString().slice(0,10)}.pdf`;
-    doc.save(fname);
-    btn.classList.remove('generating');
-    btn.textContent='⬇ Descargar PDF';
-  }, 80);
+  const t=TCcache; if(!t.tcImpl)return;
+  const doc = new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
+  let y = pdfHeader(doc, `TC ${t.modo}`, `Comisión: ${t.comm.toFixed(2)}%`);
+  y = pdfSectionTitle(doc, 'Desglose TC Implícito', y);
+  y = pdfRow(doc, 'TC Bruto (AL30 / '+(t.modo==='MEP'?'AL30D':'AL30C')+')', fmt(t.tcBruto,4), y);
+  y = pdfRow(doc, 'TC IMPLÍCITO (todo incluido)', fmt(t.tcImpl,4), y, true);
+  doc.save(`TC_${t.modo}_${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
-/* ── EXPORT CANJE PDF ── */
 function exportCanjePdf(){
   const { jsPDF } = window.jspdf;
-  if(!jsPDF){alert('jsPDF no disponible');return}
-  const t=CANJEcache;
-  if(!t.d){alert('Esperá a que carguen los precios.');return}
-
-  const btn=el('pdf-canje-btn');
-  btn.classList.add('generating');
-  btn.textContent='⏳ Generando...';
-
-  setTimeout(()=>{
-    const doc = new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
-    const W   = doc.internal.pageSize.getWidth();
-    let y = pdfHeader(doc, 'CANJE MEP / Cable', `AL30D · AL30C · Comisión: ${t.comm.toFixed(2)}%`);
-
-    // Big numbers: las dos tasas
-    doc.setFillColor(13, 27, 46);
-    doc.rect(0, y, W, 38, 'F');
-    doc.setFillColor(58, 111, 216);
-    doc.rect(0, y, W, 1.5, 'F');
-    // MEP→Cable
-    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(122,163,240);
-    doc.text('MEP → Cable (bruto)', 10, y+9);
-    doc.setFont('helvetica','bold');doc.setFontSize(18);
-    doc.setTextColor(t.m2c>=0?34:255, t.m2c>=0?214:77, t.m2c>=0?138:106);
-    doc.text(fmtPct(t.m2c,4), 10, y+28);
-    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(240,180,41);
-    doc.text('Neto: '+fmtPct(t.netPct,4), 10, y+36);
-    // Cable→MEP
-    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(122,163,240);
-    doc.text('Cable → MEP (bruto)', W/2+10, y+9);
-    doc.setFont('helvetica','bold');doc.setFontSize(18);
-    doc.setTextColor(t.c2m>=0?34:255, t.c2m>=0?214:77, t.c2m>=0?138:106);
-    doc.text(fmtPct(t.c2m,4), W/2+10, y+28);
-    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(240,180,41);
-    doc.text('Neto: '+fmtPct(t.netPctC2M,4), W/2+10, y+36);
-    // divisor vertical
-    doc.setDrawColor(42,74,122);doc.setLineWidth(0.5);
-    doc.line(W/2, y+6, W/2, y+34);
-    y += 46;
-
-    // Precios
-    y = pdfSectionTitle(doc, 'Precios de Mercado · data912.com', y);
-    y = pdfRow(doc, 'AL30D (USD MEP)',   fmtUSD(t.d), y, false, true);
-    y = pdfRow(doc, 'AL30C (USD Cable)', fmtUSD(t.c), y, false, true);
-
-    // Desglose base 10k
-    y = pdfSectionTitle(doc, 'Desglose Base USD 10.000 (MEP → Cable)', y);
-    y = pdfRow(doc, 'AL30D (USD MEP)',                              fmtUSD(t.d), y);
-    y = pdfRow(doc, 'AL30C (USD Cable)',                            fmtUSD(t.c), y);
-    y = pdfRow(doc, 'Spread bruto MEP→Cable',                       fmtPct(t.m2c,4), y);
-    y = pdfRow(doc, `− Comisión ${t.comm.toFixed(2)}% × 2 puntas`, `ARS ${fmt(t.commARS,2)}`, y);
-    y = pdfRow(doc, '− DDMM 0.0100% × 2 puntas (en ARS)',          `ARS ${fmt(t.ddmmARS,2)}  (≈ USD ${fmt(t.ddmmUSD,4)})`, y);
-    y = pdfRow(doc, 'Spread NETO MEP→Cable', fmtPct(t.netPct,4), y, true);
-
-    // Calculadoras canje
-    const m2cIn  = el('calc-m2c-in').value;
-    const m2cOut = el('calc-m2c-out').textContent;
-    const c2mIn  = el('calc-c2m-in').value;
-    const c2mOut = el('calc-c2m-out').textContent;
-    const hM2C   = m2cIn&&m2cOut&&m2cOut!=='—';
-    const hC2M   = c2mIn&&c2mOut&&c2mOut!=='—';
-    if(hM2C||hC2M){
-      y = pdfSectionTitle(doc, 'Resultados Calculadora Canje', y);
-      if(hM2C) y=pdfCalcResult(doc,'MEP → Cable', fmtUSD(+m2cIn), m2cOut, y);
-      if(hC2M) y=pdfCalcResult(doc,'Cable → MEP', fmtUSD(+c2mIn), c2mOut, y);
-    }
-
-    y = pdfNote(doc, '', y);
-
-    // Footer
-    doc.setDrawColor(42,74,122);doc.setLineWidth(0.5);
-    doc.line(10, y+5, W-10, y+5);
-    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(74,106,154);
-    doc.text('Portfolio Investment · Sistema de Cálculo Financiero · BYMA', 10, y+14);
-    doc.text('Documento generado automáticamente. No constituye asesoramiento financiero.', W-10, y+14, {align:'right'});
-
-    const fname=`Canje_MEP_Cable_${new Date().toISOString().slice(0,10)}.pdf`;
-    doc.save(fname);
-    btn.classList.remove('generating');
-    btn.textContent='⬇ Descargar PDF';
-  }, 80);
+  const t=CANJEcache; if(!t.d)return;
+  const doc = new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
+  let y = pdfHeader(doc, 'CANJE MEP / Cable', `Comisión: ${t.comm.toFixed(2)}%`);
+  y = pdfRow(doc, 'Spread NETO MEP→Cable', fmtPct(t.netPct,4), y, true);
+  doc.save(`Canje_MEP_Cable_${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
 /* ── INIT ── */
