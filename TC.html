@@ -9,120 +9,55 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-
 :root{
-  --navy:   #0d1b2e;
-  --navy2:  #122540;
-  --navy3:  #172d4d;
-  --border: #2a4a7a;
-  --border2:#3a5a8a;
-  --blue:   #3a6fd8;
-  --blue2:  #5b8def;
-  --blue3:  #7aa3f0;
-  --blue4:  #a8c4f8;
-  --accent: #4f81e8;
-  --white:  #f0f4ff;
-  --white2: #d0ddf5;
-  --gray:   #7a99c4;
-  --gray2:  #4a6a9a;
-  --green:  #22d68a;
-  --red:    #ff4d6a;
-  --amber:  #f0b429;
-  --cyan:   #22d4f0;
-  --yellow: #e8f43a;
-  --font:   'Inter', sans-serif;
-  --mono:   'JetBrains Mono', 'Courier New', monospace;
-  --r:      10px;
-  --r-sm:   6px;
+  --navy:#0d1b2e;--navy2:#122540;--navy3:#172d4d;
+  --border:#2a4a7a;--border2:#3a5a8a;
+  --blue:#3a6fd8;--blue2:#5b8def;--blue3:#7aa3f0;--accent:#4f81e8;
+  --white:#f0f4ff;--white2:#d0ddf5;
+  --gray:#7a99c4;--gray2:#4a6a9a;
+  --green:#22d68a;--red:#ff4d6a;--amber:#f0b429;--cyan:#22d4f0;--yellow:#e8f43a;
+  --font:'Inter',sans-serif;--mono:'JetBrains Mono','Courier New',monospace;
+  --r:10px;--r-sm:6px;
 }
+html,body{background:var(--navy);color:var(--white);font-family:var(--font);font-size:13px;min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--navy2)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.shell{max-width:1000px;margin:0 auto;padding:14px 16px 40px;display:flex;flex-direction:column;gap:12px}
 
-html,body{
-  background:var(--navy);color:var(--white);
-  font-family:var(--font);font-size:13px;
-  min-height:100vh;overflow-x:hidden;
-}
-::-webkit-scrollbar{width:6px}
-::-webkit-scrollbar-track{background:var(--navy2)}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-
-.shell{max-width:1000px;margin:0 auto;padding:14px 16px 32px;display:flex;flex-direction:column;gap:12px}
-
-.page-hdr{
-  display:flex;align-items:center;gap:10px;padding:10px 14px;
-  background:linear-gradient(90deg,var(--navy3),var(--navy2));
-  border:1px solid var(--border);border-radius:var(--r);
-}
+/* HEADER */
+.page-hdr{display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(90deg,var(--navy3),var(--navy2));border:1px solid var(--border);border-radius:var(--r)}
 .ph-title{font-size:15px;font-weight:800;color:var(--white);letter-spacing:-.01em}
 .ph-sub{font-size:10px;color:var(--blue3);letter-spacing:.06em;text-transform:uppercase;font-weight:500;margin-top:1px}
-.ph-right{margin-left:auto;display:flex;align-items:center;gap:10px}
-
-/* Market status pill — two states */
-.mh-pill{
-  display:flex;align-items:center;gap:6px;
-  font-size:10px;font-family:var(--mono);font-weight:700;letter-spacing:.07em;
-  padding:4px 11px;border-radius:20px;
-  border:1px solid var(--border);
-  transition:all .3s;
-}
-.mh-pill.open{
-  background:rgba(34,214,138,.08);
-  border-color:rgba(34,214,138,.35);
-  color:var(--green);
-}
-.mh-pill.closed{
-  background:rgba(255,77,106,.07);
-  border-color:rgba(255,77,106,.3);
-  color:#ff7a90;
-}
+.ph-right{margin-left:auto}
+.mh-pill{display:flex;align-items:center;gap:6px;font-size:10px;font-family:var(--mono);font-weight:700;letter-spacing:.07em;padding:4px 11px;border-radius:20px;border:1px solid var(--border);transition:all .3s}
+.mh-pill.open{background:rgba(34,214,138,.08);border-color:rgba(34,214,138,.35);color:var(--green)}
+.mh-pill.closed{background:rgba(255,77,106,.07);border-color:rgba(255,77,106,.3);color:#ff7a90}
 .mh-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .mh-pill.open .mh-dot{background:var(--green);box-shadow:0 0 8px rgba(34,214,138,.6);animation:blink 2.5s infinite}
 .mh-pill.closed .mh-dot{background:var(--red);box-shadow:0 0 6px rgba(255,77,106,.4)}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
-.main-tabs{display:flex;border-bottom:2px solid var(--border);gap:0}
-.mtab{
-  display:flex;align-items:center;gap:7px;padding:0 22px;height:40px;
-  font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
-  color:var(--gray);border:none;background:none;cursor:pointer;
-  border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .13s;white-space:nowrap;
-}
+/* TABS */
+.main-tabs{display:flex;border-bottom:2px solid var(--border)}
+.mtab{display:flex;align-items:center;gap:7px;padding:0 22px;height:40px;font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gray);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .13s;white-space:nowrap}
 .mtab:hover{color:var(--blue3);background:rgba(58,111,216,.07)}
 .mtab.active{color:var(--white);border-bottom-color:var(--blue);background:rgba(58,111,216,.1)}
+.sec{display:none}.sec.on{display:flex;flex-direction:column;gap:12px}
 
-.sec{display:none}
-.sec.on{display:flex;flex-direction:column;gap:12px}
-
+/* CARD */
 .card{background:var(--navy2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
-.card-hdr{
-  background:linear-gradient(90deg,var(--navy3),var(--navy2));
-  border-bottom:1px solid var(--border);padding:9px 14px;
-  display:flex;align-items:center;flex-wrap:wrap;gap:8px;
-}
+.card-hdr{background:linear-gradient(90deg,var(--navy3),var(--navy2));border-bottom:1px solid var(--border);padding:9px 14px;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
 .ch-label{font-size:9px;font-weight:700;color:var(--blue3);letter-spacing:.18em;text-transform:uppercase;margin-right:auto}
 
+/* STABS */
 .stabs{display:flex;gap:3px}
-.stab{
-  background:var(--navy3);border:1px solid var(--border);
-  color:var(--gray);font-family:var(--font);font-size:10px;font-weight:600;
-  padding:4px 11px;cursor:pointer;letter-spacing:.04em;border-radius:var(--r-sm);
-  transition:all .12s;height:26px;display:flex;align-items:center;
-}
+.stab{background:var(--navy3);border:1px solid var(--border);color:var(--gray);font-family:var(--font);font-size:10px;font-weight:600;padding:4px 11px;cursor:pointer;letter-spacing:.04em;border-radius:var(--r-sm);transition:all .12s;height:26px;display:flex;align-items:center}
 .stab:hover{color:var(--blue3);border-color:var(--blue2)}
 .stab.on{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 0 8px rgba(58,111,216,.35)}
-
-.comm-btn, .pdf-btn{
-  background:var(--navy3);border:1px solid var(--border);
-  font-family:var(--font);font-size:10px;font-weight:600;
-  padding:4px 11px;border-radius:var(--r-sm);cursor:pointer;
-  letter-spacing:.04em;transition:all .12s;height:26px;
-  display:flex;align-items:center;gap:5px;
-}
-.comm-btn{color:var(--gray)}
+.comm-btn{background:var(--navy3);border:1px solid var(--border);font-family:var(--font);font-size:10px;font-weight:600;padding:4px 11px;border-radius:var(--r-sm);cursor:pointer;letter-spacing:.04em;transition:all .12s;height:26px;display:flex;align-items:center;gap:5px;color:var(--gray)}
 .comm-btn:hover{color:var(--amber);border-color:rgba(240,180,41,.5)}
 .comm-val{color:var(--amber);font-weight:700;font-family:var(--mono)}
-.pdf-btn{color:var(--blue3);border-color:rgba(90,141,239,.3)}
-.pdf-btn:hover{color:var(--white);border-color:var(--blue2);background:rgba(58,111,216,.15)}
 
+/* PRICE ROW */
 .price-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:12px 14px 8px}
 .pc{background:var(--navy3);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px}
 .pc.hl{border-color:rgba(90,141,239,.4);background:rgba(58,111,216,.07)}
@@ -133,46 +68,51 @@ html,body{
 .pc-tc-val{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--cyan);font-variant-numeric:tabular-nums}
 .pc-tc-val.empty{color:var(--gray2);font-size:11px;font-weight:400}
 
-.pi{
-  background:var(--navy);border:1px solid var(--border2);
-  color:var(--yellow);font-family:var(--mono);font-size:13px;font-weight:600;
-  padding:5px 10px;outline:none;height:34px;border-radius:var(--r-sm);
-  transition:border-color .12s,box-shadow .12s;width:100%;
-}
-.pi:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(58,111,216,.18);background:#0a1828}
-.pi::placeholder{color:var(--gray2);font-weight:400;font-size:11px}
-.pi::-webkit-inner-spin-button,.pi::-webkit-outer-spin-button{-webkit-appearance:none}
-
+/* CALC */
 .calc-body{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
 .calc-row{display:grid;grid-template-columns:1fr 28px 1fr;align-items:end;gap:8px}
 .cf{display:flex;flex-direction:column;gap:5px}
 .cf-lbl{font-size:9px;font-weight:700;color:var(--white2);letter-spacing:.12em;text-transform:uppercase}
 .calc-arrow{height:34px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--blue3)}
-.result-box{
-  background:var(--navy3);border:1px solid var(--border2);
-  color:var(--green);font-family:var(--mono);font-size:14px;font-weight:700;
-  padding:5px 10px;height:34px;border-radius:var(--r-sm);
-  display:flex;align-items:center;font-variant-numeric:tabular-nums;
-}
+.pi{background:var(--navy);border:1px solid var(--border2);color:var(--yellow);font-family:var(--mono);font-size:13px;font-weight:600;padding:5px 10px;outline:none;height:34px;border-radius:var(--r-sm);transition:border-color .12s,box-shadow .12s;width:100%}
+.pi:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(58,111,216,.18);background:#0a1828}
+.pi::placeholder{color:var(--gray2);font-weight:400;font-size:11px}
+.pi::-webkit-inner-spin-button,.pi::-webkit-outer-spin-button{-webkit-appearance:none}
+.result-box{background:var(--navy3);border:1px solid var(--border2);color:var(--green);font-family:var(--mono);font-size:14px;font-weight:700;padding:5px 10px;height:34px;border-radius:var(--r-sm);display:flex;align-items:center;font-variant-numeric:tabular-nums}
 .result-box.empty{color:var(--gray2);font-size:11px;font-weight:400}
-.calc-sep{height:1px;background:var(--border);margin:2px 0}
-.calc-note{
-  font-size:10px;color:var(--gray2);line-height:1.6;
-  padding:7px 10px;
-  background:rgba(58,111,216,.04);border:1px solid rgba(42,74,122,.5);
-  border-radius:var(--r-sm);
-}
-.calc-note strong{color:var(--gray)}
-.calc-note .amt{color:var(--white2);font-family:var(--mono);font-weight:600}
-.calc-note .lbl-item{color:var(--gray2)}
+.calc-sep{height:1px;background:var(--border);margin:2px 14px}
 
-.tc-main{padding:14px 16px 10px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
-.tc-big .lbl{font-size:9px;font-weight:700;color:var(--blue3);letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px}
-.tc-big .val{font-family:var(--mono);font-size:34px;font-weight:700;color:var(--cyan);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
-.tc-side{margin-left:auto;text-align:right}
-.tc-side .lbl{font-size:9px;color:var(--gray2);text-transform:uppercase;letter-spacing:.1em}
-.tc-side .val{font-family:var(--mono);font-size:18px;color:var(--white2);font-weight:600;font-variant-numeric:tabular-nums}
+/* ══ BOLETO ══ */
+.boleto{display:none;margin:0 14px 14px;border:1px solid var(--border2);border-radius:var(--r-sm);overflow:hidden;animation:fadeIn .2s ease}
+.boleto.show{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.bol-hdr{background:linear-gradient(90deg,rgba(58,111,216,.2),rgba(23,45,77,.9));border-bottom:1px solid var(--border2);padding:7px 12px 7px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.bol-hdr-left{display:flex;align-items:center;gap:8px}
+.bol-hdr-badge{background:var(--blue);color:#fff;font-size:8px;font-weight:700;padding:2px 6px;border-radius:3px;letter-spacing:.1em;text-transform:uppercase}
+.bol-hdr-title{font-size:10px;font-weight:700;color:var(--white2);letter-spacing:.04em}
+.bol-hdr-right{display:flex;align-items:center;gap:8px}
+.bol-ts{font-size:9px;color:var(--gray2);font-family:var(--mono)}
+.bol-pdf{background:none;border:1px solid rgba(90,141,239,.35);color:var(--blue3);font-family:var(--font);font-size:9px;font-weight:700;padding:3px 9px;border-radius:var(--r-sm);cursor:pointer;letter-spacing:.06em;text-transform:uppercase;transition:all .12s;display:flex;align-items:center;gap:4px}
+.bol-pdf:hover{color:var(--white);border-color:var(--blue2);background:rgba(58,111,216,.18)}
 
+.bol-rows{background:var(--navy)}
+.br{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;border-bottom:1px solid rgba(42,74,122,.28)}
+.br:last-child{border-bottom:none}
+.br.sep{background:rgba(23,45,77,.6);padding:4px 12px;border-color:rgba(42,74,122,.5)}
+.br.sep .br-lbl{font-size:8px;font-weight:700;color:var(--gray2);letter-spacing:.14em;text-transform:uppercase}
+.br.total{background:rgba(34,214,138,.06);border-top:2px solid rgba(34,214,138,.25);padding:10px 12px;border-bottom:none}
+.br.total .br-lbl{font-size:11px;font-weight:700;color:var(--white);text-transform:uppercase;letter-spacing:.04em}
+.br.total .br-val{font-size:15px;font-weight:700;color:var(--green)}
+.br-lbl{font-size:10px;color:var(--gray);font-weight:500;display:flex;align-items:center;gap:6px;flex:1}
+.br-val{font-family:var(--mono);font-size:11px;color:var(--white2);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.br-val.neg{color:var(--red)}.br-val.pos{color:var(--green)}.br-val.cyn{color:var(--cyan)}.br-val.amb{color:var(--amber)}
+.tag{display:inline-flex;align-items:center;font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;letter-spacing:.06em;text-transform:uppercase;min-width:20px;justify-content:center;flex-shrink:0}
+.tag-neg{background:rgba(255,77,106,.12);color:var(--red);border:1px solid rgba(255,77,106,.2)}
+.tag-pos{background:rgba(34,214,138,.1);color:var(--green);border:1px solid rgba(34,214,138,.2)}
+.tag-inf{background:rgba(122,163,240,.1);color:var(--blue3);border:1px solid rgba(122,163,240,.2)}
+.tag-amb{background:rgba(240,180,41,.1);color:var(--amber);border:1px solid rgba(240,180,41,.2)}
+
+/* TC IMPLICITO TABLE */
 .bk-table{width:100%;border-collapse:collapse;font-size:11px}
 .bk-table tr{border-top:1px solid rgba(42,74,122,.35)}
 .bk-table td{padding:6px 16px;line-height:1.4}
@@ -181,16 +121,16 @@ html,body{
 .bk-total td{background:rgba(34,212,240,.05);padding-top:9px;padding-bottom:9px}
 .bk-total td:first-child{color:var(--cyan);font-weight:700;font-size:12px}
 .bk-total td:last-child{color:var(--cyan);font-weight:700;font-size:13px}
-
-.ddmm-note{
-  margin:0 14px 14px;
-  background:rgba(240,180,41,.04);border:1px solid rgba(240,180,41,.18);
-  border-left:3px solid var(--amber);border-radius:var(--r-sm);
-  padding:7px 11px;font-size:10px;color:var(--gray);line-height:1.6;
-}
+.tc-main{padding:14px 16px 10px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.tc-big .lbl{font-size:9px;font-weight:700;color:var(--blue3);letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px}
+.tc-big .val{font-family:var(--mono);font-size:34px;font-weight:700;color:var(--cyan);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.tc-side{margin-left:auto;text-align:right}
+.tc-side .lbl{font-size:9px;color:var(--gray2);text-transform:uppercase;letter-spacing:.1em}
+.tc-side .val{font-family:var(--mono);font-size:18px;color:var(--white2);font-weight:600;font-variant-numeric:tabular-nums}
+.ddmm-note{margin:0 14px 14px;background:rgba(240,180,41,.04);border:1px solid rgba(240,180,41,.18);border-left:3px solid var(--amber);border-radius:var(--r-sm);padding:7px 11px;font-size:10px;color:var(--gray);line-height:1.6}
 .ddmm-note strong{color:var(--white2)}
 
-/* Canje specific */
+/* CANJE */
 .canje-rates{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 14px 10px}
 .cr{background:var(--navy3);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 12px;text-align:center}
 .cr-lbl{font-size:9px;font-weight:700;color:var(--gray);letter-spacing:.12em;text-transform:uppercase;margin-bottom:2px}
@@ -199,70 +139,42 @@ html,body{
 .cr-rate.pos{color:var(--green)}.cr-rate.neg{color:var(--red)}.cr-rate.neu{color:var(--gray2)}
 .cr-sub{font-size:9px;color:var(--gray2);margin-top:3px}
 .cr-net{font-size:11px;font-family:var(--mono);color:var(--amber);font-weight:600;margin-top:6px}
+.cj-dir-panel{display:none}.cj-dir-panel.on{display:block}
 
-/* Canje direction panel */
-.cj-dir-panel{display:none}
-.cj-dir-panel.on{display:block}
-
-.status-bar{
-  display:flex;align-items:center;gap:8px;padding:7px 14px;
-  background:var(--navy2);border:1px solid var(--border);border-radius:var(--r);
-}
+/* STATUS */
+.status-bar{display:flex;align-items:center;gap:8px;padding:7px 14px;background:var(--navy2);border:1px solid var(--border);border-radius:var(--r)}
 .sdot{width:7px;height:7px;border-radius:50%;background:var(--gray2);flex-shrink:0}
 .sdot.live{background:var(--green);box-shadow:0 0 6px rgba(34,214,138,.5);animation:livePulse 2s ease-in-out infinite}
-.sdot.err{background:var(--red)}
-.sdot.fetching{background:var(--amber);animation:livePulse 1s ease-in-out infinite}
+.sdot.err{background:var(--red)}.sdot.fetching{background:var(--amber);animation:livePulse 1s ease-in-out infinite}
 @keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
 .stxt{font-size:10px;color:var(--gray);font-family:var(--mono);letter-spacing:.04em}
 .stime{margin-left:auto;font-size:10px;color:var(--gray2);font-family:var(--mono)}
 
+/* MODAL */
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:9999}
-.modal{
-  background:var(--navy3);border:1px solid var(--border2);border-top:2px solid var(--blue);
-  border-radius:var(--r);padding:24px 26px;min-width:300px;box-shadow:0 24px 60px rgba(0,0,0,.6);
-}
+.modal{background:var(--navy3);border:1px solid var(--border2);border-top:2px solid var(--blue);border-radius:var(--r);padding:24px 26px;min-width:300px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
 .modal h3{font-size:11px;font-weight:700;color:var(--blue3);letter-spacing:.14em;text-transform:uppercase;margin-bottom:14px}
 .modal p{font-size:11px;color:var(--white2);margin-bottom:12px;line-height:1.6}
-.modal-inp{
-  background:var(--navy);border:1px solid var(--border2);color:var(--yellow);
-  font-family:var(--mono);font-size:22px;font-weight:700;
-  padding:10px 12px;width:100%;outline:none;border-radius:var(--r-sm);
-}
+.modal-inp{background:var(--navy);border:1px solid var(--border2);color:var(--yellow);font-family:var(--mono);font-size:22px;font-weight:700;padding:10px 12px;width:100%;outline:none;border-radius:var(--r-sm)}
 .modal-inp:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(58,111,216,.2)}
 .modal-btns{display:flex;gap:8px;margin-top:14px}
-.modal-btns button{
-  flex:1;padding:9px;font-family:var(--font);font-size:11px;font-weight:700;
-  cursor:pointer;letter-spacing:.06em;text-transform:uppercase;border-radius:var(--r-sm);border:1px solid;transition:all .12s;
-}
-.mbtn-ok{background:var(--blue);color:#fff;border-color:var(--blue)}
-.mbtn-ok:hover{background:var(--accent)}
-.mbtn-cancel{background:var(--navy2);color:var(--gray);border-color:var(--border)}
-.mbtn-cancel:hover{color:var(--white);border-color:var(--border2)}
-
-.flash{animation:fl .28s ease}
-@keyframes fl{0%{opacity:.25}100%{opacity:1}}
-
-@media(max-width:640px){
-  .calc-row{grid-template-columns:1fr 22px 1fr}
-  .price-row{grid-template-columns:1fr 1fr}
-  .canje-rates{grid-template-columns:1fr}
-}
+.modal-btns button{flex:1;padding:9px;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.06em;text-transform:uppercase;border-radius:var(--r-sm);border:1px solid;transition:all .12s}
+.mbtn-ok{background:var(--blue);color:#fff;border-color:var(--blue)}.mbtn-ok:hover{background:var(--accent)}
+.mbtn-cancel{background:var(--navy2);color:var(--gray);border-color:var(--border)}.mbtn-cancel:hover{color:var(--white);border-color:var(--border2)}
+.flash{animation:fl .28s ease}@keyframes fl{0%{opacity:.25}100%{opacity:1}}
+@media(max-width:640px){.calc-row{grid-template-columns:1fr 22px 1fr}.price-row{grid-template-columns:1fr 1fr}.canje-rates{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="shell">
 
-<!-- HEADER (sin botón Volver) -->
 <div class="page-hdr">
   <div>
     <div class="ph-title">TC MEP / CCL</div>
     <div class="ph-sub">AL30 · AL30D · AL30C · BYMA</div>
   </div>
   <div class="ph-right">
-    <div class="mh-pill closed" id="mh-pill">
-      <div class="mh-dot"></div>
-      <span id="mh-txt">CERRADO</span>
-    </div>
+    <div class="mh-pill closed" id="mh-pill"><div class="mh-dot"></div><span id="mh-txt">CERRADO</span></div>
   </div>
 </div>
 
@@ -271,33 +183,21 @@ html,body{
   <button class="mtab"        id="tab-canje" onclick="switchSec('canje')">🔄 &nbsp;Canje</button>
 </div>
 
-<!-- ═══════════════════════════════ TC SECTION ═══════════════════════════════ -->
+<!-- ═══════════════════ TC ═══════════════════ -->
 <div class="sec on" id="sec-tc">
-
-  <!-- Calculadora TC -->
   <div class="card">
     <div class="card-hdr">
       <span class="ch-label">Calculadora · Tipo de Cambio</span>
       <div class="stabs">
-        <button class="stab on" id="btn-mep" onclick="setModo('MEP')">MEP &nbsp;AL30D</button>
-        <button class="stab"    id="btn-ccl" onclick="setModo('CCL')">CCL &nbsp;AL30C</button>
+        <button class="stab on" id="btn-mep" onclick="setModo('MEP')">MEP · AL30D</button>
+        <button class="stab"    id="btn-ccl" onclick="setModo('CCL')">CCL · AL30C</button>
       </div>
-      <button class="comm-btn" onclick="openModal('tc')">
-        Comisión: <span class="comm-val" id="comm-tc-disp">1.00%</span>
-      </button>
+      <button class="comm-btn" onclick="openModal('tc')">Comisión: <span class="comm-val" id="comm-tc-disp">1.00%</span></button>
     </div>
 
     <div class="price-row">
-      <div class="pc hl">
-        <div class="pc-sym">AL30 · ARS</div>
-        <div class="pc-val empty" id="p-al30">—</div>
-        <div class="pc-sub">T+1 · 24hs</div>
-      </div>
-      <div class="pc hl">
-        <div class="pc-sym" id="sym-usd">AL30D · USD MEP</div>
-        <div class="pc-val empty" id="p-usd">—</div>
-        <div class="pc-sub">T+1 · 24hs</div>
-      </div>
+      <div class="pc hl"><div class="pc-sym">AL30 · ARS</div><div class="pc-val empty" id="p-al30">—</div><div class="pc-sub">T+1 · 24hs</div></div>
+      <div class="pc hl"><div class="pc-sym" id="sym-usd">AL30D · USD MEP</div><div class="pc-val empty" id="p-usd">—</div><div class="pc-sub">T+1 · 24hs</div></div>
       <div class="pc" style="border-color:rgba(34,212,240,.3);background:rgba(34,212,240,.05)">
         <div class="pc-sym" id="sym-tc-chip">TC BRUTO · MEP</div>
         <div class="pc-tc-val empty" id="p-tc-chip">—</div>
@@ -305,101 +205,69 @@ html,body{
       </div>
     </div>
 
+    <!-- ARS → USD -->
     <div class="calc-body">
-      <!-- ARS → USD -->
       <div class="calc-row">
-        <div class="cf">
-          <div class="cf-lbl">Pesos (ARS) a invertir</div>
-          <input class="pi" type="number" id="calc-ars-in" placeholder="Ej: 1000000" oninput="calcArsToUsd()">
-        </div>
+        <div class="cf"><div class="cf-lbl">Pesos (ARS) a invertir</div><input class="pi" type="number" id="calc-ars-in" placeholder="Ej: 1000000" oninput="calcArsToUsd()"></div>
         <div class="calc-arrow">→</div>
-        <div class="cf">
-          <div class="cf-lbl" id="usd-out-lbl">USD MEP recibidos (neto)</div>
-          <div class="result-box empty" id="calc-ars-out">—</div>
-        </div>
-      </div>
-      <div class="calc-note" id="detail-ars">
-        <strong>Ingresá un monto en ARS</strong> para ver el desglose de la operación.
-      </div>
-
-      <div class="calc-sep"></div>
-
-      <!-- USD → ARS -->
-      <div class="calc-row">
-        <div class="cf">
-          <div class="cf-lbl" id="usd-in-lbl">USD MEP a convertir</div>
-          <input class="pi" type="number" id="calc-usd-in" placeholder="Ej: 5000" oninput="calcUsdToArs()">
-        </div>
-        <div class="calc-arrow">→</div>
-        <div class="cf">
-          <div class="cf-lbl">Pesos ARS a pagar</div>
-          <div class="result-box empty" id="calc-usd-out">—</div>
-        </div>
-      </div>
-      <div class="calc-note" id="detail-usd">
-        <strong>Ingresá un monto en USD</strong> para ver el desglose de la operación.
+        <div class="cf"><div class="cf-lbl" id="usd-out-lbl">USD MEP recibidos (neto)</div><div class="result-box empty" id="calc-ars-out">—</div></div>
       </div>
     </div>
+    <div class="boleto" id="boleto-ars">
+      <div class="bol-hdr">
+        <div class="bol-hdr-left"><span class="bol-hdr-badge">COMPRA</span><span class="bol-hdr-title" id="bol-ars-title">—</span></div>
+        <div class="bol-hdr-right"><span class="bol-ts" id="bol-ars-ts">—</span><button class="bol-pdf" onclick="exportTCpdf('ars')">⬇ PDF</button></div>
+      </div>
+      <div class="bol-rows" id="bol-ars-rows"></div>
+    </div>
+
+    <div class="calc-sep"></div>
+
+    <!-- USD → ARS -->
+    <div class="calc-body">
+      <div class="calc-row">
+        <div class="cf"><div class="cf-lbl" id="usd-in-lbl">USD MEP a convertir</div><input class="pi" type="number" id="calc-usd-in" placeholder="Ej: 5000" oninput="calcUsdToArs()"></div>
+        <div class="calc-arrow">→</div>
+        <div class="cf"><div class="cf-lbl">Pesos ARS a pagar</div><div class="result-box empty" id="calc-usd-out">—</div></div>
+      </div>
+    </div>
+    <div class="boleto" id="boleto-usd">
+      <div class="bol-hdr">
+        <div class="bol-hdr-left"><span class="bol-hdr-badge" style="background:var(--amber);color:#000">VENTA</span><span class="bol-hdr-title" id="bol-usd-title">—</span></div>
+        <div class="bol-hdr-right"><span class="bol-ts" id="bol-usd-ts">—</span><button class="bol-pdf" onclick="exportTCpdf('usd')">⬇ PDF</button></div>
+      </div>
+      <div class="bol-rows" id="bol-usd-rows"></div>
+    </div>
+    <div style="height:6px"></div>
   </div>
 
-  <!-- TC Implícito Desglose -->
+  <!-- TC Implícito -->
   <div class="card">
-    <div class="card-hdr">
-      <span class="ch-label" id="tc-card-lbl">TC Implícito · MEP (T+1 · 24hs)</span>
-      <button class="pdf-btn" id="pdf-tc-btn" onclick="exportTCpdf()">⬇ PDF</button>
-    </div>
-
+    <div class="card-hdr"><span class="ch-label" id="tc-card-lbl">TC Implícito · MEP (T+1 · 24hs)</span></div>
     <div class="tc-main">
-      <div class="tc-big">
-        <div class="lbl">TC Implícito Compra (ARS→USD)</div>
-        <div class="val" id="tc-implicito">—</div>
-      </div>
+      <div class="tc-big"><div class="lbl">TC Implícito Compra (ARS→USD)</div><div class="val" id="tc-implicito">—</div></div>
       <div class="tc-side">
-        <div class="lbl">TC Bruto</div>
-        <div class="val" id="tc-bruto-disp">—</div>
-        <div class="lbl" style="margin-top:6px">TC Venta (USD→ARS)</div>
-        <div class="val" id="tc-venta-disp" style="color:var(--amber)">—</div>
+        <div class="lbl">TC Bruto</div><div class="val" id="tc-bruto-disp">—</div>
+        <div class="lbl" style="margin-top:6px">TC Implícito Venta (USD→ARS)</div><div class="val" id="tc-venta-disp" style="color:var(--amber)">—</div>
       </div>
     </div>
-
     <table class="bk-table">
-      <tr>
-        <td>TC Bruto &nbsp;(AL30 / <span id="bk-sym">AL30D</span>)</td>
-        <td id="bk-bruto">—</td>
-      </tr>
-      <tr>
-        <td>+ Comisión &nbsp;<span id="bk-comm-pct">1.00%</span> &nbsp;· sobre punta ARS</td>
-        <td id="bk-comm">—</td>
-      </tr>
-      <tr>
-        <td>+ DDMM 0.0100% · punta ARS</td>
-        <td id="bk-ddmm-ars">—</td>
-      </tr>
-      <tr>
-        <td>+ DDMM 0.0100% · punta USD × TC oficial</td>
-        <td id="bk-ddmm-usd">—</td>
-      </tr>
-      <tr class="bk-total">
-        <td>TC IMPLÍCITO COMPRA (ARS→USD)</td>
-        <td id="bk-total">—</td>
-      </tr>
-      <tr>
-        <td style="color:var(--amber)">TC IMPLÍCITO VENTA (USD→ARS)</td>
-        <td id="bk-total-venta" style="color:var(--amber);text-align:right;font-family:var(--mono);font-size:10px">—</td>
-      </tr>
+      <tr><td>TC Bruto &nbsp;(AL30 / <span id="bk-sym">AL30D</span>)</td><td id="bk-bruto">—</td></tr>
+      <tr><td>+ Comisión &nbsp;<span id="bk-comm-pct">1.00%</span> &nbsp;× punta ARS</td><td id="bk-comm">—</td></tr>
+      <tr><td>+ DDMM 0.0100% · punta ARS</td><td id="bk-ddmm-ars">—</td></tr>
+      <tr><td>+ DDMM 0.0100% · punta USD × TC oficial</td><td id="bk-ddmm-usd">—</td></tr>
+      <tr class="bk-total"><td>TC IMPLÍCITO COMPRA (ARS→USD)</td><td id="bk-total">—</td></tr>
+      <tr><td style="color:var(--amber)">TC IMPLÍCITO VENTA (USD→ARS)</td><td style="text-align:right;font-family:var(--mono);font-size:10px;color:var(--amber)" id="bk-total-venta">—</td></tr>
     </table>
-
     <div class="ddmm-note" style="margin-top:12px">
-      <strong>DDMM Títulos Públicos:</strong> 0.0100% por punta · Exento IVA ·
-      Punta ARS cobrada sobre el total ARS operado · Punta USD cobrada en ARS al TC oficial BCRA
+      <strong>Comisión:</strong> % sobre el total ARS operado ·
+      <strong>DDMM:</strong> 0.0100% punta ARS sobre ARS operados + 0.0100% punta USD en ARS al TC oficial BCRA · Exento IVA
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════ CANJE SECTION ═══════════════════════════════ -->
+<!-- ═══════════════════ CANJE ═══════════════════ -->
 <div class="sec" id="sec-canje">
-
-  <!-- Calculadora Canje -->
   <div class="card">
     <div class="card-hdr">
       <span class="ch-label">Calculadora · Canje</span>
@@ -407,22 +275,12 @@ html,body{
         <button class="stab on" id="btn-c2m" onclick="setCanjeDir('c2m')">Cable → MEP</button>
         <button class="stab"    id="btn-m2c" onclick="setCanjeDir('m2c')">MEP → Cable</button>
       </div>
-      <button class="comm-btn" onclick="openModal('canje')">
-        Comisión: <span class="comm-val" id="comm-canje-disp">1.00%</span>
-      </button>
+      <button class="comm-btn" onclick="openModal('canje')">Comisión: <span class="comm-val" id="comm-canje-disp">1.00%</span></button>
     </div>
 
     <div class="price-row">
-      <div class="pc hl">
-        <div class="pc-sym">AL30D · USD MEP</div>
-        <div class="pc-val empty" id="cj-al30d-disp">—</div>
-        <div class="pc-sub">T+1 · 24hs</div>
-      </div>
-      <div class="pc hl">
-        <div class="pc-sym">AL30C · USD Cable</div>
-        <div class="pc-val empty" id="cj-al30c-disp">—</div>
-        <div class="pc-sub">T+1 · 24hs</div>
-      </div>
+      <div class="pc hl"><div class="pc-sym">AL30D · USD MEP</div><div class="pc-val empty" id="cj-al30d-disp">—</div><div class="pc-sub">T+1 · 24hs</div></div>
+      <div class="pc hl"><div class="pc-sym">AL30C · USD Cable</div><div class="pc-val empty" id="cj-al30c-disp">—</div><div class="pc-sub">T+1 · 24hs</div></div>
       <div class="pc" style="border-color:rgba(34,212,240,.3);background:rgba(34,212,240,.05)">
         <div class="pc-sym">SPREAD · Cable/MEP</div>
         <div class="pc-tc-val empty" id="cj-spread-chip">—</div>
@@ -430,114 +288,64 @@ html,body{
       </div>
     </div>
 
-    <!-- Cable → MEP panel -->
+    <!-- Cable → MEP -->
     <div id="cj-panel-c2m" class="cj-dir-panel on">
       <div class="calc-body">
         <div class="calc-row">
-          <div class="cf">
-            <div class="cf-lbl">USD Cable a canjear</div>
-            <input class="pi" type="number" id="calc-c2m-in" placeholder="Ej: 10000" oninput="calcCableToMep()">
-          </div>
+          <div class="cf"><div class="cf-lbl">USD Cable a canjear</div><input class="pi" type="number" id="calc-c2m-in" placeholder="Ej: 10000" oninput="calcCableToMep()"></div>
           <div class="calc-arrow">→</div>
-          <div class="cf">
-            <div class="cf-lbl">USD MEP recibidos (neto)</div>
-            <div class="result-box empty" id="calc-c2m-out">—</div>
-          </div>
-        </div>
-        <div class="calc-note" id="detail-c2m">
-          <strong>Ingresá un monto en USD Cable</strong> para ver el desglose.
+          <div class="cf"><div class="cf-lbl">USD MEP recibidos (neto)</div><div class="result-box empty" id="calc-c2m-out">—</div></div>
         </div>
       </div>
+      <div class="boleto" id="boleto-c2m">
+        <div class="bol-hdr">
+          <div class="bol-hdr-left"><span class="bol-hdr-badge" style="background:var(--cyan);color:#000">CANJE</span><span class="bol-hdr-title">Cable → MEP</span></div>
+          <div class="bol-hdr-right"><span class="bol-ts" id="bol-c2m-ts">—</span><button class="bol-pdf" onclick="exportCanjePdf('c2m')">⬇ PDF</button></div>
+        </div>
+        <div class="bol-rows" id="bol-c2m-rows"></div>
+      </div>
+      <div style="height:6px"></div>
     </div>
 
-    <!-- MEP → Cable panel -->
+    <!-- MEP → Cable -->
     <div id="cj-panel-m2c" class="cj-dir-panel">
       <div class="calc-body">
         <div class="calc-row">
-          <div class="cf">
-            <div class="cf-lbl">USD MEP a canjear</div>
-            <input class="pi" type="number" id="calc-m2c-in" placeholder="Ej: 10000" oninput="calcMepToCable()">
-          </div>
+          <div class="cf"><div class="cf-lbl">USD MEP a canjear</div><input class="pi" type="number" id="calc-m2c-in" placeholder="Ej: 10000" oninput="calcMepToCable()"></div>
           <div class="calc-arrow">→</div>
-          <div class="cf">
-            <div class="cf-lbl">USD Cable recibidos (neto)</div>
-            <div class="result-box empty" id="calc-m2c-out">—</div>
-          </div>
-        </div>
-        <div class="calc-note" id="detail-m2c">
-          <strong>Ingresá un monto en USD MEP</strong> para ver el desglose.
+          <div class="cf"><div class="cf-lbl">USD Cable recibidos (neto)</div><div class="result-box empty" id="calc-m2c-out">—</div></div>
         </div>
       </div>
+      <div class="boleto" id="boleto-m2c">
+        <div class="bol-hdr">
+          <div class="bol-hdr-left"><span class="bol-hdr-badge" style="background:var(--cyan);color:#000">CANJE</span><span class="bol-hdr-title">MEP → Cable</span></div>
+          <div class="bol-hdr-right"><span class="bol-ts" id="bol-m2c-ts">—</span><button class="bol-pdf" onclick="exportCanjePdf('m2c')">⬇ PDF</button></div>
+        </div>
+        <div class="bol-rows" id="bol-m2c-rows"></div>
+      </div>
+      <div style="height:6px"></div>
     </div>
   </div>
 
-  <!-- Desglose Canje -->
+  <!-- Tasas -->
   <div class="card">
-    <div class="card-hdr">
-      <span class="ch-label" id="cj-desglose-lbl">Desglose · Cable → MEP</span>
-      <button class="pdf-btn" id="pdf-canje-btn" onclick="exportCanjePdf()">⬇ PDF</button>
-    </div>
-
-    <!-- Tasas bruto/neto para ambas direcciones -->
+    <div class="card-hdr"><span class="ch-label">Tasas de Canje · AL30D / AL30C</span></div>
     <div class="canje-rates">
-      <div class="cr">
-        <div class="cr-lbl">Cable → MEP</div>
-        <div class="cr-formula">(AL30D / AL30C − 1) × 100</div>
-        <div class="cr-rate neu" id="cj-c2m-bruto">—</div>
-        <div class="cr-sub">Spread bruto recibido en MEP</div>
-        <div class="cr-net" id="cj-c2m-net">Neto (c/gastos): —</div>
-      </div>
-      <div class="cr">
-        <div class="cr-lbl">MEP → Cable</div>
-        <div class="cr-formula">(AL30C / AL30D − 1) × 100</div>
-        <div class="cr-rate neu" id="cj-m2c-bruto">—</div>
-        <div class="cr-sub">Prima bruta a pagar por Cable</div>
-        <div class="cr-net" id="cj-m2c-net">Neto (c/gastos): —</div>
-      </div>
+      <div class="cr"><div class="cr-lbl">Cable → MEP</div><div class="cr-formula">(AL30D / AL30C − 1) × 100</div><div class="cr-rate neu" id="cj-c2m-bruto">—</div><div class="cr-sub">Spread bruto recibido en MEP</div><div class="cr-net" id="cj-c2m-net">Neto (c/gastos): —</div></div>
+      <div class="cr"><div class="cr-lbl">MEP → Cable</div><div class="cr-formula">(AL30C / AL30D − 1) × 100</div><div class="cr-rate neu" id="cj-m2c-bruto">—</div><div class="cr-sub">Prima bruta a pagar por Cable</div><div class="cr-net" id="cj-m2c-net">Neto (c/gastos): —</div></div>
     </div>
-
-    <!-- Desglose table por dirección seleccionada -->
-    <div class="card-hdr" style="margin-top:2px;border-top:1px solid var(--border)">
-      <span class="ch-label" id="cj-bk-lbl">Desglose Cable → MEP · Base USD 10.000</span>
-    </div>
-    <table class="bk-table">
-      <tr><td id="cj-bk-in-lbl">USD Cable invertidos</td><td id="cj-p-in">—</td></tr>
-      <tr><td id="cj-bk-gross-lbl">USD MEP bruto &nbsp;(× AL30D/AL30C)</td><td id="cj-p-gross">—</td></tr>
-      <tr>
-        <td>− Comisión &nbsp;<span id="cj-comm-pct">1.00%</span> &nbsp;<span id="cj-comm-sobre">(sobre USD MEP)</span></td>
-        <td id="cj-comm-v">—</td>
-      </tr>
-      <tr>
-        <td>− DDMM 0.0100% punta Cable &nbsp;(en ARS)</td>
-        <td id="cj-ddmm-p1">—</td>
-      </tr>
-      <tr>
-        <td>− DDMM 0.0100% punta MEP &nbsp;(en ARS)</td>
-        <td id="cj-ddmm-p2">—</td>
-      </tr>
-      <tr class="bk-total">
-        <td id="cj-bk-net-lbl">USD MEP NETO</td>
-        <td id="cj-spread-n">—</td>
-      </tr>
-    </table>
-
-    <div class="ddmm-note" style="margin-top:12px">
-      <strong>DDMM Títulos Públicos:</strong> 0.0100% por punta · Exento IVA ·
-      Cobrado en USD por pata y convertido a ARS al TC oficial BCRA ·
-      <strong>Comisión</strong> cobrada en USD sobre el punta resultante (sin conversión a ARS)
+    <div class="ddmm-note" style="margin:0 14px 14px">
+      <strong>Comisión:</strong> cobrada en USD sobre el punta resultante (MEP si Cable→MEP, Cable si MEP→Cable) ·
+      <strong>DDMM:</strong> 0.0100% por pata en USD, convertido a ARS al TC oficial BCRA · Exento IVA
     </div>
   </div>
 </div>
 
 <div class="status-bar">
-  <div class="sdot" id="sdot"></div>
-  <span class="stxt" id="stxt">Inicializando...</span>
-  <span class="stime" id="stime">—</span>
+  <div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Inicializando...</span><span class="stime" id="stime">—</span>
+</div>
 </div>
 
-</div>
-
-<!-- MODAL COMISIÓN -->
 <div class="modal-ov" id="modal-ov" style="display:none" onclick="closeModalOv(event)">
   <div class="modal">
     <h3 id="modal-ttl">Comisión</h3>
@@ -552,674 +360,445 @@ html,body{
 
 <script>
 'use strict';
+const DDMM=0.0001, REFRESH_MS=15000;
+const S={modo:'MEP',canjeDir:'c2m',commTC:1.00,commCanje:1.00,modalFor:'tc',t1:{al30:null,al30d:null,al30c:null},bcra:null};
 
-const DDMM       = 0.0001;   // 0.0100%
-const REFRESH_MS = 15000;
+const el   = id=>document.getElementById(id);
+const fmt  = (n,d=2)=>n==null||isNaN(n)?'—':n.toLocaleString('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtARS = n=>n==null?'—':'$ '+fmt(n,2);
+const fmtUSD = n=>n==null?'—':'USD '+fmt(n,2);
+const fmtPct = (n,d=4)=>n==null?'—':(n>=0?'+':'')+fmt(n,d)+'%';
+const nowTs  = ()=>new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+function setText(id,v){const e=el(id);if(e)e.textContent=v;}
+function flash(id){const e=el(id);if(!e)return;e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash');}
+function setPcVal(id,v){const e=el(id);if(!e)return;e.textContent=v||'—';e.className='pc-val'+((!v||v==='—')?' empty':'');}
+function setResult(id,v){const e=el(id);if(!e)return;e.textContent=v||'—';e.className='result-box'+((!v||v==='—')?' empty':'');}
 
-const S = {
-  modo: 'MEP',
-  canjeDir: 'c2m',          // 'c2m' = Cable→MEP, 'm2c' = MEP→Cable
-  commTC: 1.00,
-  commCanje: 1.00,
-  modalFor: 'tc',
-  t1: { al30: null, al30d: null, al30c: null },
-  bcra: null
-};
-
-// ─── helpers ────────────────────────────────────────────────────────────────
-const el   = id => document.getElementById(id);
-const fmt  = (n, d=2) => n == null || isNaN(n) ? '—'
-  : n.toLocaleString('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d });
-const fmtARS = n => n == null ? '—' : '$ '  + fmt(n, 2);
-const fmtUSD = n => n == null ? '—' : 'USD ' + fmt(n, 2);
-const fmtPct = (n, d=4) => n == null ? '—' : (n >= 0 ? '+' : '') + fmt(n, d) + '%';
-function setText(id, v){ const e = el(id); if(e) e.textContent = v; }
-function flash(id){ const e = el(id); if(!e) return; e.classList.remove('flash'); void e.offsetWidth; e.classList.add('flash'); }
-function setPcVal(id, v){
-  const e = el(id); if(!e) return;
-  e.textContent = v || '—';
-  e.className = 'pc-val' + ((!v || v === '—') ? ' empty' : '');
-}
-function setResult(id, v){
-  const e = el(id); if(!e) return;
-  e.textContent = v || '—';
-  e.className = 'result-box' + ((!v || v === '—') ? ' empty' : '');
+/* ── BOLETO BUILDER ── */
+function buildBoleto(rowsId, rows){
+  const c=el(rowsId); if(!c) return;
+  c.innerHTML=rows.map(r=>{
+    if('sep' in r)
+      return `<div class="br sep"><span class="br-lbl">${r.sep}</span></div>`;
+    if('total' in r)
+      return `<div class="br total"><span class="br-lbl">${r.total}</span><span class="br-val">${r.val}</span></div>`;
+    const tag=r.tag?`<span class="tag ${r.tag}">${r.tagTxt||'·'}</span>`:'';
+    return `<div class="br"><span class="br-lbl">${tag}${r.label}</span><span class="br-val ${r.cls||''}">${r.val}</span></div>`;
+  }).join('');
 }
 
-// ─── nav / section ──────────────────────────────────────────────────────────
-function switchSec(s){
-  ['tc','canje'].forEach(x => {
-    el('tab-' + x).classList.toggle('active', x === s);
-    el('sec-' + x).classList.toggle('on',     x === s);
-  });
-}
+/* ── NAV ── */
+function switchSec(s){['tc','canje'].forEach(x=>{el('tab-'+x).classList.toggle('active',x===s);el('sec-'+x).classList.toggle('on',x===s);});}
 
-// ─── TC modo (MEP / CCL) ────────────────────────────────────────────────────
+/* ── TC MODO ── */
 function setModo(m){
-  S.modo = m;
-  el('btn-mep').classList.toggle('on', m === 'MEP');
-  el('btn-ccl').classList.toggle('on', m === 'CCL');
-  const isMEP = m === 'MEP';
-  setText('sym-usd',     isMEP ? 'AL30D · USD MEP' : 'AL30C · USD Cable');
-  setText('sym-tc-chip', isMEP ? 'TC BRUTO · MEP'  : 'TC BRUTO · CCL');
-  setText('sub-tc-chip', isMEP ? 'AL30 / AL30D'    : 'AL30 / AL30C');
-  setText('bk-sym',      isMEP ? 'AL30D' : 'AL30C');
-  setText('usd-out-lbl', isMEP ? 'USD MEP recibidos (neto)' : 'USD Cable recibidos (neto)');
-  setText('usd-in-lbl',  isMEP ? 'USD MEP a convertir'     : 'USD Cable a convertir');
-  setText('tc-card-lbl', `TC Implícito · ${m} (T+1 · 24hs)`);
-  el('calc-ars-in').value = '';
-  el('calc-usd-in').value = '';
-  setText('detail-ars', ''); setText('detail-usd', '');
-  setResult('calc-ars-out', null); setResult('calc-usd-out', null);
+  S.modo=m;
+  el('btn-mep').classList.toggle('on',m==='MEP');el('btn-ccl').classList.toggle('on',m==='CCL');
+  const isMEP=m==='MEP';
+  setText('sym-usd',isMEP?'AL30D · USD MEP':'AL30C · USD Cable');
+  setText('sym-tc-chip',isMEP?'TC BRUTO · MEP':'TC BRUTO · CCL');
+  setText('sub-tc-chip',isMEP?'AL30 / AL30D':'AL30 / AL30C');
+  setText('bk-sym',isMEP?'AL30D':'AL30C');
+  setText('usd-out-lbl',isMEP?'USD MEP recibidos (neto)':'USD Cable recibidos (neto)');
+  setText('usd-in-lbl',isMEP?'USD MEP a convertir':'USD Cable a convertir');
+  setText('tc-card-lbl',`TC Implícito · ${m} (T+1 · 24hs)`);
+  el('calc-ars-in').value='';el('calc-usd-in').value='';
+  el('boleto-ars').classList.remove('show');el('boleto-usd').classList.remove('show');
+  setResult('calc-ars-out',null);setResult('calc-usd-out',null);
   render();
 }
 
-// ─── Canje dirección ─────────────────────────────────────────────────────────
+/* ── CANJE DIR ── */
 function setCanjeDir(dir){
-  S.canjeDir = dir;
-  el('btn-c2m').classList.toggle('on', dir === 'c2m');
-  el('btn-m2c').classList.toggle('on', dir === 'm2c');
-  el('cj-panel-c2m').classList.toggle('on', dir === 'c2m');
-  el('cj-panel-m2c').classList.toggle('on', dir === 'm2c');
-  setText('cj-desglose-lbl', dir === 'c2m' ? 'Desglose · Cable → MEP' : 'Desglose · MEP → Cable');
-  // Reset inputs
-  el('calc-c2m-in').value = ''; el('calc-m2c-in').value = '';
-  setResult('calc-c2m-out', null); setResult('calc-m2c-out', null);
-  setText('detail-c2m', '<strong>Ingresá un monto en USD Cable</strong> para ver el desglose.');
-  setText('detail-m2c', '<strong>Ingresá un monto en USD MEP</strong> para ver el desglose.');
-  updateCanjeDesglose();
+  S.canjeDir=dir;
+  el('btn-c2m').classList.toggle('on',dir==='c2m');el('btn-m2c').classList.toggle('on',dir==='m2c');
+  el('cj-panel-c2m').classList.toggle('on',dir==='c2m');el('cj-panel-m2c').classList.toggle('on',dir==='m2c');
+  el('calc-c2m-in').value='';el('calc-m2c-in').value='';
+  el('boleto-c2m').classList.remove('show');el('boleto-m2c').classList.remove('show');
+  setResult('calc-c2m-out',null);setResult('calc-m2c-out',null);
 }
 
-// ─── Modal comisión ──────────────────────────────────────────────────────────
-function openModal(f){
-  S.modalFor = f;
-  el('modal-ttl').textContent   = f === 'tc' ? 'Comisión · Tipo de Cambio' : 'Comisión · Canje';
-  el('modal-desc').textContent  = 'Ingrese la comisión a cobrar sobre la operación (%).';
-  el('modal-inp').value         = f === 'tc' ? S.commTC : S.commCanje;
-  el('modal-ov').style.display  = 'flex';
-  setTimeout(() => el('modal-inp').select(), 50);
-}
-function closeModal(){ el('modal-ov').style.display = 'none'; }
-function closeModalOv(e){ if(e.target === el('modal-ov')) closeModal(); }
+/* ── MODAL ── */
+function openModal(f){S.modalFor=f;el('modal-ttl').textContent=f==='tc'?'Comisión · Tipo de Cambio':'Comisión · Canje';el('modal-inp').value=f==='tc'?S.commTC:S.commCanje;el('modal-ov').style.display='flex';setTimeout(()=>el('modal-inp').select(),50);}
+function closeModal(){el('modal-ov').style.display='none';}
+function closeModalOv(e){if(e.target===el('modal-ov'))closeModal();}
 function confirmModal(){
-  const v = parseFloat(el('modal-inp').value);
-  if(isNaN(v) || v < 0) return;
-  if(S.modalFor === 'tc'){
-    S.commTC = v;
-    setText('comm-tc-disp', v.toFixed(2) + '%');
-    setText('bk-comm-pct',  v.toFixed(2) + '%');
-  } else {
-    S.commCanje = v;
-    setText('comm-canje-disp', v.toFixed(2) + '%');
-    setText('cj-comm-pct',     v.toFixed(2) + '%');
-  }
-  closeModal();
-  render();
+  const v=parseFloat(el('modal-inp').value); if(isNaN(v)||v<0)return;
+  if(S.modalFor==='tc'){S.commTC=v;setText('comm-tc-disp',v.toFixed(2)+'%');setText('bk-comm-pct',v.toFixed(2)+'%');}
+  else{S.commCanje=v;setText('comm-canje-disp',v.toFixed(2)+'%');}
+  closeModal();render();
 }
 
-// ─── Mercado abierto/cerrado ─────────────────────────────────────────────────
+/* ── MARKET ── */
 function checkMarket(){
-  const ar = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
-  const h = ar.getHours(), m = ar.getMinutes(), wd = ar.getDay();
-  const open = wd >= 1 && wd <= 5 && (h > 11 || (h === 11 && m >= 0)) && h < 17;
-  const pill = el('mh-pill');
-  pill.className = 'mh-pill ' + (open ? 'open' : 'closed');
-  setText('mh-txt', open ? 'ABIERTO' : 'CERRADO');
+  const ar=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Argentina/Buenos_Aires'}));
+  const h=ar.getHours(),m=ar.getMinutes(),wd=ar.getDay();
+  const open=wd>=1&&wd<=5&&(h>11||(h===11&&m>=0))&&h<17;
+  const pill=el('mh-pill');pill.className='mh-pill '+(open?'open':'closed');setText('mh-txt',open?'ABIERTO':'CERRADO');
 }
 
-// ─── Fetch ───────────────────────────────────────────────────────────────────
+/* ── FETCH ── */
 async function pfetch(url){
-  try{ const r = await fetch(url); if(r.ok) return r.json(); }catch(e){}
-  try{
-    const r2 = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
-    if(!r2.ok) throw 0;
-    const d = await r2.json(); return JSON.parse(d.contents);
-  }catch(e){}
-  try{ const r3 = await fetch('https://corsproxy.io/?' + encodeURIComponent(url)); if(r3.ok) return r3.json(); }catch(e){}
+  try{const r=await fetch(url);if(r.ok)return r.json();}catch(e){}
+  try{const r2=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url));if(!r2.ok)throw 0;const d=await r2.json();return JSON.parse(d.contents);}catch(e){}
+  try{const r3=await fetch('https://corsproxy.io/?'+encodeURIComponent(url));if(r3.ok)return r3.json();}catch(e){}
   return null;
 }
-async function sfetch(url){ const r = await fetch(url); if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
-
-const extractBond = (arr, tk) => {
-  if(!Array.isArray(arr)) return null;
-  for(const b of arr){
-    const t = (b.ticker || b.symbol || b.t || '').trim().toUpperCase();
-    if(t !== tk) continue;
-    const v = parseFloat(b.price || b.c || b.ultimo || b.last || 0);
-    return v > 0 ? v : null;
-  }
-  return null;
-};
+async function sfetch(url){const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
+const extractBond=(arr,tk)=>{if(!Array.isArray(arr))return null;for(const b of arr){const t=(b.ticker||b.symbol||b.t||'').trim().toUpperCase();if(t!==tk)continue;const v=parseFloat(b.price||b.c||b.ultimo||b.last||0);return v>0?v:null;}return null;};
 
 async function fetchAll(){
   setStatus('fetching');
-  const [rBonds, rOficial] = await Promise.allSettled([
-    pfetch('https://data912.com/live/arg_bonds'),
-    sfetch('https://dolarapi.com/v1/dolares/oficial')
-  ]);
-  let bondArr = [];
-  if(rBonds.status === 'fulfilled' && rBonds.value){
-    const raw = rBonds.value;
-    bondArr = Array.isArray(raw) ? raw : (raw.data || raw.items || []);
-  }
-  const al30  = extractBond(bondArr, 'AL30');
-  const al30d = extractBond(bondArr, 'AL30D');
-  const al30c = extractBond(bondArr, 'AL30C');
-  if(al30 || al30d || al30c){
-    S.t1.al30 = al30; S.t1.al30d = al30d; S.t1.al30c = al30c;
-    setStatus('live');
-  } else { setStatus('error'); }
-  if(rOficial.status === 'fulfilled' && rOficial.value)
-    S.bcra = parseFloat(rOficial.value.venta || rOficial.value.compra || 0);
-  render();
-  setText('stime', 'Act.: ' + new Date().toLocaleTimeString('es-AR'));
+  const [rBonds,rOficial]=await Promise.allSettled([pfetch('https://data912.com/live/arg_bonds'),sfetch('https://dolarapi.com/v1/dolares/oficial')]);
+  let bondArr=[];
+  if(rBonds.status==='fulfilled'&&rBonds.value){const raw=rBonds.value;bondArr=Array.isArray(raw)?raw:(raw.data||raw.items||[]);}
+  const al30=extractBond(bondArr,'AL30'),al30d=extractBond(bondArr,'AL30D'),al30c=extractBond(bondArr,'AL30C');
+  if(al30||al30d||al30c){S.t1.al30=al30;S.t1.al30d=al30d;S.t1.al30c=al30c;setStatus('live');}
+  else{setStatus('error');}
+  if(rOficial.status==='fulfilled'&&rOficial.value)S.bcra=parseFloat(rOficial.value.venta||rOficial.value.compra||0);
+  render();setText('stime','Act.: '+new Date().toLocaleTimeString('es-AR'));
 }
-
 function setStatus(st){
-  const dot = el('sdot'), txt = el('stxt');
-  if(st === 'live')    { dot.className = 'sdot live';     txt.textContent = `EN VIVO · data912.com · refresco cada ${REFRESH_MS/1000}s`; }
-  else if(st === 'fetching'){ dot.className = 'sdot fetching'; txt.textContent = 'Actualizando precios...'; }
-  else                 { dot.className = 'sdot err';      txt.textContent = 'Sin datos · verificá endpoints'; }
+  const dot=el('sdot'),txt=el('stxt');
+  if(st==='live'){dot.className='sdot live';txt.textContent=`EN VIVO · data912.com · refresco cada ${REFRESH_MS/1000}s`;}
+  else if(st==='fetching'){dot.className='sdot fetching';txt.textContent='Actualizando precios...';}
+  else{dot.className='sdot err';txt.textContent='Sin datos · verificá endpoints';}
 }
 
-// ─── Render principal ─────────────────────────────────────────────────────────
-function render(){ checkMarket(); renderTC(); renderCanje(); }
-let TCcache = {}, CANJEcache = {};
+/* ── RENDER ── */
+function render(){checkMarket();renderTC();renderCanje();}
+let TCcache={},CANJEcache={};
 
-// ─── TC render ───────────────────────────────────────────────────────────────
+/* ── TC RENDER ── */
 function renderTC(){
-  const al30 = S.t1.al30, alU = S.modo === 'MEP' ? S.t1.al30d : S.t1.al30c, bcra = S.bcra;
-  const comm = S.commTC / 100;
+  const al30=S.t1.al30,alU=S.modo==='MEP'?S.t1.al30d:S.t1.al30c,bcra=S.bcra,comm=S.commTC/100;
+  flash('p-al30');flash('p-usd');flash('p-tc-chip');
+  setPcVal('p-al30',al30?fmtARS(al30):null);setPcVal('p-usd',alU?fmtUSD(alU):null);
+  const chipEl=el('p-tc-chip');
+  if(al30&&alU){chipEl.textContent=fmt(al30/alU,4);chipEl.className='pc-tc-val';}
+  else{chipEl.textContent='—';chipEl.className='pc-tc-val empty';}
 
-  flash('p-al30'); flash('p-usd'); flash('p-tc-chip');
-  setPcVal('p-al30', al30 ? fmtARS(al30) : null);
-  setPcVal('p-usd',  alU  ? fmtUSD(alU)  : null);
-
-  const tcChipEl = el('p-tc-chip');
-  if(al30 && alU){
-    const bruto = al30 / alU;
-    tcChipEl.textContent = fmt(bruto, 4);
-    tcChipEl.className = 'pc-tc-val';
-  } else {
-    tcChipEl.textContent = '—';
-    tcChipEl.className = 'pc-tc-val empty';
-  }
-
-  if(al30 && alU && bcra){
-    const tcBruto = al30 / alU;
-    // TC compra (ARS→USD): costo ARS por cada 1 USD recibido
-    const tcBuy  = tcBruto * (1 + comm + DDMM) + DDMM * bcra;
-    // TC venta (USD→ARS): ARS recibidos por cada 1 USD entregado
-    const tcSell = tcBruto * (1 - comm - DDMM) - DDMM * bcra;
-
-    // Componentes por 1 USD (desglose tasa)
-    const cPerUSD    = tcBruto * comm;      // comisión en ARS por USD
-    const dArsPerUSD = tcBruto * DDMM;      // DDMM ARS pata por USD
-    const dUsdPerUSD = DDMM * bcra;         // DDMM USD pata (en ARS) por USD
-
+  if(al30&&alU&&bcra){
+    const tcBruto=al30/alU;
+    const tcBuy =tcBruto*(1+comm+DDMM)+DDMM*bcra;
+    const tcSell=tcBruto*(1-comm-DDMM)-DDMM*bcra;
     flash('tc-implicito');
-    setText('tc-implicito',  fmt(tcBuy,  4));
-    setText('tc-bruto-disp', fmt(tcBruto, 4));
-    setText('tc-venta-disp', fmt(tcSell,  4));
-    setText('bk-bruto',    fmt(tcBruto, 4));
-    setText('bk-comm',     `+${fmt(cPerUSD,4)} ARS/USD  (${S.commTC.toFixed(2)}% sobre ARS)`);
-    setText('bk-ddmm-ars', `+${fmt(dArsPerUSD,4)} ARS/USD  (0.0100% punta ARS)`);
-    setText('bk-ddmm-usd', `+${fmt(dUsdPerUSD,4)} ARS/USD  (0.0100% punta USD × $${fmt(bcra,2)} BCRA)`);
-    setText('bk-total',       fmt(tcBuy,  4));
-    setText('bk-total-venta', fmt(tcSell, 4));
-
-    TCcache = { al30, alU, bcra, tcBruto, tcBuy, tcSell,
-      cPerUSD, dArsPerUSD, dUsdPerUSD,
-      comm: S.commTC, modo: S.modo };
-    calcArsToUsd();
-    calcUsdToArs();
+    setText('tc-implicito',fmt(tcBuy,4));setText('tc-bruto-disp',fmt(tcBruto,4));setText('tc-venta-disp',fmt(tcSell,4));
+    setText('bk-bruto',fmt(tcBruto,4));
+    setText('bk-comm',`+${fmt(tcBruto*comm,4)} ARS/USD`);
+    setText('bk-ddmm-ars',`+${fmt(tcBruto*DDMM,4)} ARS/USD`);
+    setText('bk-ddmm-usd',`+${fmt(DDMM*bcra,4)} ARS/USD  ($${fmt(bcra,2)} BCRA)`);
+    setText('bk-total',fmt(tcBuy,4));setText('bk-total-venta',fmt(tcSell,4));
+    TCcache={al30,alU,bcra,tcBruto,tcBuy,tcSell,comm:S.commTC,modo:S.modo};
+    calcArsToUsd();calcUsdToArs();
   } else {
-    ['tc-implicito','tc-bruto-disp','tc-venta-disp','bk-bruto','bk-comm','bk-ddmm-ars','bk-ddmm-usd','bk-total','bk-total-venta']
-      .forEach(id => setText(id, '—'));
-    TCcache = {};
+    ['tc-implicito','tc-bruto-disp','tc-venta-disp','bk-bruto','bk-comm','bk-ddmm-ars','bk-ddmm-usd','bk-total','bk-total-venta'].forEach(id=>setText(id,'—'));
+    TCcache={};
   }
 }
 
-// ─── TC Calculadoras ─────────────────────────────────────────────────────────
-
-// ARS → USD (compra): el inversor tiene $ARS, quiere saber cuántos USD recibe
-// Costos en ARS: comm% × ARS + DDMM × ARS + DDMM × USD_bruto × bcra
-// Todos los costos reducen los ARS disponibles para comprar bonos
+/* ─── ARS → USD ─────────────────────────────────────────────────────────────
+   Comisión  = ARS × comm%              (sobre ARS operados)
+   DDMM ARS  = ARS × 0.0100%           (sobre ARS operados)
+   USD bruto = (ARS − commARS − ddmmARS) / TC_bruto
+   DDMM USD  = USD_bruto × 0.0100% × TC_oficial   (en ARS)
+   USD neto  = (ARS − commARS − ddmmARS − ddmmUSDars) / TC_bruto
+*/
 function calcArsToUsd(){
-  const ars  = parseFloat(el('calc-ars-in').value);
-  const t    = TCcache;
-  if(!ars || !t.tcBuy){ setResult('calc-ars-out', null); setText('detail-ars','<strong>Ingresá un monto en ARS</strong> para ver el desglose de la operación.'); return; }
+  const ars=parseFloat(el('calc-ars-in').value),t=TCcache,blt=el('boleto-ars');
+  if(!ars||!t.tcBruto){setResult('calc-ars-out',null);blt.classList.remove('show');return;}
+  const comm=t.comm/100;
+  const commARS   =ars*comm;
+  const ddmmARS   =ars*DDMM;
+  const usdBruto  =(ars-commARS-ddmmARS)/t.tcBruto;
+  const ddmmUSDars=usdBruto*DDMM*t.bcra;
+  const usdNeto   =(ars-commARS-ddmmARS-ddmmUSDars)/t.tcBruto;
+  const tcEfectivo=ars/usdNeto;
 
-  const comm = t.comm / 100;
-  const commARS    = ars * comm;          // comisión sobre ARS
-  const ddmmARS    = ars * DDMM;          // DDMM punta ARS
-  const arsParaBonos = ars - commARS - ddmmARS;
-  const usdBruto   = arsParaBonos / t.tcBruto;
-  const ddmmUSDars = usdBruto * DDMM * t.bcra; // DDMM punta USD → ARS
-  const arsNeto    = arsParaBonos - ddmmUSDars;
-  const usdNeto    = arsNeto / t.tcBruto;
+  setResult('calc-ars-out',fmtUSD(usdNeto));
+  setText('bol-ars-title',`${t.modo}  ·  ${fmtARS(ars)}`);
+  setText('bol-ars-ts',nowTs());
 
-  setResult('calc-ars-out', fmtUSD(usdNeto));
-  el('detail-ars').innerHTML =
-    `<span class="lbl-item">ARS operados:</span> <span class="amt">${fmtARS(ars)}</span>&nbsp;&nbsp;` +
-    `<strong>−</strong> Comisión ${t.comm.toFixed(2)}%: <span class="amt" style="color:var(--red)">−${fmtARS(commARS)}</span>&nbsp;&nbsp;` +
-    `<strong>−</strong> DDMM ARS: <span class="amt" style="color:var(--red)">−${fmtARS(ddmmARS)}</span>&nbsp;&nbsp;` +
-    `<strong>−</strong> DDMM USD→ARS: <span class="amt" style="color:var(--red)">−${fmtARS(ddmmUSDars)}</span>&nbsp;&nbsp;` +
-    `<strong>→</strong> USD neto: <span class="amt" style="color:var(--green)">${fmtUSD(usdNeto)}</span>`;
+  buildBoleto('bol-ars-rows',[
+    {sep:'Punta ARS  —  venta de pesos'},
+    {label:'ARS operados',                                           val:fmtARS(ars),                cls:'cyn'},
+    {label:`Comisión  ${t.comm.toFixed(2)}%  ×  ARS operados`,      tag:'tag-neg',tagTxt:'−',        val:`−${fmtARS(commARS)}`,   cls:'neg'},
+    {label:'DDMM  0.0100%  ×  ARS operados',                        tag:'tag-neg',tagTxt:'−',        val:`−${fmtARS(ddmmARS)}`,   cls:'neg'},
+    {sep:'Punta USD  —  compra de dólares'},
+    {label:`USD ${t.modo} bruto  (TC bruto ${fmt(t.tcBruto,4)})`,   tag:'tag-amb',tagTxt:'≈',        val:fmtUSD(usdBruto),        cls:'amb'},
+    {label:`DDMM  0.0100%  ×  USD bruto  ×  $${fmt(t.bcra,2)} BCRA`,tag:'tag-neg',tagTxt:'−',       val:`−${fmtARS(ddmmUSDars)}`,cls:'neg'},
+    {sep:'Resultado'},
+    {label:'TC efectivo aplicado',                                   tag:'tag-inf',tagTxt:'TC',       val:fmt(tcEfectivo,4),       cls:'cyn'},
+    {total:`USD ${t.modo} NETO RECIBIDOS`,                           val:fmtUSD(usdNeto)},
+  ]);
+  blt.classList.add('show');
 }
 
-// USD → ARS (venta): el inversor tiene USD, quiere saber cuántos ARS recibe
-// ARS bruto = USD × TC_bruto
-// Costos: comm% × ARS_bruto + DDMM × ARS_bruto + DDMM × USD × bcra
-// ARS neto = ARS_bruto × (1 − comm − DDMM) − USD × DDMM × bcra
+/* ─── USD → ARS ─────────────────────────────────────────────────────────────
+   ARS bruto = USD × TC_bruto
+   Comisión  = ARS_bruto × comm%
+   DDMM ARS  = ARS_bruto × 0.0100%
+   DDMM USD  = USD × 0.0100% × TC_oficial   (en ARS)
+   ARS neto  = ARS_bruto − commARS − ddmmARS − ddmmUSDars
+*/
 function calcUsdToArs(){
-  const usd = parseFloat(el('calc-usd-in').value);
-  const t   = TCcache;
-  if(!usd || !t.tcBruto){ setResult('calc-usd-out', null); setText('detail-usd','<strong>Ingresá un monto en USD</strong> para ver el desglose de la operación.'); return; }
+  const usd=parseFloat(el('calc-usd-in').value),t=TCcache,blt=el('boleto-usd');
+  if(!usd||!t.tcBruto){setResult('calc-usd-out',null);blt.classList.remove('show');return;}
+  const comm=t.comm/100;
+  const arsBruto  =usd*t.tcBruto;
+  const commARS   =arsBruto*comm;
+  const ddmmARS   =arsBruto*DDMM;
+  const ddmmUSDars=usd*DDMM*t.bcra;
+  const arsNeto   =arsBruto-commARS-ddmmARS-ddmmUSDars;
+  const tcEfectivo=arsNeto/usd;
 
-  const comm     = t.comm / 100;
-  const arsBruto = usd * t.tcBruto;
-  const commARS  = arsBruto * comm;
-  const ddmmARS  = arsBruto * DDMM;
-  const ddmmUSDars = usd * DDMM * t.bcra;
-  const arsNeto  = arsBruto - commARS - ddmmARS - ddmmUSDars;
+  setResult('calc-usd-out',fmtARS(arsNeto));
+  setText('bol-usd-title',`${t.modo}  ·  ${fmtUSD(usd)}`);
+  setText('bol-usd-ts',nowTs());
 
-  setResult('calc-usd-out', fmtARS(arsNeto));
-  el('detail-usd').innerHTML =
-    `<span class="lbl-item">USD operados:</span> <span class="amt">${fmtUSD(usd)}</span>&nbsp;&nbsp;` +
-    `ARS bruto: <span class="amt">${fmtARS(arsBruto)}</span>&nbsp;&nbsp;` +
-    `<strong>−</strong> Comisión ${t.comm.toFixed(2)}%: <span class="amt" style="color:var(--red)">−${fmtARS(commARS)}</span>&nbsp;&nbsp;` +
-    `<strong>−</strong> DDMM ARS: <span class="amt" style="color:var(--red)">−${fmtARS(ddmmARS)}</span>&nbsp;&nbsp;` +
-    `<strong>−</strong> DDMM USD→ARS: <span class="amt" style="color:var(--red)">−${fmtARS(ddmmUSDars)}</span>&nbsp;&nbsp;` +
-    `<strong>→</strong> ARS neto: <span class="amt" style="color:var(--green)">${fmtARS(arsNeto)}</span>`;
+  buildBoleto('bol-usd-rows',[
+    {sep:'Punta USD  —  venta de dólares'},
+    {label:`USD ${t.modo} operados`,                                 val:fmtUSD(usd),                cls:'cyn'},
+    {label:`DDMM  0.0100%  ×  USD  ×  $${fmt(t.bcra,2)} BCRA`,      tag:'tag-neg',tagTxt:'−',        val:`−${fmtARS(ddmmUSDars)}`,cls:'neg'},
+    {sep:'Punta ARS  —  compra de pesos'},
+    {label:`ARS bruto  (TC bruto ${fmt(t.tcBruto,4)})`,              tag:'tag-amb',tagTxt:'≈',        val:fmtARS(arsBruto),        cls:'amb'},
+    {label:`Comisión  ${t.comm.toFixed(2)}%  ×  ARS bruto`,          tag:'tag-neg',tagTxt:'−',        val:`−${fmtARS(commARS)}`,   cls:'neg'},
+    {label:'DDMM  0.0100%  ×  ARS bruto',                            tag:'tag-neg',tagTxt:'−',        val:`−${fmtARS(ddmmARS)}`,   cls:'neg'},
+    {sep:'Resultado'},
+    {label:'TC efectivo aplicado',                                    tag:'tag-inf',tagTxt:'TC',       val:fmt(tcEfectivo,4),       cls:'cyn'},
+    {total:'ARS NETOS A PAGAR',                                       val:fmtARS(arsNeto)},
+  ]);
+  blt.classList.add('show');
 }
 
-// ─── Canje render ─────────────────────────────────────────────────────────────
+/* ── CANJE RENDER ── */
 function renderCanje(){
-  const d = S.t1.al30d, c = S.t1.al30c, bcra = S.bcra;
-  setPcVal('cj-al30d-disp', d ? fmtUSD(d) : null);
-  setPcVal('cj-al30c-disp', c ? fmtUSD(c) : null);
+  const d=S.t1.al30d,c=S.t1.al30c,bcra=S.bcra;
+  setPcVal('cj-al30d-disp',d?fmtUSD(d):null);setPcVal('cj-al30c-disp',c?fmtUSD(c):null);
+  const chipEl=el('cj-spread-chip');
+  if(d&&c){const spr=(c/d-1)*100;chipEl.textContent=fmtPct(spr,4);chipEl.style.color=spr>=0?'var(--green)':'var(--red)';chipEl.className='pc-tc-val';}
+  else{chipEl.textContent='—';chipEl.className='pc-tc-val empty';chipEl.style.color='';}
 
-  const chipEl = el('cj-spread-chip');
-  if(d && c){
-    const spr = (c / d - 1) * 100;
-    chipEl.textContent = fmtPct(spr, 4);
-    chipEl.style.color = spr >= 0 ? 'var(--green)' : 'var(--red)';
-    chipEl.className = 'pc-tc-val';
+  if(d&&c&&bcra){
+    const m2c=(c/d-1)*100,c2m=(d/c-1)*100,cc=S.commCanje/100;
+    const r1=el('cj-m2c-bruto');r1.textContent=fmtPct(m2c,4);r1.className='cr-rate '+(m2c>=0?'pos':'neg');
+    const r2=el('cj-c2m-bruto');r2.textContent=fmtPct(c2m,4);r2.className='cr-rate '+(c2m>=0?'pos':'neg');
+    // neto: comisión sobre punta resultante
+    setText('cj-c2m-net','Neto (c/gastos): '+fmtPct(((d/c)*(1-cc)-1)*100,4));
+    setText('cj-m2c-net','Neto (c/gastos): '+fmtPct(((c/d)*(1-cc)-1)*100,4));
+    CANJEcache={d,c,bcra,m2c,c2m,comm:S.commCanje};
+    calcCableToMep();calcMepToCable();
   } else {
-    chipEl.textContent = '—'; chipEl.className = 'pc-tc-val empty'; chipEl.style.color = '';
-  }
-
-  if(d && c && bcra){
-    // Tasas brutas
-    const m2c = (c / d - 1) * 100;   // MEP → Cable spread
-    const c2m = (d / c - 1) * 100;   // Cable → MEP spread (negativo)
-    const r1 = el('cj-m2c-bruto'); r1.textContent = fmtPct(m2c, 4); r1.className = 'cr-rate ' + (m2c >= 0 ? 'pos' : 'neg');
-    const r2 = el('cj-c2m-bruto'); r2.textContent = fmtPct(c2m, 4); r2.className = 'cr-rate ' + (c2m >= 0 ? 'pos' : 'neg');
-
-    const cc = S.commCanje / 100;
-
-    // Cable → MEP neto (comisión sobre USD MEP resultante)
-    const mepGrossPerCable = d / c;               // USD MEP por 1 USD Cable
-    const c2m_netFactor = mepGrossPerCable * (1 - cc);
-    const c2m_net = (c2m_netFactor - 1) * 100;
-    setText('cj-c2m-net', 'Neto (c/gastos): ' + fmtPct(c2m_net, 4));
-
-    // MEP → Cable neto (comisión sobre USD Cable resultante)
-    const cableGrossPerMep = c / d;               // USD Cable por 1 USD MEP
-    const m2c_netFactor = cableGrossPerMep * (1 - cc);
-    const m2c_net = (m2c_netFactor - 1) * 100;
-    setText('cj-m2c-net', 'Neto (c/gastos): ' + fmtPct(m2c_net, 4));
-
-    CANJEcache = { d, c, bcra, m2c, c2m, m2c_net, c2m_net, comm: S.commCanje };
-    updateCanjeDesglose();
-    calcCableToMep();
-    calcMepToCable();
-  } else {
-    ['cj-c2m-bruto','cj-m2c-bruto'].forEach(id => { const e = el(id); if(e){ e.textContent = '—'; e.className = 'cr-rate neu'; }});
-    setText('cj-c2m-net','Neto (c/gastos): —'); setText('cj-m2c-net','Neto (c/gastos): —');
-    CANJEcache = {};
-    updateCanjeDesglose();
+    ['cj-c2m-bruto','cj-m2c-bruto'].forEach(id=>{const e=el(id);if(e){e.textContent='—';e.className='cr-rate neu';}});
+    setText('cj-c2m-net','Neto (c/gastos): —');setText('cj-m2c-net','Neto (c/gastos): —');
+    CANJEcache={};
   }
 }
 
-// Actualiza la tabla de desglose según la dirección seleccionada (base 10.000 USD)
-function updateCanjeDesglose(){
-  const dir = S.canjeDir;
-  const { d, c, bcra, comm } = CANJEcache;
-  const BASE = 10000;
-
-  if(dir === 'c2m'){
-    // Cable → MEP
-    setText('cj-bk-lbl',     'Desglose Cable → MEP · Base USD ' + fmt(BASE,0));
-    setText('cj-bk-in-lbl',  'USD Cable invertidos');
-    setText('cj-bk-gross-lbl','USD MEP bruto  (× AL30D / AL30C)');
-    setText('cj-bk-net-lbl', 'USD MEP NETO');
-    setText('cj-comm-sobre', '(sobre USD MEP)');
-    if(d && c && bcra){
-      const cc = comm / 100;
-      const mepGross = BASE * (d / c);
-      const commUSD  = mepGross * cc;
-      const dd1_ars  = BASE    * DDMM * bcra;
-      const dd2_ars  = mepGross * DDMM * bcra;
-      const mepNeto  = mepGross - commUSD;
-      setText('cj-p-in',    fmtUSD(BASE));
-      setText('cj-p-gross', fmtUSD(mepGross));
-      setText('cj-comm-v',  `−USD ${fmt(commUSD,2)}`);
-      setText('cj-ddmm-p1', `−$ ${fmt(dd1_ars,2)} ARS`);
-      setText('cj-ddmm-p2', `−$ ${fmt(dd2_ars,2)} ARS`);
-      setText('cj-spread-n', fmtUSD(mepNeto));
-    } else {
-      ['cj-p-in','cj-p-gross','cj-comm-v','cj-ddmm-p1','cj-ddmm-p2','cj-spread-n'].forEach(id => setText(id,'—'));
-    }
-  } else {
-    // MEP → Cable
-    setText('cj-bk-lbl',     'Desglose MEP → Cable · Base USD ' + fmt(BASE,0));
-    setText('cj-bk-in-lbl',  'USD MEP invertidos');
-    setText('cj-bk-gross-lbl','USD Cable bruto  (× AL30C / AL30D)');
-    setText('cj-bk-net-lbl', 'USD Cable NETO');
-    setText('cj-comm-sobre', '(sobre USD Cable)');
-    if(d && c && bcra){
-      const cc = comm / 100;
-      const cableGross = BASE * (c / d);
-      const commUSD    = cableGross * cc;
-      const dd1_ars    = BASE       * DDMM * bcra;
-      const dd2_ars    = cableGross * DDMM * bcra;
-      const cableNeto  = cableGross - commUSD;
-      setText('cj-p-in',    fmtUSD(BASE));
-      setText('cj-p-gross', fmtUSD(cableGross));
-      setText('cj-comm-v',  `−USD ${fmt(commUSD,2)}`);
-      setText('cj-ddmm-p1', `−$ ${fmt(dd1_ars,2)} ARS`);
-      setText('cj-ddmm-p2', `−$ ${fmt(dd2_ars,2)} ARS`);
-      setText('cj-spread-n', fmtUSD(cableNeto));
-    } else {
-      ['cj-p-in','cj-p-gross','cj-comm-v','cj-ddmm-p1','cj-ddmm-p2','cj-spread-n'].forEach(id => setText(id,'—'));
-    }
-  }
-}
-
-// ─── Canje Calculadoras ───────────────────────────────────────────────────────
-
-// Cable → MEP
-// Comisión sobre USD MEP resultante (en USD, no en ARS)
-// DDMM por pata en USD convertido a ARS al TC oficial
+/* ─── Cable → MEP ────────────────────────────────────────────────────────────
+   USD MEP bruto = USD Cable × (AL30D / AL30C)
+   Comisión = USD_MEP_bruto × comm%           (en USD, sobre punta MEP)
+   DDMM punta Cable = USD_Cable × 0.0100% × BCRA   → ARS
+   DDMM punta MEP   = USD_MEP_bruto × 0.0100% × BCRA → ARS
+   USD MEP neto = USD_MEP_bruto − commUSD
+*/
 function calcCableToMep(){
-  const cable = parseFloat(el('calc-c2m-in').value);
-  const { d, c, bcra, comm } = CANJEcache;
-  if(!cable || !d || !c || !bcra){ setResult('calc-c2m-out', null); setText('detail-c2m','<strong>Ingresá un monto en USD Cable</strong> para ver el desglose.'); return; }
-  const cc       = comm / 100;
-  const mepGross = cable * (d / c);
-  const commUSD  = mepGross * cc;                  // comisión sobre USD MEP
-  const dd1_ars  = cable    * DDMM * bcra;          // DDMM punta Cable → ARS
-  const dd2_ars  = mepGross * DDMM * bcra;          // DDMM punta MEP → ARS
-  const mepNeto  = mepGross - commUSD;              // neto en USD MEP
-  setResult('calc-c2m-out', fmtUSD(mepNeto));
-  el('detail-c2m').innerHTML =
-    `USD Cable: <span class="amt">${fmtUSD(cable)}</span> &nbsp;→&nbsp; ` +
-    `MEP bruto: <span class="amt">${fmtUSD(mepGross)}</span> &nbsp;` +
-    `<strong>−</strong> Comisión ${comm.toFixed(2)}% (MEP): <span class="amt" style="color:var(--red)">−USD ${fmt(commUSD,2)}</span> &nbsp;` +
-    `<strong>−</strong> DDMM Cable: <span class="amt" style="color:var(--amber)">−${fmtARS(dd1_ars)}</span> &nbsp;` +
-    `<strong>−</strong> DDMM MEP: <span class="amt" style="color:var(--amber)">−${fmtARS(dd2_ars)}</span> &nbsp;&nbsp;` +
-    `<strong>→</strong> <span class="amt" style="color:var(--green)">${fmtUSD(mepNeto)}</span>`;
+  const cable=parseFloat(el('calc-c2m-in').value),t=CANJEcache,blt=el('boleto-c2m');
+  if(!cable||!t.d||!t.c||!t.bcra){setResult('calc-c2m-out',null);blt.classList.remove('show');return;}
+  const cc=t.comm/100;
+  const mepBruto =cable*(t.d/t.c);
+  const commUSD  =mepBruto*cc;
+  const mepNeto  =mepBruto-commUSD;
+  const dd1_ars  =cable   *DDMM*t.bcra;
+  const dd2_ars  =mepBruto*DDMM*t.bcra;
+  const spread   =(mepNeto/cable-1)*100;
+
+  setResult('calc-c2m-out',fmtUSD(mepNeto));
+  setText('bol-c2m-ts',nowTs());
+
+  buildBoleto('bol-c2m-rows',[
+    {sep:'Punta Cable  —  venta de Cable'},
+    {label:'USD Cable a canjear',                                         val:fmtUSD(cable),    cls:'cyn'},
+    {label:`DDMM  0.0100%  ×  USD Cable  ×  $${fmt(t.bcra,2)} BCRA`,     tag:'tag-neg',tagTxt:'ARS',val:`−${fmtARS(dd1_ars)}`,cls:'neg'},
+    {sep:'Punta MEP  —  compra de MEP'},
+    {label:`USD MEP bruto  (× ${fmt(t.d/t.c,6)}  ≙  AL30D/AL30C)`,       tag:'tag-amb',tagTxt:'≈', val:fmtUSD(mepBruto),  cls:'amb'},
+    {label:`Comisión  ${t.comm.toFixed(2)}%  ×  USD MEP bruto`,           tag:'tag-neg',tagTxt:'−', val:`−USD ${fmt(commUSD,2)}`,cls:'neg'},
+    {label:`DDMM  0.0100%  ×  USD MEP bruto  ×  $${fmt(t.bcra,2)} BCRA`,  tag:'tag-neg',tagTxt:'ARS',val:`−${fmtARS(dd2_ars)}`,cls:'neg'},
+    {sep:'Resultado'},
+    {label:'Spread efectivo neto',                                         tag:'tag-inf',tagTxt:'%', val:fmtPct(spread,4),  cls:spread>=0?'pos':'neg'},
+    {total:'USD MEP NETO RECIBIDOS',                                       val:fmtUSD(mepNeto)},
+  ]);
+  blt.classList.add('show');
 }
 
-// MEP → Cable
-// Comisión sobre USD Cable resultante (en USD, no en ARS)
+/* ─── MEP → Cable ────────────────────────────────────────────────────────────
+   USD Cable bruto = USD MEP × (AL30C / AL30D)
+   Comisión = USD_Cable_bruto × comm%          (en USD, sobre punta Cable)
+   DDMM punta MEP   = USD_MEP × 0.0100% × BCRA   → ARS
+   DDMM punta Cable = USD_Cable_bruto × 0.0100% × BCRA → ARS
+   USD Cable neto = USD_Cable_bruto − commUSD
+*/
 function calcMepToCable(){
-  const mep = parseFloat(el('calc-m2c-in').value);
-  const { d, c, bcra, comm } = CANJEcache;
-  if(!mep || !d || !c || !bcra){ setResult('calc-m2c-out', null); setText('detail-m2c','<strong>Ingresá un monto en USD MEP</strong> para ver el desglose.'); return; }
-  const cc         = comm / 100;
-  const cableGross = mep * (c / d);
-  const commUSD    = cableGross * cc;               // comisión sobre USD Cable
-  const dd1_ars    = mep        * DDMM * bcra;      // DDMM punta MEP → ARS
-  const dd2_ars    = cableGross * DDMM * bcra;      // DDMM punta Cable → ARS
-  const cableNeto  = cableGross - commUSD;          // neto en USD Cable
-  setResult('calc-m2c-out', fmtUSD(cableNeto));
-  el('detail-m2c').innerHTML =
-    `USD MEP: <span class="amt">${fmtUSD(mep)}</span> &nbsp;→&nbsp; ` +
-    `Cable bruto: <span class="amt">${fmtUSD(cableGross)}</span> &nbsp;` +
-    `<strong>−</strong> Comisión ${comm.toFixed(2)}% (Cable): <span class="amt" style="color:var(--red)">−USD ${fmt(commUSD,2)}</span> &nbsp;` +
-    `<strong>−</strong> DDMM MEP: <span class="amt" style="color:var(--amber)">−${fmtARS(dd1_ars)}</span> &nbsp;` +
-    `<strong>−</strong> DDMM Cable: <span class="amt" style="color:var(--amber)">−${fmtARS(dd2_ars)}</span> &nbsp;&nbsp;` +
-    `<strong>→</strong> <span class="amt" style="color:var(--green)">${fmtUSD(cableNeto)}</span>`;
+  const mep=parseFloat(el('calc-m2c-in').value),t=CANJEcache,blt=el('boleto-m2c');
+  if(!mep||!t.d||!t.c||!t.bcra){setResult('calc-m2c-out',null);blt.classList.remove('show');return;}
+  const cc=t.comm/100;
+  const cableBruto=mep*(t.c/t.d);
+  const commUSD   =cableBruto*cc;
+  const cableNeto =cableBruto-commUSD;
+  const dd1_ars   =mep       *DDMM*t.bcra;
+  const dd2_ars   =cableBruto*DDMM*t.bcra;
+  const spread    =(cableNeto/mep-1)*100;
+
+  setResult('calc-m2c-out',fmtUSD(cableNeto));
+  setText('bol-m2c-ts',nowTs());
+
+  buildBoleto('bol-m2c-rows',[
+    {sep:'Punta MEP  —  venta de MEP'},
+    {label:'USD MEP a canjear',                                            val:fmtUSD(mep),      cls:'cyn'},
+    {label:`DDMM  0.0100%  ×  USD MEP  ×  $${fmt(t.bcra,2)} BCRA`,        tag:'tag-neg',tagTxt:'ARS',val:`−${fmtARS(dd1_ars)}`,cls:'neg'},
+    {sep:'Punta Cable  —  compra de Cable'},
+    {label:`USD Cable bruto  (× ${fmt(t.c/t.d,6)}  ≙  AL30C/AL30D)`,      tag:'tag-amb',tagTxt:'≈', val:fmtUSD(cableBruto), cls:'amb'},
+    {label:`Comisión  ${t.comm.toFixed(2)}%  ×  USD Cable bruto`,          tag:'tag-neg',tagTxt:'−', val:`−USD ${fmt(commUSD,2)}`,cls:'neg'},
+    {label:`DDMM  0.0100%  ×  USD Cable bruto  ×  $${fmt(t.bcra,2)} BCRA`, tag:'tag-neg',tagTxt:'ARS',val:`−${fmtARS(dd2_ars)}`,cls:'neg'},
+    {sep:'Resultado'},
+    {label:'Spread efectivo neto',                                          tag:'tag-inf',tagTxt:'%', val:fmtPct(spread,4),  cls:spread>=0?'pos':'neg'},
+    {total:'USD Cable NETO RECIBIDOS',                                      val:fmtUSD(cableNeto)},
+  ]);
+  blt.classList.add('show');
 }
 
-// ─── PDF helpers ──────────────────────────────────────────────────────────────
-function pdfHeader(doc, title, subtitle){
-  const W = doc.internal.pageSize.getWidth();
-  doc.setFillColor(13, 27, 46);   doc.rect(0, 0, W, 40, 'F');
-  doc.setFillColor(58, 111, 216); doc.rect(0, 0, 4, 40, 'F');
-  doc.setFontSize(14); doc.setTextColor(240, 244, 255); doc.setFont('helvetica','bold');
-  doc.text('Portfolio Investment', 12, 16);
-  doc.setFontSize(9);  doc.setTextColor(122, 163, 240); doc.setFont('helvetica','normal');
-  doc.text('Calculadora Tipo de Cambio MEP / CCL', 12, 27);
-  doc.setFontSize(12); doc.setTextColor(34, 212, 240); doc.setFont('helvetica','bold');
-  doc.text(title, W - 10, 14, { align: 'right' });
-  doc.setFontSize(9);  doc.setTextColor(122, 163, 240); doc.setFont('helvetica','normal');
-  doc.text(subtitle, W - 10, 26, { align: 'right' });
+/* ── PDF HELPERS ── */
+function pdfHdr(doc,t1,t2,ts){
+  const W=doc.internal.pageSize.getWidth();
+  doc.setFillColor(13,27,46);doc.rect(0,0,W,42,'F');
+  doc.setFillColor(58,111,216);doc.rect(0,0,4,42,'F');
+  doc.setFontSize(14);doc.setTextColor(240,244,255);doc.setFont('helvetica','bold');doc.text('Portfolio Investment',12,16);
+  doc.setFontSize(9);doc.setTextColor(122,163,240);doc.setFont('helvetica','normal');doc.text('Calculadora ALyC · TC MEP / CCL',12,28);
+  doc.setFontSize(11);doc.setTextColor(34,212,240);doc.setFont('helvetica','bold');doc.text(t1,W-10,14,{align:'right'});
+  doc.setFontSize(9);doc.setTextColor(122,163,240);doc.setFont('helvetica','normal');doc.text(t2+' · '+ts,W-10,27,{align:'right'});
   return 52;
 }
-
-function pdfSection(doc, text, y){
-  const W = doc.internal.pageSize.getWidth();
-  doc.setFillColor(23, 45, 77); doc.rect(0, y, W, 10, 'F');
-  doc.setFontSize(7.5); doc.setTextColor(122, 163, 240); doc.setFont('helvetica','bold');
-  doc.text(text.toUpperCase(), 8, y + 7);
-  return y + 16;
+function pdfSec(doc,txt,y){
+  const W=doc.internal.pageSize.getWidth();
+  doc.setFillColor(23,45,77);doc.rect(0,y,W,10,'F');
+  doc.setFontSize(7.5);doc.setTextColor(122,163,240);doc.setFont('helvetica','bold');doc.text(txt.toUpperCase(),8,y+7);
+  return y+16;
 }
-
-function pdfRow(doc, label, value, y, isTotal=false, colorVal=null){
-  const W = doc.internal.pageSize.getWidth();
-  if(y > 770){ doc.addPage(); y = 20; }
+function pdfRow(doc,lbl,val,y,isTotal=false){
+  const W=doc.internal.pageSize.getWidth();if(y>775){doc.addPage();y=20;}
   if(isTotal){
-    doc.setFillColor(13, 27, 46); doc.rect(0, y - 1, W, 12, 'F');
-    doc.setFontSize(10); doc.setFont('helvetica','bold');
-    doc.setTextColor(colorVal || 34, colorVal ? 0 : 212, colorVal ? 0 : 240);
-    doc.text(label, 10, y + 8); doc.text(value, W - 10, y + 8, { align: 'right' });
-    return y + 16;
+    doc.setFillColor(13,27,46);doc.rect(0,y-1,W,13,'F');
+    doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(34,214,138);
+    doc.text(lbl,10,y+8);doc.text(val,W-10,y+8,{align:'right'});return y+17;
   }
-  doc.setFontSize(9); doc.setFont('helvetica','normal');
-  doc.setTextColor(122, 153, 196); doc.text(label, 10, y + 6);
-  doc.setTextColor(208, 221, 245); doc.text(value, W - 10, y + 6, { align: 'right' });
-  return y + 11;
+  doc.setFontSize(9);doc.setFont('helvetica','normal');
+  doc.setTextColor(122,153,196);doc.text(lbl,10,y+6);
+  doc.setTextColor(208,221,245);doc.text(val,W-10,y+6,{align:'right'});return y+11;
 }
+function pdfDiv(doc,y){doc.setDrawColor(42,74,122);doc.setLineWidth(0.5);doc.line(8,y,doc.internal.pageSize.getWidth()-8,y);return y+8;}
+function pdfNote(doc,lines,y){doc.setFontSize(7.5);doc.setTextColor(74,106,154);doc.setFont('helvetica','normal');lines.forEach(l=>{doc.text(l,8,y);y+=10;});return y;}
 
-function pdfDivider(doc, y){ doc.setDrawColor(42, 74, 122); doc.line(8, y, doc.internal.pageSize.getWidth() - 8, y); return y + 6; }
+/* ── PDF TC ── */
+function exportTCpdf(tipo){
+  const{jsPDF}=window.jspdf,t=TCcache;if(!t.tcBruto)return;
+  const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
+  const ts=new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const comm=t.comm/100;
+  let y=pdfHdr(doc,tipo==='ars'?`Compra ${t.modo}`:`Venta ${t.modo}`,`Comisión: ${t.comm.toFixed(2)}%`,ts);
 
-// ─── PDF TC ───────────────────────────────────────────────────────────────────
-function exportTCpdf(){
-  const { jsPDF } = window.jspdf;
-  const t = TCcache; if(!t.tcBuy) return;
-  const doc = new jsPDF({ orientation:'portrait', unit:'pt', format:'a4' });
-  const fecha = new Date().toLocaleDateString('es-AR');
-  const hora  = new Date().toLocaleTimeString('es-AR');
-  let y = pdfHeader(doc, `TC ${t.modo}`, `Comisión: ${t.comm.toFixed(2)}%  ·  ${fecha} ${hora}`);
+  y=pdfSec(doc,'Tasas de referencia',y);
+  y=pdfRow(doc,'TC Bruto (AL30 / '+(t.modo==='MEP'?'AL30D':'AL30C')+')',fmt(t.tcBruto,4),y);
+  y=pdfRow(doc,'TC Implícito Compra (ARS→USD)',fmt(t.tcBuy,4),y);
+  y=pdfRow(doc,'TC Implícito Venta  (USD→ARS)',fmt(t.tcSell,4),y);
+  y+=4;
 
-  // ── Tasas de referencia ──
-  y = pdfSection(doc, `Desglose TC Implícito · ${t.modo} (T+1)`, y);
-  y = pdfRow(doc, `TC Bruto (AL30 / ${t.modo === 'MEP' ? 'AL30D' : 'AL30C'})`, fmt(t.tcBruto, 4), y);
-  y = pdfRow(doc, `+ Comisión ${t.comm.toFixed(2)}% · sobre punta ARS`, `+${fmt(t.cPerUSD, 4)} ARS/USD`, y);
-  y = pdfRow(doc, '+ DDMM 0.0100% · punta ARS', `+${fmt(t.dArsPerUSD, 4)} ARS/USD`, y);
-  y = pdfRow(doc, `+ DDMM 0.0100% · punta USD × TC oficial ($${fmt(t.bcra, 2)})`, `+${fmt(t.dUsdPerUSD, 4)} ARS/USD`, y);
-  y = pdfRow(doc, 'TC IMPLÍCITO COMPRA (ARS → USD)', fmt(t.tcBuy, 4), y, true);
-  y = pdfRow(doc, 'TC IMPLÍCITO VENTA (USD → ARS)', fmt(t.tcSell, 4), y, false);
-  y += 4;
-
-  // ── Operación ARS → USD (si hay valor ingresado) ──
-  const arsIn = parseFloat(el('calc-ars-in').value);
-  if(arsIn && t.tcBruto){
-    y = pdfDivider(doc, y);
-    y = pdfSection(doc, `Operación ARS → USD  ·  ${fmtARS(arsIn)}`, y);
-    const comm     = t.comm / 100;
-    const commARS  = arsIn * comm;
-    const ddmmARS  = arsIn * DDMM;
-    const arsParaBonos = arsIn - commARS - ddmmARS;
-    const usdBruto = arsParaBonos / t.tcBruto;
-    const ddmmUSDars = usdBruto * DDMM * t.bcra;
-    const arsNeto2 = arsParaBonos - ddmmUSDars;
-    const usdNeto  = arsNeto2 / t.tcBruto;
-    y = pdfRow(doc, 'ARS operados',               fmtARS(arsIn),       y);
-    y = pdfRow(doc, `− Comisión ${t.comm.toFixed(2)}% sobre ARS`, `−${fmtARS(commARS)}`,   y);
-    y = pdfRow(doc, '− DDMM 0.0100% punta ARS',   `−${fmtARS(ddmmARS)}`, y);
-    y = pdfRow(doc, '− DDMM 0.0100% punta USD (en ARS)', `−${fmtARS(ddmmUSDars)}`, y);
-    y = pdfRow(doc, 'USD NETO RECIBIDOS', fmtUSD(usdNeto), y, true);
-    y += 4;
-  }
-
-  // ── Operación USD → ARS (si hay valor ingresado) ──
-  const usdIn = parseFloat(el('calc-usd-in').value);
-  if(usdIn && t.tcBruto){
-    y = pdfDivider(doc, y);
-    y = pdfSection(doc, `Operación USD → ARS  ·  ${fmtUSD(usdIn)}`, y);
-    const comm    = t.comm / 100;
-    const arsB    = usdIn * t.tcBruto;
-    const commARS = arsB * comm;
-    const ddmmARS = arsB * DDMM;
-    const ddmmUSDars = usdIn * DDMM * t.bcra;
-    const arsNeto = arsB - commARS - ddmmARS - ddmmUSDars;
-    y = pdfRow(doc, 'USD operados',                 fmtUSD(usdIn),      y);
-    y = pdfRow(doc, 'ARS bruto (USD × TC Bruto)',   fmtARS(arsB),       y);
-    y = pdfRow(doc, `− Comisión ${t.comm.toFixed(2)}% sobre ARS bruto`, `−${fmtARS(commARS)}`, y);
-    y = pdfRow(doc, '− DDMM 0.0100% punta ARS',    `−${fmtARS(ddmmARS)}`, y);
-    y = pdfRow(doc, '− DDMM 0.0100% punta USD (en ARS)', `−${fmtARS(ddmmUSDars)}`, y);
-    y = pdfRow(doc, 'ARS NETO A PAGAR', fmtARS(arsNeto), y, true);
-    y += 4;
-  }
-
-  // ── Nota metodológica ──
-  y = pdfDivider(doc, y + 4);
-  doc.setFontSize(8); doc.setTextColor(74, 106, 154); doc.setFont('helvetica','normal');
-  const nota = [
-    'METODOLOGÍA: Comisión cobrada como % sobre el total de ARS operados (punta ARS).',
-    'DDMM 0.0100% por punta: punta ARS sobre el total ARS operado + punta USD en ARS al TC oficial BCRA.',
-    'TC oficial BCRA (Neg. Sec. PPT) utilizado: $' + fmt(t.bcra, 2) + '  ·  Exento IVA.',
-    'Precios obtenidos de data912.com  ·  Portfolio Investment'
-  ];
-  nota.forEach(l => { doc.text(l, 8, y); y += 11; });
-
-  doc.save(`TC_${t.modo}_${new Date().toISOString().slice(0,10)}.pdf`);
-}
-
-// ─── PDF Canje ────────────────────────────────────────────────────────────────
-function exportCanjePdf(){
-  const { jsPDF } = window.jspdf;
-  const t = CANJEcache; if(!t.d) return;
-  const dir   = S.canjeDir;
-  const label = dir === 'c2m' ? 'Cable → MEP' : 'MEP → Cable';
-  const doc   = new jsPDF({ orientation:'portrait', unit:'pt', format:'a4' });
-  const fecha = new Date().toLocaleDateString('es-AR');
-  const hora  = new Date().toLocaleTimeString('es-AR');
-  let y = pdfHeader(doc, `Canje ${label}`, `Comisión: ${t.comm.toFixed(2)}%  ·  ${fecha} ${hora}`);
-
-  // ── Precios de mercado ──
-  y = pdfSection(doc, 'Precios de Mercado (T+1)', y);
-  y = pdfRow(doc, 'AL30D (USD MEP)',   fmtUSD(t.d), y);
-  y = pdfRow(doc, 'AL30C (USD Cable)', fmtUSD(t.c), y);
-  y = pdfRow(doc, 'TC oficial BCRA',   fmtARS(t.bcra), y);
-  y += 4;
-
-  // ── Tasas ──
-  y = pdfSection(doc, 'Tasas de Canje', y);
-  y = pdfRow(doc, 'Spread bruto MEP → Cable',  fmtPct(t.m2c, 4), y);
-  y = pdfRow(doc, 'Spread bruto Cable → MEP',  fmtPct(t.c2m, 4), y);
-  y = pdfRow(doc, `Spread neto MEP → Cable (c/gastos)`,   fmtPct(t.m2c_net, 4), y);
-  y = pdfRow(doc, `Spread neto Cable → MEP (c/gastos)`,   fmtPct(t.c2m_net, 4), y);
-  y += 4;
-
-  const cc   = t.comm / 100;
-  const BASE = 10000;
-
-  if(dir === 'c2m'){
-    // ── Desglose Cable → MEP ──
-    y = pdfSection(doc, `Desglose Cable → MEP  ·  Base USD ${fmt(BASE,0)}`, y);
-    const mepGross = BASE * (t.d / t.c);
-    const commUSD  = mepGross * cc;
-    const dd1_ars  = BASE     * DDMM * t.bcra;
-    const dd2_ars  = mepGross * DDMM * t.bcra;
-    const mepNeto  = mepGross - commUSD;
-    y = pdfRow(doc, 'USD Cable invertidos',                    fmtUSD(BASE),       y);
-    y = pdfRow(doc, 'USD MEP bruto  (Cable × AL30D/AL30C)',    fmtUSD(mepGross),   y);
-    y = pdfRow(doc, `− Comisión ${t.comm.toFixed(2)}% sobre USD MEP`, `−USD ${fmt(commUSD,2)}`, y);
-    y = pdfRow(doc, '− DDMM 0.0100% punta Cable (→ ARS al BCRA)', `−${fmtARS(dd1_ars)}`, y);
-    y = pdfRow(doc, '− DDMM 0.0100% punta MEP (→ ARS al BCRA)',   `−${fmtARS(dd2_ars)}`, y);
-    y = pdfRow(doc, 'USD MEP NETO',                            fmtUSD(mepNeto),    y, true);
-    y += 4;
-
-    // ── Operación personalizada ──
-    const cableIn = parseFloat(el('calc-c2m-in').value);
-    if(cableIn){
-      y = pdfDivider(doc, y);
-      y = pdfSection(doc, `Operación  ·  ${fmtUSD(cableIn)} Cable`, y);
-      const mG  = cableIn * (t.d / t.c);
-      const cU  = mG * cc;
-      const d1  = cableIn * DDMM * t.bcra;
-      const d2  = mG * DDMM * t.bcra;
-      const mN  = mG - cU;
-      y = pdfRow(doc, 'USD Cable a canjear',   fmtUSD(cableIn), y);
-      y = pdfRow(doc, 'USD MEP bruto',          fmtUSD(mG),      y);
-      y = pdfRow(doc, `− Comisión ${t.comm.toFixed(2)}%`,`−USD ${fmt(cU,2)}`, y);
-      y = pdfRow(doc, '− DDMM Cable (ARS)',     `−${fmtARS(d1)}`, y);
-      y = pdfRow(doc, '− DDMM MEP (ARS)',       `−${fmtARS(d2)}`, y);
-      y = pdfRow(doc, 'USD MEP NETO',           fmtUSD(mN), y, true);
-      y += 4;
-    }
-
+  if(tipo==='ars'){
+    const ars=parseFloat(el('calc-ars-in').value);if(!ars)return;
+    const commARS=ars*comm,ddmmARS=ars*DDMM,usdBruto=(ars-commARS-ddmmARS)/t.tcBruto;
+    const ddmmUSDars=usdBruto*DDMM*t.bcra,usdNeto=(ars-commARS-ddmmARS-ddmmUSDars)/t.tcBruto;
+    y=pdfSec(doc,'Punta ARS  —  venta de pesos',y);
+    y=pdfRow(doc,'ARS operados',fmtARS(ars),y);
+    y=pdfRow(doc,'Comisión '+t.comm.toFixed(2)+'% × ARS operados','−'+fmtARS(commARS),y);
+    y=pdfRow(doc,'DDMM 0.0100% × ARS operados','−'+fmtARS(ddmmARS),y);
+    y=pdfSec(doc,'Punta USD  —  compra de dólares',y);
+    y=pdfRow(doc,'USD '+t.modo+' bruto  (TC '+fmt(t.tcBruto,4)+')',fmtUSD(usdBruto),y);
+    y=pdfRow(doc,'DDMM 0.0100% × USD bruto × $'+fmt(t.bcra,2)+' BCRA','−'+fmtARS(ddmmUSDars),y);
+    y=pdfSec(doc,'Resultado',y);
+    y=pdfRow(doc,'TC efectivo aplicado',fmt(ars/usdNeto,4),y);
+    y=pdfRow(doc,'USD '+t.modo+' NETO RECIBIDOS',fmtUSD(usdNeto),y,true);
   } else {
-    // ── Desglose MEP → Cable ──
-    y = pdfSection(doc, `Desglose MEP → Cable  ·  Base USD ${fmt(BASE,0)}`, y);
-    const cableGross = BASE * (t.c / t.d);
-    const commUSD    = cableGross * cc;
-    const dd1_ars    = BASE       * DDMM * t.bcra;
-    const dd2_ars    = cableGross * DDMM * t.bcra;
-    const cableNeto  = cableGross - commUSD;
-    y = pdfRow(doc, 'USD MEP invertidos',                        fmtUSD(BASE),         y);
-    y = pdfRow(doc, 'USD Cable bruto  (MEP × AL30C/AL30D)',      fmtUSD(cableGross),   y);
-    y = pdfRow(doc, `− Comisión ${t.comm.toFixed(2)}% sobre USD Cable`, `−USD ${fmt(commUSD,2)}`, y);
-    y = pdfRow(doc, '− DDMM 0.0100% punta MEP (→ ARS al BCRA)',   `−${fmtARS(dd1_ars)}`, y);
-    y = pdfRow(doc, '− DDMM 0.0100% punta Cable (→ ARS al BCRA)', `−${fmtARS(dd2_ars)}`, y);
-    y = pdfRow(doc, 'USD Cable NETO',                            fmtUSD(cableNeto),    y, true);
-    y += 4;
-
-    // ── Operación personalizada ──
-    const mepIn = parseFloat(el('calc-m2c-in').value);
-    if(mepIn){
-      y = pdfDivider(doc, y);
-      y = pdfSection(doc, `Operación  ·  ${fmtUSD(mepIn)} MEP`, y);
-      const cG  = mepIn * (t.c / t.d);
-      const cU  = cG * cc;
-      const d1  = mepIn * DDMM * t.bcra;
-      const d2  = cG * DDMM * t.bcra;
-      const cN  = cG - cU;
-      y = pdfRow(doc, 'USD MEP a canjear',     fmtUSD(mepIn), y);
-      y = pdfRow(doc, 'USD Cable bruto',         fmtUSD(cG),   y);
-      y = pdfRow(doc, `− Comisión ${t.comm.toFixed(2)}%`, `−USD ${fmt(cU,2)}`, y);
-      y = pdfRow(doc, '− DDMM MEP (ARS)',       `−${fmtARS(d1)}`, y);
-      y = pdfRow(doc, '− DDMM Cable (ARS)',     `−${fmtARS(d2)}`, y);
-      y = pdfRow(doc, 'USD Cable NETO',         fmtUSD(cN), y, true);
-      y += 4;
-    }
+    const usd=parseFloat(el('calc-usd-in').value);if(!usd)return;
+    const arsBruto=usd*t.tcBruto,commARS=arsBruto*comm,ddmmARS=arsBruto*DDMM;
+    const ddmmUSDars=usd*DDMM*t.bcra,arsNeto=arsBruto-commARS-ddmmARS-ddmmUSDars;
+    y=pdfSec(doc,'Punta USD  —  venta de dólares',y);
+    y=pdfRow(doc,'USD '+t.modo+' operados',fmtUSD(usd),y);
+    y=pdfRow(doc,'DDMM 0.0100% × USD × $'+fmt(t.bcra,2)+' BCRA','−'+fmtARS(ddmmUSDars),y);
+    y=pdfSec(doc,'Punta ARS  —  compra de pesos',y);
+    y=pdfRow(doc,'ARS bruto  (TC '+fmt(t.tcBruto,4)+')',fmtARS(arsBruto),y);
+    y=pdfRow(doc,'Comisión '+t.comm.toFixed(2)+'% × ARS bruto','−'+fmtARS(commARS),y);
+    y=pdfRow(doc,'DDMM 0.0100% × ARS bruto','−'+fmtARS(ddmmARS),y);
+    y=pdfSec(doc,'Resultado',y);
+    y=pdfRow(doc,'TC efectivo aplicado',fmt(arsNeto/usd,4),y);
+    y=pdfRow(doc,'ARS NETOS A PAGAR',fmtARS(arsNeto),y,true);
   }
-
-  // ── Nota ──
-  y = pdfDivider(doc, y + 4);
-  doc.setFontSize(8); doc.setTextColor(74, 106, 154); doc.setFont('helvetica','normal');
-  const nota = [
-    'METODOLOGÍA: Comisión cobrada en USD sobre el punta resultante (sin conversión a ARS).',
-    'DDMM 0.0100% por punta: cada pata en USD convertida a ARS al TC oficial BCRA.',
-    `TC oficial BCRA utilizado: $${fmt(t.bcra, 2)}  ·  Exento IVA.`,
-    'Precios: data912.com  ·  Portfolio Investment'
-  ];
-  nota.forEach(l => { doc.text(l, 8, y); y += 11; });
-
-  doc.save(`Canje_${label.replace(' ', '_').replace('→','a')}_${new Date().toISOString().slice(0,10)}.pdf`);
+  y=pdfDiv(doc,y+6);
+  pdfNote(doc,['Comisión: '+t.comm.toFixed(2)+'% sobre ARS operados (punta ARS). DDMM: 0.0100% por punta.','Punta ARS: sobre ARS totales. Punta USD: en ARS al TC oficial BCRA $'+fmt(t.bcra,2)+'. Exento IVA.','Precios tiempo real: data912.com  ·  Portfolio Investment'],y);
+  doc.save(`TC_${t.modo}_${tipo==='ars'?'Compra':'Venta'}_${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
-checkMarket();
-fetchAll();
-setInterval(fetchAll, REFRESH_MS);
-setInterval(checkMarket, 15000);
+/* ── PDF CANJE ── */
+function exportCanjePdf(dir){
+  const{jsPDF}=window.jspdf,t=CANJEcache;if(!t.d)return;
+  const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
+  const ts=new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const label=dir==='c2m'?'Cable → MEP':'MEP → Cable';
+  const cc=t.comm/100;
+  let y=pdfHdr(doc,'Canje '+label,'Comisión: '+t.comm.toFixed(2)+'%',ts);
+
+  y=pdfSec(doc,'Precios de mercado (T+1)',y);
+  y=pdfRow(doc,'AL30D  (USD MEP)',fmtUSD(t.d),y);
+  y=pdfRow(doc,'AL30C  (USD Cable)',fmtUSD(t.c),y);
+  y=pdfRow(doc,'TC oficial BCRA',fmtARS(t.bcra),y);
+  y+=4;
+
+  if(dir==='c2m'){
+    const cable=parseFloat(el('calc-c2m-in').value);if(!cable)return;
+    const mepBruto=cable*(t.d/t.c),commUSD=mepBruto*cc,mepNeto=mepBruto-commUSD;
+    const dd1=cable   *DDMM*t.bcra,dd2=mepBruto*DDMM*t.bcra;
+    const spread=(mepNeto/cable-1)*100;
+    y=pdfSec(doc,'Punta Cable  —  venta de Cable',y);
+    y=pdfRow(doc,'USD Cable a canjear',fmtUSD(cable),y);
+    y=pdfRow(doc,'DDMM 0.0100% × USD Cable × $'+fmt(t.bcra,2)+' BCRA','−'+fmtARS(dd1),y);
+    y=pdfSec(doc,'Punta MEP  —  compra de MEP',y);
+    y=pdfRow(doc,'USD MEP bruto  (× '+fmt(t.d/t.c,6)+'  AL30D/AL30C)',fmtUSD(mepBruto),y);
+    y=pdfRow(doc,'Comisión '+t.comm.toFixed(2)+'% × USD MEP bruto','−USD '+fmt(commUSD,2),y);
+    y=pdfRow(doc,'DDMM 0.0100% × USD MEP bruto × $'+fmt(t.bcra,2)+' BCRA','−'+fmtARS(dd2),y);
+    y=pdfSec(doc,'Resultado',y);
+    y=pdfRow(doc,'Spread efectivo neto',fmtPct(spread,4),y);
+    y=pdfRow(doc,'USD MEP NETO RECIBIDOS',fmtUSD(mepNeto),y,true);
+  } else {
+    const mep=parseFloat(el('calc-m2c-in').value);if(!mep)return;
+    const cableBruto=mep*(t.c/t.d),commUSD=cableBruto*cc,cableNeto=cableBruto-commUSD;
+    const dd1=mep       *DDMM*t.bcra,dd2=cableBruto*DDMM*t.bcra;
+    const spread=(cableNeto/mep-1)*100;
+    y=pdfSec(doc,'Punta MEP  —  venta de MEP',y);
+    y=pdfRow(doc,'USD MEP a canjear',fmtUSD(mep),y);
+    y=pdfRow(doc,'DDMM 0.0100% × USD MEP × $'+fmt(t.bcra,2)+' BCRA','−'+fmtARS(dd1),y);
+    y=pdfSec(doc,'Punta Cable  —  compra de Cable',y);
+    y=pdfRow(doc,'USD Cable bruto  (× '+fmt(t.c/t.d,6)+'  AL30C/AL30D)',fmtUSD(cableBruto),y);
+    y=pdfRow(doc,'Comisión '+t.comm.toFixed(2)+'% × USD Cable bruto','−USD '+fmt(commUSD,2),y);
+    y=pdfRow(doc,'DDMM 0.0100% × USD Cable bruto × $'+fmt(t.bcra,2)+' BCRA','−'+fmtARS(dd2),y);
+    y=pdfSec(doc,'Resultado',y);
+    y=pdfRow(doc,'Spread efectivo neto',fmtPct(spread,4),y);
+    y=pdfRow(doc,'USD Cable NETO RECIBIDOS',fmtUSD(cableNeto),y,true);
+  }
+  y=pdfDiv(doc,y+6);
+  pdfNote(doc,['Comisión: '+t.comm.toFixed(2)+'% sobre el punta resultante en USD (sin conversión a ARS).','DDMM: 0.0100% por pata en USD → ARS al TC oficial BCRA $'+fmt(t.bcra,2)+'. Exento IVA.','Precios tiempo real: data912.com  ·  Portfolio Investment'],y);
+  doc.save(`Canje_${dir==='c2m'?'Cable_a_MEP':'MEP_a_Cable'}_${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+/* ── INIT ── */
+checkMarket();fetchAll();setInterval(fetchAll,REFRESH_MS);setInterval(checkMarket,15000);
 </script>
 </body>
 </html>
