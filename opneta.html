@@ -45,7 +45,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
   padding:0 20px;height:56px;position:sticky;top:0;z-index:200;
   box-shadow:0 2px 16px rgba(0,0,0,.4);
 }
-.logo-area{display:flex;align-items:center;gap:12px}
+.logo-area{display:flex;align-items:center;gap:12px;cursor:pointer;}
 .logo-text{display:flex;flex-direction:column;line-height:1.1}
 .logo-text strong{font-size:16px;font-weight:800;color:var(--white);letter-spacing:-.02em}
 .logo-text span{font-size:10px;font-weight:500;color:var(--blue3);letter-spacing:.08em;text-transform:uppercase}
@@ -61,7 +61,37 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
   cursor:pointer;border-bottom:2px solid transparent;
   margin-bottom:-2px;transition:all .15s;
 }
+.nav-tab:hover{color:var(--blue3);background:rgba(58,111,216,.08)}
 .nav-tab.active{color:var(--white);border-bottom-color:var(--blue);background:rgba(58,111,216,.12)}
+
+/* ─── DROPDOWN NAV (Para mantener tu estructura original) ─── */
+.nav-dropdown{position:relative;display:flex;align-items:stretch}
+.nav-dropdown-btn{
+  display:flex;align-items:center;gap:7px;padding:0 18px;height:42px;
+  font-family:var(--font);font-size:12px;font-weight:600;
+  letter-spacing:.04em;text-transform:uppercase;
+  color:var(--gray);border:none;background:none;cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-2px;
+  transition:all .15s;white-space:nowrap;user-select:none;
+}
+.nav-dropdown-btn:hover{color:var(--blue3);background:rgba(58,111,216,.08)}
+.nav-dropdown-btn.open{color:var(--white);background:rgba(58,111,216,.08)}
+.nav-dropdown-menu{
+  display:none;position:absolute;top:42px;left:0;z-index:500;
+  background:var(--navy3);border:1px solid var(--border);
+  border-top:2px solid var(--blue);min-width:200px;padding:4px 0;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+}
+.nav-dropdown.open .nav-dropdown-menu{display:block}
+.nav-dropdown-item{
+  display:flex;align-items:center;gap:9px;padding:8px 16px;
+  font-family:var(--font);font-size:11px;font-weight:600;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--gray2);
+  text-decoration:none;transition:all .12s;border-left:2px solid transparent;
+}
+.nav-dropdown-item:hover{
+  color:var(--white);background:rgba(58,111,216,.12);border-left-color:var(--blue);
+}
 
 /* ─── LAYOUT CALCULADORA ─── */
 .calc-container {
@@ -208,7 +238,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 <body>
 
 <div class="top-bar">
-  <div class="logo-area">
+  <div class="logo-area" onclick="location.href='index.html'">
     <div class="logo-text">
       <strong>Portfolio Investment</strong>
       <span>Sistema de Cálculo Financiero</span>
@@ -217,8 +247,16 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 </div>
 
 <div class="nav-bar">
-  <button class="nav-tab" onclick="location.href='#'">◉ Resumen</button>
-  <button class="nav-tab" onclick="location.href='#'">📊 Bonos CER</button>
+  <button class="nav-tab" onclick="location.href='index.html'">◉ Resumen</button>
+  
+  <div class="nav-dropdown">
+    <button class="nav-dropdown-btn" onclick="this.parentElement.classList.toggle('open'); this.classList.toggle('open');">📊 Bonos ▼</button>
+    <div class="nav-dropdown-menu">
+      <a class="nav-dropdown-item" href="lecap.html"><span class="di-icon">◆</span> LECAP / BONCAP</a>
+      <a class="nav-dropdown-item" href="cer.html"><span class="di-icon">◎</span> Bonos CER</a>
+    </div>
+  </div>
+
   <button class="nav-tab active">🧮 Calculadora de Neto</button>
 </div>
 
@@ -311,6 +349,14 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 </div>
 
 <script>
+// Click afuera para cerrar dropdowns
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.nav-dropdown')) {
+    document.querySelectorAll('.nav-dropdown').forEach(d => d.classList.remove('open'));
+    document.querySelectorAll('.nav-dropdown-btn').forEach(b => b.classList.remove('open'));
+  }
+});
+
 // Configuración estricta de condiciones de mercado
 const CONDICIONES = {
   'bonos':    { ddmm: 0.01,  iva: false },
@@ -325,24 +371,20 @@ function formatCurrency(val, mon) {
 }
 
 function actualizarCalculo() {
-  // Obtener inputs
   const tipo = document.getElementById('calc-tipo').value;
   const moneda = document.getElementById('calc-moneda').value;
   const montoBruto = parseFloat(document.getElementById('calc-monto').value) || 0;
   const arancelPct = parseFloat(document.getElementById('calc-arancel').value) || 0;
   
-  // Condicionales del instrumento
   const config = CONDICIONES[tipo];
   const ddmmPct = config.ddmm;
   const aplicaIva = config.iva;
 
-  // Actualizar labels visuales de información
   document.getElementById('lbl-moneda').innerText = (moneda === 'ARS') ? '$' : 'U$S';
   document.getElementById('lbl-ddmm-pct').innerText = ddmmPct + '%';
   document.getElementById('lbl-iva-status').innerText = aplicaIva ? '21% (+IVA)' : 'Exento';
   document.getElementById('lbl-iva-status').style.color = aplicaIva ? 'var(--red)' : 'var(--green)';
 
-  // Matemática
   const gastoArancel = montoBruto * (arancelPct / 100);
   const gastoDDMM = montoBruto * (ddmmPct / 100);
   
@@ -352,11 +394,9 @@ function actualizarCalculo() {
   }
   
   const totalGastos = gastoArancel + gastoDDMM + gastoIva;
-  
   const netoCompra = montoBruto + totalGastos;
   const netoVenta = montoBruto - totalGastos;
 
-  // Render en pantalla
   document.getElementById('res-bruto').innerText = formatCurrency(montoBruto, moneda);
   
   document.getElementById('res-arancel-pct').innerText = arancelPct;
@@ -366,7 +406,7 @@ function actualizarCalculo() {
   document.getElementById('res-ddmm').innerText = formatCurrency(gastoDDMM, moneda);
   
   document.getElementById('res-iva').innerText = formatCurrency(gastoIva, moneda);
-  document.getElementById('row-iva').style.opacity = aplicaIva ? '1' : '0.4'; // Dimm si está exento
+  document.getElementById('row-iva').style.opacity = aplicaIva ? '1' : '0.4'; 
   
   document.getElementById('res-gastos').innerText = formatCurrency(totalGastos, moneda);
 
@@ -374,7 +414,6 @@ function actualizarCalculo() {
   document.getElementById('neto-venta').innerText = formatCurrency(netoVenta, moneda);
 }
 
-// Init en primera carga
 document.addEventListener('DOMContentLoaded', actualizarCalculo);
 </script>
 </body>
