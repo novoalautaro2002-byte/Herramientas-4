@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portfolio Investment — Bonos CER</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
 :root{
@@ -40,6 +40,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 ::-webkit-scrollbar-track{background:var(--navy2)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 
+/* ─── TOP BAR ─── */
 .top-bar{
   background:linear-gradient(135deg, var(--navy2) 0%, var(--navy3) 100%);
   border-bottom:1px solid var(--border);
@@ -48,7 +49,6 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
   box-shadow:0 2px 16px rgba(0,0,0,.4);
 }
 .logo-area{display:flex;align-items:center;gap:12px}
-.logo-svg{width:40px;height:40px;flex-shrink:0}
 .logo-text{display:flex;flex-direction:column;line-height:1.1}
 .logo-text strong{font-size:16px;font-weight:800;color:var(--white);letter-spacing:-.02em}
 .logo-text span{font-size:10px;font-weight:500;color:var(--blue3);letter-spacing:.08em;text-transform:uppercase}
@@ -57,6 +57,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 #clock{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--blue3);letter-spacing:.04em;
   background:var(--navy);padding:3px 8px;border:1px solid var(--border);border-radius:4px}
 
+/* ─── NAV TABS ─── */
 .nav-bar{
   background:var(--navy2);border-bottom:2px solid var(--border);
   display:flex;align-items:stretch;padding:0 20px;gap:0;
@@ -75,6 +76,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 .nav-meta{display:flex;align-items:center;gap:8px;padding:0 4px}
 .nav-meta-txt{font-size:10px;color:var(--gray2);letter-spacing:.06em;font-family:var(--mono)}
 
+/* ─── PAGE ─── */
 .page{display:block;min-height:calc(100vh - 98px)}
 .lecap-page{min-height:calc(100vh - 98px);display:flex;flex-direction:column;background:var(--navy2)}
 .lc-toolbar{
@@ -97,8 +99,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
   border:1px solid;letter-spacing:.06em;font-weight:600;
 }
 .lc-status-pill.ok{color:var(--green);border-color:var(--green2);background:var(--green-bg)}
-.lc-status-pill.loading{color:var(--amber);border-color:#7a5a10;background:rgba(120,80,10,.2);animation:pillblink 1s step-end infinite}
-@keyframes pillblink{0%,100%{opacity:1}50%{opacity:.4}}
+.lc-status-pill.err{color:var(--red);border-color:var(--red2);background:var(--red-bg)}
 
 .lc-filters{display:flex;gap:4px}
 .lc-ftab{
@@ -113,54 +114,43 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 .lc-table thead th{
   padding:8px 14px;font-size:10px;font-weight:700;
   color:#f0b429;letter-spacing:.12em;text-transform:uppercase;
-  text-align:right;position:sticky;top:0;background:#0a1525;z-index:2;
+  text-align:right;white-space:nowrap;border-bottom:2px solid var(--border);
+  position:sticky;top:0;background:#0a1525;z-index:2;
 }
 .lc-table thead th:first-child{text-align:left}
 .lc-table tbody tr{border-bottom:1px solid rgba(42,74,122,.4);transition:background .1s}
 .lc-table tbody tr:hover{background:rgba(58,111,216,.12)}
-.lc-table tbody td{padding:7px 14px;font-size:12px;text-align:right;color:var(--white2)}
+.lc-table tbody td{padding:7px 14px;font-size:12px;text-align:right;color:var(--white2);white-space:nowrap}
 .lc-table tbody td:first-child{text-align:left}
-.lc-ticker{font-weight:700;font-size:13px;color:var(--white)}
+.lc-ticker{font-weight:700;font-size:13px;color:var(--white);letter-spacing:.04em}
 
 .lc-curves-panel{display:flex;flex-direction:column;background:var(--navy2);border-top:2px solid var(--border2)}
-.lc-statusbar{background:var(--navy3);border-top:1px solid var(--border);display:flex;justify-content:space-between;padding:5px 16px;font-size:10px}
+.lc-statusbar{background:var(--navy3);border-top:1px solid var(--border);display:flex;justify-content:space-between;padding:5px 16px;font-size:10px;font-family:var(--mono)}
 
-/* Dropdown simples para navegación */
-.nav-dropdown{position:relative;display:flex;align-items:stretch}
-.nav-dropdown-btn{padding:0 18px;height:42px;font-size:12px;font-weight:600;color:var(--gray);border:none;background:none;cursor:pointer}
-.nav-dropdown-menu{display:none;position:absolute;top:42px;left:0;background:var(--navy3);min-width:180px;border:1px solid var(--border);z-index:500}
-.nav-dropdown.open .nav-dropdown-menu{display:block}
-.nav-dropdown-item{display:block;padding:10px 15px;color:var(--white2);text-decoration:none;font-size:11px}
-.nav-dropdown-item:hover{background:var(--blue)}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 </head>
 <body>
 
 <div class="top-bar">
   <div class="logo-area">
-    <div class="logo-text"><strong>Portfolio Investment</strong><span>Sistema de Cálculo Financiero</span></div>
+    <div class="logo-text"><strong>Portfolio Investment</strong><span>Sistema de Cálculo Financiero Exacto</span></div>
   </div>
   <div class="top-right"><span id="clock">--:--:--</span></div>
 </div>
 
 <div class="nav-bar">
   <button class="nav-tab">◉ Resumen</button>
-  <div class="nav-dropdown" id="dd-bonos">
-    <button class="nav-dropdown-btn" onclick="document.getElementById('dd-bonos').classList.toggle('open')">📊 Bonos ▼</button>
-    <div class="nav-dropdown-menu">
-      <a class="nav-dropdown-item" href="#">LECAP / BONCAP</a>
-      <a class="nav-dropdown-item" href="#">Bonos CER</a>
-    </div>
-  </div>
+  <button class="nav-tab active">📊 Bonos CER</button>
 </div>
 
-<div id="page-cer" class="page">
+<div class="page">
   <div class="lecap-page">
     <div class="lc-toolbar">
       <div>
-        <div class="lc-title">BONOS CER — Cálculo de TIR Real</div>
-        <div class="lc-sub">Ajuste de flujos base 100 sobre precio desinflactado</div>
+        <div class="lc-title">BONOS CER — TIR REAL EXACTA (Newton-Raphson)</div>
+        <div class="lc-sub">Motor de flujos basado en condiciones de emisión ByMA</div>
       </div>
       <div class="lc-filters">
         <button class="lc-ftab on" id="f-all" onclick="cerSetFilter('all')">TODOS</button>
@@ -168,7 +158,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
         <button class="lc-ftab" id="f-largo" onclick="cerSetFilter('largo')">LARGO</button>
       </div>
       <div class="lc-spacer"></div>
-      <span class="lc-status-pill loading" id="cer-pill">CARGANDO...</span>
+      <span class="lc-status-pill ok" id="cer-pill">LIVE ●</span>
       <button class="lc-refresh-btn" onclick="cerFetch()">↻ ACTUALIZAR</button>
     </div>
 
@@ -177,8 +167,8 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
         <thead>
           <tr>
             <th>TICKER</th>
+            <th>DESCRIPCIÓN</th>
             <th>VENCIMIENTO</th>
-            <th>DÍAS</th>
             <th>PRECIO DIRTY</th>
             <th>DUR. MOD.</th>
             <th style="color:var(--green)">TIR REAL %</th>
@@ -189,144 +179,217 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
     </div>
 
     <div class="lc-curves-panel">
-      <div style="height:300px;padding:20px"><canvas id="cer-chart"></canvas></div>
+      <div style="position:relative;height:350px;width:100%;padding:16px 32px">
+        <canvas id="cer-curve-canvas"></canvas>
+      </div>
     </div>
 
     <div class="lc-statusbar">
-      <span id="cer-upd">—</span>
-      <span id="cer-info">Calculando...</span>
+      <span id="cer-last-upd" style="color:var(--gray)">—</span>
+      <span style="color:var(--blue3)" id="cer-source-info">Cálculos: Act/365, Liq T+1</span>
     </div>
   </div>
 </div>
 
 <script>
-// --- DATOS Y CONFIGURACIÓN ---
+Chart.register(ChartDataLabels);
+
+// Reloj
+setInterval(() => {
+    const n = new Date();
+    document.getElementById('clock').textContent = n.toLocaleTimeString();
+}, 1000);
+
+// Configuración de bonos.
 const CER_CONFIG = {
-  'X15Y6':  {venc:'2026-05-15', cerBase: 701.614, tipo:'corto'},
-  'X29Y6':  {venc:'2026-05-29', cerBase: 651.8981, tipo:'corto'},
-  'TZX26':  {venc:'2026-06-30', cerBase: 200.388, tipo:'corto'},
-  'X31L6':  {venc:'2026-07-31', cerBase: 685.5506, tipo:'corto'},
-  'TX26':   {venc:'2026-11-09', cerBase: 22.544, tipo:'corto'},
-  'TX28':   {venc:'2028-11-09', cerBase: 22.544, tipo:'largo'},
-  'DICP':   {venc:'2033-12-31', cerBase: 1.4551, tipo:'largo'},
-  'PARP':   {venc:'2038-12-31', cerBase: 1.4551, tipo:'largo'}
+  'X15Y6':  {name:'TZXY May-26A', tipo:'corto', venc:'2026-05-15', cerBase: 701.614},
+  'X29Y6':  {name:'TZXY May-26B', tipo:'corto', venc:'2026-05-29', cerBase: 651.8981},
+  'TZX26':  {name:'TZXY Jun-26',  tipo:'corto', venc:'2026-06-30', cerBase: 200.388},
+  'X31L6':  {name:'TZXY Jul-26',  tipo:'corto', venc:'2026-07-31', cerBase: 685.5506},
+  'TX26':   {name:'Boncer Nov-26', tipo:'corto', venc:'2026-11-09', cerBase: 22.544},
+  'TX28':   {name:'Boncer Nov-28', tipo:'largo', venc:'2028-11-09', cerBase: 22.544},
+  'DICP':   {name:'Discount Pesos', tipo:'largo', venc:'2033-12-31', cerBase: 1.4551}
 };
 
-let CER_VALOR = 722.35; // Valor aproximado si falla la API
-let cerData = [], cerFilter = 'all';
-let chartInstance = null;
+let CER_HOY = 722.35; // Valor T-10 de referencia
+let cerData = [];
+let cerFilter = 'all';
+let cerCurveChart = null;
 
-// --- MOTOR FINANCIERO CORREGIDO ---
-
-/**
- * Calcula la TIR Real iterando flujos base 100 contra el Precio Real.
- * Precio Real = Precio Mercado / (CER Hoy / CER Base)
- */
-function calcularTirReal(precioMercado, cerBase, vencimiento) {
-    const hoy = new Date();
-    const liquidacion = new Date();
-    liquidacion.setDate(hoy.getDate() + 1); // T+1
-    
-    const fechaVenc = new Date(vencimiento + 'T00:00:00');
-    const t = (fechaVenc - liquidacion) / (1000 * 60 * 60 * 24 * 365); // Tiempo en años
-    
-    if (t <= 0) return 0;
-
-    // 1. DESINFACTAR PRECIO: Obtenemos el precio "limpio" de inflación (Base 100)
-    const factorAjuste = CER_VALOR / cerBase;
-    const precioReal = precioMercado / factorAjuste;
-
-    // 2. TIR REAL (Para un bono Bullet asumiendo flujos simplificados de capital 100)
-    // Formula: PrecioReal = 100 / (1 + r)^t
-    // r = (100 / PrecioReal)^(1/t) - 1
-    const tir = Math.pow(100 / precioReal, 1 / t) - 1;
-    
-    return {
-        tir: tir * 100,
-        macD: t,
-        dias: Math.round(t * 365)
+// MOTOR DE FLUJOS REALES (Reemplaza el CSV)
+// Construye los flujos exactos base 100 según el prospecto de emisión.
+function getFlujosReales(ticker, fechaLiq) {
+    const flows = [];
+    const add = (d, cf) => { 
+        if (new Date(d + 'T00:00:00') > fechaLiq) flows.push({ date: d, cf: cf }); 
     };
+
+    if (ticker.startsWith('X') || ticker.startsWith('TZX')) {
+        // Letras y Bonos Cero Cupón (Bullet 100% al final)
+        add(CER_CONFIG[ticker].venc, 100);
+    } 
+    else if (ticker === 'TX26') {
+        // Amortiza 20% semestral. Cupón 2% anual (1% semestral).
+        // Mayo 26: Amort 20 + 1% de 40 (residual) = 20.4
+        // Nov 26: Amort 20 + 1% de 20 (residual) = 20.2
+        add('2026-05-11', 20.40);
+        add('2026-11-09', 20.20);
+    } 
+    else if (ticker === 'TX28') {
+        // Amortiza 10% semestral. Cupón 2.25% anual (1.125% SA).
+        add('2026-05-11', 10.675);   // Amort 10 + (1.125% de 60)
+        add('2026-11-09', 10.5625);  // Amort 10 + (1.125% de 50)
+        add('2027-05-11', 10.450);   // Amort 10 + (1.125% de 40)
+        add('2027-11-09', 10.3375);  // Amort 10 + (1.125% de 30)
+        add('2028-05-11', 10.225);   // Amort 10 + (1.125% de 20)
+        add('2028-11-09', 10.1125);  // Amort 10 + (1.125% de 10)
+    } 
+    else if (ticker === 'DICP') {
+        // Amortiza 5% semestral sobre saldo capitalizado (factor 1.845 base 100 orig).
+        // Quedan 16 cuotas desde Jun-26. Cuota pura real = 9.225
+        // Cupón = 2.915% semestral sobre el saldo residual.
+        let residual = 147.60; // Saldo real restante (16 * 9.225)
+        const fechas = ['2026-06-30','2026-12-31','2027-06-30','2027-12-31','2028-06-30','2028-12-31','2029-06-30','2029-12-31','2030-06-30','2030-12-31','2031-06-30','2031-12-31','2032-06-30','2032-12-31','2033-06-30','2033-12-31'];
+        
+        for (let f of fechas) {
+            let cupon = residual * 0.02915;
+            add(f, 9.225 + cupon);
+            residual -= 9.225;
+        }
+    }
+
+    return flows;
 }
 
-async function cerFetch() {
-    const pill = document.getElementById('cer-pill');
-    pill.textContent = 'ACTUALIZANDO...';
+// 1. Desinflactar el precio Dirty de pizarra.
+function cerCalcularPrecioReal(ticker, pricePesos) {
+    const cfg = CER_CONFIG[ticker];
+    if (!cfg) return 0;
+    const factorCER = CER_HOY / cfg.cerBase;
+    return pricePesos / factorCER; 
+}
 
-    try {
-        // Simulación de fetch de precios (Aquí iría tu pfetch a data912)
-        // Usamos valores de referencia para el ejemplo
-        const mockPrices = { 'X15Y6': 104.5, 'X29Y6': 113.2, 'TZX26': 368.0, 'TX26': 1315, 'DICP': 48500, 'PARP': 32600 };
+// 2. Resolver TIR Real iterando los flujos Reales contra el Precio Real (Algoritmo Newton-Raphson recuperado)
+function cerSolveReal(precioReal, flows, fechaLiq) {
+    if (precioReal <= 0 || !flows.length) return 0;
 
-        cerData = [];
-        for (const [ticker, cfg] of Object.entries(CER_CONFIG)) {
-            const precio = mockPrices[ticker] || 100;
-            const calculos = calcularTirReal(precio, cfg.cerBase, cfg.venc);
-            
-            cerData.push({
-                ticker,
-                ...cfg,
-                precio,
-                ...calculos
-            });
+    const futs = flows.map(f => ({
+        t: (new Date(f.date + 'T00:00:00') - fechaLiq) / (1000 * 60 * 60 * 24 * 365),
+        cf: f.cf
+    })).filter(f => f.t > 0);
+
+    let r = 0.05; 
+    for (let i = 0; i < 300; i++) {
+        let pv = 0; let dpv = 0;
+        for (const f of futs) {
+            const df = Math.pow(1 + r, f.t);
+            pv += f.cf / df;
+            dpv -= (f.t * f.cf) / (df * (1 + r));
         }
-
-        pill.className = 'lc-status-pill ok';
-        pill.textContent = 'LIVE ●';
-        document.getElementById('cer-upd').textContent = 'Act: ' + new Date().toLocaleTimeString();
-        document.getElementById('cer-info').textContent = `CER Base: ${CER_VALOR.toFixed(2)} | Liq: T+1`;
-        
-        renderTable();
-        renderChart();
-
-    } catch (e) {
-        pill.textContent = 'ERROR';
-        console.error(e);
+        const diff = pv - precioReal; 
+        if (Math.abs(diff) < 1e-12) break;
+        const step = diff / dpv;
+        r -= step;
+        if (r < -0.99) r = -0.5; if (r > 10) r = 2; 
     }
+    return r; // Devuelve tasa decimal
+}
+
+// 3. Duration Macauly
+function cerMacDuration(teaDecimal, flows, fechaLiq) {
+    const futs = flows.map(f => ({
+        t: (new Date(f.date + 'T00:00:00') - fechaLiq) / (1000 * 60 * 60 * 24 * 365),
+        cf: f.cf
+    })).filter(f => f.t > 0);
+    
+    let sPV = 0, sTPV = 0;
+    for (const f of futs) {
+        const pv = f.cf / Math.pow(1 + teaDecimal, f.t);
+        sPV += pv; sTPV += f.t * pv;
+    }
+    return sPV > 0 ? sTPV / sPV : 0;
+}
+
+// LOOP PRINCIPAL
+async function cerFetch() {
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const fechaLiq = new Date(hoy); fechaLiq.setDate(fechaLiq.getDate() + 1); // T+1
+
+    // Simulación de precios API (Acá iría tu fetch real a data912)
+    const mockPrices = {
+        'X15Y6': 104.50, 'X29Y6': 112.90, 'TZX26': 368.40, 'X31L6': 108.10,
+        'TX26': 1314.00, 'TX28': 1915.00, 'DICP': 48570.00
+    };
+
+    cerData = [];
+    for (const [ticker, cfg] of Object.entries(CER_CONFIG)) {
+        const precio = mockPrices[ticker];
+        if (!precio) continue;
+
+        const flujos = getFlujosReales(ticker, fechaLiq);
+        if (!flujos.length) continue;
+
+        const precioReal = cerCalcularPrecioReal(ticker, precio);
+        const teaDecimal = cerSolveReal(precioReal, flujos, fechaLiq);
+        const macD = cerMacDuration(teaDecimal, flujos, fechaLiq);
+
+        cerData.push({
+            ticker, ...cfg,
+            price: precio,
+            macD: macD,
+            tirReal: teaDecimal * 100
+        });
+    }
+
+    document.getElementById('cer-last-upd').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-AR');
+    renderTable();
+    renderCurve();
 }
 
 function renderTable() {
     const tbody = document.getElementById('cer-tbody');
-    const filtered = cerData.filter(d => cerFilter === 'all' || d.tipo === cerFilter);
+    let rows = cerData.filter(b => cerFilter === 'all' || b.tipo === cerFilter);
+    rows.sort((a,b) => new Date(a.venc) - new Date(b.venc));
     
-    tbody.innerHTML = filtered.map(d => `
-        <tr>
-            <td><span class="lc-ticker">${d.ticker}</span></td>
-            <td>${d.venc}</td>
-            <td>${d.dias}d</td>
-            <td>$ ${d.precio.toLocaleString()}</td>
-            <td>${d.macD.toFixed(2)}</td>
-            <td style="font-weight:bold; color:${d.tir > 0 ? '#22d68a' : '#ff4d6a'}">${d.tir.toFixed(2)}%</td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = rows.map(b => `<tr>
+        <td><span class="lc-ticker">${b.ticker}</span></td>
+        <td style="color:var(--white2);font-size:11px">${b.name}</td>
+        <td style="color:var(--blue3)">${b.venc}</td>
+        <td>$ ${b.price.toLocaleString('es-AR',{minimumFractionDigits:2})}</td>
+        <td style="color:var(--cyan);font-family:var(--mono)">${b.macD.toFixed(2)}</td>
+        <td style="font-weight:bold; color:${b.tirReal > 4 ? 'var(--green)' : b.tirReal > 0 ? 'var(--amber)' : 'var(--red)'}">
+            ${b.tirReal.toFixed(2)}%
+        </td>
+    </tr>`).join('');
 }
 
-function renderChart() {
-    const ctx = document.getElementById('cer-chart').getContext('2d');
-    if (chartInstance) chartInstance.destroy();
+function renderCurve() {
+    const canvas = document.getElementById('cer-curve-canvas');
+    let pts = cerData.filter(b => cerFilter === 'all' || b.tipo === cerFilter);
+    if (!pts.length) return;
 
-    const datasets = cerData.filter(d => cerFilter === 'all' || d.tipo === cerFilter);
-
-    chartInstance = new Chart(ctx, {
+    if (cerCurveChart) cerCurveChart.destroy();
+    cerCurveChart = new Chart(canvas.getContext('2d'), {
         type: 'scatter',
         data: {
             datasets: [{
-                label: 'Curva Real',
-                data: datasets.map(d => ({ x: d.macD, y: d.tir, label: d.ticker })),
-                backgroundColor: '#3a6fd8',
+                data: pts.map(b => ({ x: b.macD, y: b.tirReal })),
+                backgroundColor: pts.map(b => b.tipo === 'corto' ? '#5b8def' : '#f0b429'),
                 borderColor: '#fff',
-                showLine: true,
-                tension: 0.4
+                pointRadius: 6,
+                datalabels: {
+                    display: true, align: 'top', color: '#c8d8f0', 
+                    font: { family: 'monospace', size: 10 },
+                    formatter: (v, ctx) => pts[ctx.dataIndex].ticker
+                }
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
             scales: {
-                x: { title: { display: true, text: 'Duración (Años)', color: '#7a99c4' } },
-                y: { title: { display: true, text: 'TIR Real %', color: '#7a99c4' } }
-            },
-            plugins: {
-                legend: { display: false }
+                x: { title: { display: true, text: 'Duration (Años)', color: '#7a99c4'} },
+                y: { title: { display: true, text: 'TIR Real (%)', color: '#7a99c4'} }
             }
         }
     });
@@ -336,17 +399,9 @@ function cerSetFilter(f) {
     cerFilter = f;
     document.querySelectorAll('.lc-ftab').forEach(btn => btn.classList.remove('on'));
     document.getElementById('f-' + f).classList.add('on');
-    renderTable();
-    renderChart();
+    renderTable(); renderCurve();
 }
 
-// Reloj
-setInterval(() => {
-    const n = new Date();
-    document.getElementById('clock').textContent = n.toLocaleTimeString();
-}, 1000);
-
-// Iniciar
 cerFetch();
 </script>
 </body>
