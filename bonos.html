@@ -931,6 +931,110 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 /* standalone — page always visible */
 .page{display:block!important}
 
+/* ─── ALTA BONO MODAL ─── */
+.alta-overlay{
+  display:none;position:fixed;inset:0;z-index:900;
+  background:rgba(4,11,24,.82);backdrop-filter:blur(4px);
+  align-items:center;justify-content:center;
+}
+.alta-overlay.open{display:flex;}
+.alta-modal{
+  background:linear-gradient(160deg,var(--navy3) 0%,var(--navy2) 100%);
+  border:1px solid var(--border2);border-top:2px solid #a07aef;
+  border-radius:8px;width:560px;max-width:96vw;max-height:90vh;
+  display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.7);
+}
+.alta-hdr{
+  background:linear-gradient(90deg,rgba(160,122,239,.12),transparent);
+  border-bottom:1px solid var(--border);
+  padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.alta-hdr-left{display:flex;align-items:center;gap:10px}
+.alta-hdr-icon{font-size:18px}
+.alta-title{font-family:var(--mono);font-size:13px;font-weight:800;color:#c4a8ff;letter-spacing:.06em}
+.alta-step-badge{
+  font-size:9px;font-weight:700;letter-spacing:.1em;
+  padding:2px 8px;border-radius:10px;
+  background:rgba(160,122,239,.15);border:1px solid rgba(160,122,239,.3);color:#c4a8ff;
+}
+.alta-close{
+  background:none;border:none;color:var(--gray);font-size:16px;cursor:pointer;
+  width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  border-radius:4px;transition:all .12s;
+}
+.alta-close:hover{background:var(--red-bg);color:var(--red);}
+
+.alta-body{padding:16px 18px;overflow-y:auto;flex:1}
+.alta-section{margin-bottom:14px}
+.alta-sec-title{
+  font-size:9px;font-weight:700;color:#a07aef;letter-spacing:.16em;text-transform:uppercase;
+  margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(160,122,239,.2);
+}
+.alta-field-row{display:grid;grid-template-columns:140px 1fr;align-items:center;gap:10px;margin-bottom:8px}
+.alta-label{font-size:11px;color:var(--white2);text-align:right;padding-right:8px;border-right:1px solid var(--border)}
+.alta-preview{
+  font-family:var(--mono);font-size:11px;color:var(--green);font-weight:700;
+  background:var(--green-bg);border:1px solid var(--green2);
+  padding:3px 8px;border-radius:4px;letter-spacing:.08em;display:inline-block;
+}
+.alta-preview.empty{color:var(--gray2);background:transparent;border-color:transparent}
+
+/* law radio tabs */
+.alta-law-tabs{display:flex;gap:6px}
+.alta-law-tab{
+  background:var(--navy3);border:1px solid var(--border);color:var(--gray);
+  font-family:var(--mono);font-size:10px;font-weight:700;
+  padding:4px 12px;cursor:pointer;border-radius:4px;
+  transition:all .12s;height:26px;display:flex;align-items:center;
+}
+.alta-law-tab:hover{color:var(--blue3);border-color:var(--blue2)}
+.alta-law-tab.on-ar{background:rgba(34,212,240,.1);color:var(--cyan);border-color:var(--cyan)}
+.alta-law-tab.on-ny{background:rgba(240,180,41,.1);color:var(--amber);border-color:var(--amber)}
+.alta-law-tab.on-otro{background:rgba(160,122,239,.1);color:#c4a8ff;border-color:#a07aef}
+
+/* cashflow table */
+.alta-cf-hdr{
+  display:grid;grid-template-columns:1fr 1fr 28px;gap:6px;
+  padding:0 4px 4px;font-size:9px;font-weight:700;color:var(--gray2);letter-spacing:.1em;text-transform:uppercase;
+}
+.alta-cf-rows{display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto;padding-right:2px}
+.alta-cf-row{display:grid;grid-template-columns:1fr 1fr 28px;gap:6px;align-items:center}
+.alta-cf-del{
+  background:var(--red-bg);border:1px solid var(--red2);color:var(--red);
+  font-size:12px;width:26px;height:26px;border-radius:4px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;
+}
+.alta-cf-del:hover{background:rgba(204,58,85,.3)}
+.alta-add-row-btn{
+  background:rgba(160,122,239,.08);border:1px dashed rgba(160,122,239,.3);color:#a07aef;
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.06em;
+  padding:6px;width:100%;cursor:pointer;border-radius:4px;margin-top:6px;
+  display:flex;align-items:center;justify-content:center;gap:6px;transition:all .12s;
+}
+.alta-add-row-btn:hover{background:rgba(160,122,239,.18);border-style:solid}
+
+/* footer buttons */
+.alta-footer{
+  border-top:1px solid var(--border);padding:12px 18px;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+  background:rgba(5,12,24,.4);
+}
+.alta-btn{
+  font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;
+  padding:0 18px;height:32px;border-radius:4px;cursor:pointer;
+  display:flex;align-items:center;gap:6px;border:1px solid;transition:all .15s;
+}
+.alta-btn.cancel{background:transparent;border-color:var(--border2);color:var(--gray)}
+.alta-btn.cancel:hover{border-color:var(--red2);color:var(--red)}
+.alta-btn.confirm{background:rgba(160,122,239,.15);border-color:#a07aef;color:#c4a8ff}
+.alta-btn.confirm:hover{background:rgba(160,122,239,.35);color:#fff}
+.alta-btn.confirm:disabled{opacity:.4;cursor:not-allowed}
+.alta-info-box{
+  background:rgba(160,122,239,.06);border:1px solid rgba(160,122,239,.18);
+  border-radius:4px;padding:7px 10px;font-size:10px;color:rgba(196,168,255,.7);
+  font-family:var(--mono);line-height:1.6;margin-top:8px;
+}
+
 
 /* ── Dropdown nav ── */
 .nav-dropdown{position:relative;display:flex;align-items:stretch}
@@ -1047,6 +1151,7 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
     <div class="bnd-spacer"></div>
     <span class="bnd-status loading" id="bnd-pill">CARGANDO...</span>
     <button class="lc-refresh-btn" onclick="bndFetch()">↻ ACTUALIZAR</button>
+    <button class="lc-refresh-btn" onclick="altaBonoOpen()" style="border-color:#a07aef;color:#c4a8ff;background:rgba(160,122,239,.08)">＋ ALTA BONO</button>
     <button class="pdf-btn" onclick="bndPanelPDF()">⬇ PDF PANEL</button>
   </div>
   <div class="bnd-table-wrap">
@@ -1071,10 +1176,73 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
       <div class="bnd-curve-legend">
         <span class="bnd-leg-dot" style="background:#22d4f0"></span><span class="bnd-leg-lbl">Ley Argentina</span>
         <span class="bnd-leg-dot" style="background:#f0b429"></span><span class="bnd-leg-lbl">Ley NY</span>
+        <span class="bnd-leg-dot" style="background:#c4a8ff" id="bnd-leg-custom" style="display:none"></span><span class="bnd-leg-lbl" id="bnd-leg-custom-lbl" style="display:none">Custom</span>
       </div>
     </div>
     <div style="position:relative;height:420px;width:100%;padding:16px 32px 16px">
       <canvas id="bnd-curve-canvas"></canvas>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ALTA BONO MODAL -->
+<div class="alta-overlay" id="alta-overlay" onclick="if(event.target===this)altaBonoClose()">
+<div class="alta-modal" onclick="event.stopPropagation()">
+  <div class="alta-hdr">
+    <div class="alta-hdr-left">
+      <span class="alta-hdr-icon">📋</span>
+      <span class="alta-title">ALTA DE BONO PERSONALIZADO</span>
+    </div>
+    <button class="alta-close" onclick="altaBonoClose()">✕</button>
+  </div>
+  <div class="alta-body">
+    <!-- DATOS GENERALES -->
+    <div class="alta-section">
+      <div class="alta-sec-title">① Datos del instrumento</div>
+      <div class="alta-field-row">
+        <span class="alta-label">Ticker MEP (con D)</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input class="pi" id="alta-ticker-input" placeholder="ej: AO28D" style="width:110px;text-transform:uppercase" oninput="altaBonoTickerChange(this.value)" maxlength="12">
+          <span style="font-size:11px;color:var(--gray2)">→ base:</span>
+          <span class="alta-preview empty" id="alta-ticker-preview">—</span>
+        </div>
+      </div>
+      <div class="alta-field-row">
+        <span class="alta-label">Nombre</span>
+        <input class="pi" id="alta-name-input" placeholder="ej: Bonar 2028" style="width:100%">
+      </div>
+      <div class="alta-field-row">
+        <span class="alta-label">Legislación</span>
+        <div class="alta-law-tabs">
+          <button class="alta-law-tab on-ar" id="alt-law-AR" onclick="altaSelectLaw('AR')">LEY AR</button>
+          <button class="alta-law-tab" id="alt-law-NY" onclick="altaSelectLaw('NY')">LEY NY</button>
+          <button class="alta-law-tab" id="alt-law-OTRO" onclick="altaSelectLaw('OTRO')">OTRO</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CASHFLOW -->
+    <div class="alta-section">
+      <div class="alta-sec-title">② Flujo de fondos — por cada 100 VN</div>
+      <div class="alta-cf-hdr">
+        <span>Fecha (AAAA-MM-DD)</span>
+        <span>Pago total / 100 VN</span>
+        <span></span>
+      </div>
+      <div class="alta-cf-rows" id="alta-cf-rows"></div>
+      <button class="alta-add-row-btn" onclick="altaBonoAddRow()">＋ Agregar fecha de pago</button>
+      <div class="alta-info-box">
+        Los flujos son por <strong>100 VN</strong> (nominal), igual que el CASHFLOW_DB interno.<br>
+        Incluí cupón + amortización en un solo número por fecha. El precio se trae en <strong>USD MEP (D)</strong> desde data912.
+      </div>
+    </div>
+  </div>
+  <div class="alta-footer">
+    <button class="alta-btn cancel" onclick="altaBonoClose()">✕ Cancelar</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span id="alta-validation-msg" style="font-size:10px;color:var(--red);font-family:var(--mono)"></span>
+      <button class="alta-btn confirm" id="alta-confirm-btn" onclick="altaBonoSubmit()">✓ AGREGAR A LA CURVA</button>
     </div>
   </div>
 </div>
@@ -1245,7 +1413,100 @@ const CASHFLOW_DB = {
   'GD41':[{date:'2026-07-09',total:1.56},{date:'2027-01-09',total:1.56},{date:'2027-07-09',total:1.56},{date:'2028-01-09',total:5.13},{date:'2028-07-09',total:5.07},{date:'2029-01-09',total:5.01},{date:'2029-07-09',total:4.95},{date:'2030-01-09',total:5.4},{date:'2030-07-09',total:5.31},{date:'2031-01-09',total:5.23},{date:'2031-07-09',total:5.14},{date:'2032-01-09',total:5.05},{date:'2032-07-09',total:4.96},{date:'2033-01-09',total:4.88},{date:'2033-07-09',total:4.79},{date:'2034-01-09',total:4.7},{date:'2034-07-09',total:4.62},{date:'2035-01-09',total:4.53},{date:'2035-07-09',total:4.44},{date:'2036-01-09',total:4.35},{date:'2036-07-09',total:4.27},{date:'2037-01-09',total:4.18},{date:'2037-07-09',total:4.09},{date:'2038-01-09',total:4.01},{date:'2038-07-09',total:3.92},{date:'2039-01-09',total:3.83},{date:'2039-07-09',total:3.75},{date:'2040-01-09',total:3.66},{date:'2040-07-09',total:3.75},{date:'2041-01-09',total:3.83},{date:'2041-07-09',total:3.92}],
 };
 
-// TNA [180/360]: convención semi-anual estándar bonos USD
+// ── BONOS CUSTOM (alta de usuario) ──────────────────────────────────────────
+let _customBonds = {}; // { ticker: {name, law, cashflow:[{date,total}]} }
+
+let _altaSelectedLaw = 'AR';
+
+function altaBonoOpen(){
+  // Reset form
+  document.getElementById('alta-ticker-input').value='';
+  document.getElementById('alta-name-input').value='';
+  document.getElementById('alta-ticker-preview').textContent='—';
+  document.getElementById('alta-ticker-preview').className='alta-preview empty';
+  document.getElementById('alta-cf-rows').innerHTML='';
+  document.getElementById('alta-validation-msg').textContent='';
+  _altaSelectedLaw='AR';
+  ['AR','NY','OTRO'].forEach(l=>document.getElementById('alt-law-'+l).className='alta-law-tab');
+  document.getElementById('alt-law-AR').classList.add('on-ar');
+  // Add 3 empty rows to start
+  altaBonoAddRow();altaBonoAddRow();altaBonoAddRow();
+  document.getElementById('alta-overlay').classList.add('open');
+}
+function altaBonoClose(){document.getElementById('alta-overlay').classList.remove('open');}
+
+function altaBonoTickerChange(val){
+  const raw=val.toUpperCase().replace(/\s+/g,'');
+  // Strip trailing D or C suffix to get base ticker
+  const base=raw.replace(/[DC]$/,'');
+  const prev=document.getElementById('alta-ticker-preview');
+  if(base.length>=2){prev.textContent=base;prev.className='alta-preview';}
+  else{prev.textContent='—';prev.className='alta-preview empty';}
+}
+
+function altaSelectLaw(law){
+  _altaSelectedLaw=law;
+  ['AR','NY','OTRO'].forEach(l=>{
+    const btn=document.getElementById('alt-law-'+l);
+    btn.className='alta-law-tab'+(l===law?' on-'+l.toLowerCase():'');
+  });
+}
+
+let _altaRowId=0;
+function altaBonoAddRow(){
+  const id=_altaRowId++;
+  const container=document.getElementById('alta-cf-rows');
+  const row=document.createElement('div');
+  row.className='alta-cf-row';row.id='alta-row-'+id;
+  row.innerHTML=`
+    <input class="pi" type="date" id="alta-date-${id}" style="width:100%;font-size:11px" color-scheme="dark">
+    <input class="pi" type="number" id="alta-total-${id}" placeholder="0.000" step="0.001" min="0" style="width:100%;text-align:right">
+    <button class="alta-cf-del" onclick="document.getElementById('alta-row-${id}').remove()" title="Eliminar">×</button>
+  `;
+  container.appendChild(row);
+  container.scrollTop=container.scrollHeight;
+}
+
+function altaBonoSubmit(){
+  const msg=document.getElementById('alta-validation-msg');
+  msg.textContent='';
+
+  // 1. Ticker
+  const rawTicker=document.getElementById('alta-ticker-input').value.toUpperCase().replace(/\s+/g,'');
+  if(!rawTicker){msg.textContent='⚠ Ingresá el ticker';return;}
+  const base=rawTicker.replace(/[DC]$/,'');
+  if(base.length<2){msg.textContent='⚠ Ticker inválido';return;}
+
+  // 2. Cashflows — read all rows
+  const rows=document.querySelectorAll('#alta-cf-rows .alta-cf-row');
+  const cashflow=[];
+  const today=new Date();today.setHours(0,0,0,0);
+  for(const row of rows){
+    const id=row.id.replace('alta-row-','');
+    const dateVal=document.getElementById('alta-date-'+id)?.value;
+    const totalVal=parseFloat(document.getElementById('alta-total-'+id)?.value);
+    if(!dateVal||isNaN(totalVal)||totalVal<=0) continue;
+    const d=new Date(dateVal+'T00:00:00');
+    if(d<=today) continue; // skip past dates silently
+    cashflow.push({date:dateVal,total:totalVal});
+  }
+  if(cashflow.length<1){msg.textContent='⚠ Necesitás al menos 1 flujo futuro';return;}
+  cashflow.sort((a,b)=>a.date.localeCompare(b.date));
+
+  // 3. Name
+  const name=document.getElementById('alta-name-input').value.trim()||('Bono '+base);
+
+  // 4. Register
+  _customBonds[base]={name,law:_altaSelectedLaw,cashflow};
+  BOND_DEFS[base]={name,law:_altaSelectedLaw,_custom:true};
+  CASHFLOW_DB[base]=cashflow;
+
+  altaBonoClose();
+  // Refresh with new bond included
+  bndFetch();
+}
+
+
 // price = Σ CF_i / (1+r_semi)^(2 × t_i)  donde t_i = días_i/360
 // TNA = 2 × r_semi   (tasa nominal anual base semi-anual)
 function bndSolveIRR(flows, dirty){
@@ -1392,7 +1653,7 @@ function bndRender(){
   const lc={AR:'ar',NY:'ny',BCRA:'bcra'};
   const vc=v=>v>0.05?'bnd-green':v<-0.05?'bnd-red':'';
   tbody.innerHTML=rows.map(b=>`<tr onclick="bndOpenModal('${b.ticker}')">
-    <td><span class="bnd-tk">${b.ticker}</span><span class="bnd-law ${lc[b.law]}">${b.law}</span></td>
+    <td><span class="bnd-tk">${b.ticker}</span><span class="bnd-law ${lc[b.law]||'ar'}">${b.law}</span>${BOND_DEFS[b.ticker]?._custom?'<span class="bnd-law" style="background:rgba(160,122,239,.15);color:#c4a8ff;border-color:#a07aef;margin-left:3px">★</span>':''}</td>
     <td style="font-weight:600;color:var(--amber)">u$s ${f2(b.dirty)}</td>
     <td class="${vc(b.varPct)}">${b.varPct>=0?'+':''}${f2(b.varPct)}%</td>
     <td class="bnd-green">${f2(b.tna)}%</td>
@@ -1455,20 +1716,32 @@ function bndCalcModal(){
   if(pk)pk.style.color=gain>=0?'var(--green)':'var(--red)';
 }
 
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){const o=$$('bnd-modal-overlay');if(o&&o.classList.contains('open'))o.classList.remove('open');}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const o=$$('bnd-modal-overlay');if(o&&o.classList.contains('open'))o.classList.remove('open');const a=$$('alta-overlay');if(a&&a.classList.contains('open'))a.classList.remove('open');}});
 
 let bndCurveChart=null;
 function bndRenderCurve(){
   const canvas=$$('bnd-curve-canvas');if(!canvas)return;
   // Build per-series arrays with TIR on Y
-  const arPts=[],nyPts=[];
+  const arPts=[],nyPts=[],customPts=[];
   for(const b of bndData){
-    if(b.law==='AR') arPts.push({x:b.modD,y:b.tir,tna:b.tna,ticker:b.ticker});
+    if(BOND_DEFS[b.ticker]?._custom){
+      customPts.push({x:b.modD,y:b.tir,tna:b.tna,ticker:b.ticker});
+    } else if(b.law==='AR') arPts.push({x:b.modD,y:b.tir,tna:b.tna,ticker:b.ticker});
     else if(b.law==='NY') nyPts.push({x:b.modD,y:b.tir,tna:b.tna,ticker:b.ticker});
   }
   arPts.sort((a,b)=>a.x-b.x);
   nyPts.sort((a,b)=>a.x-b.x);
-  if(!arPts.length&&!nyPts.length)return;
+
+  // Show/hide custom legend
+  const legDot=document.getElementById('bnd-leg-custom');
+  const legLbl=document.getElementById('bnd-leg-custom-lbl');
+  if(legDot&&legLbl){
+    const show=customPts.length>0;
+    legDot.style.display=show?'inline-block':'none';
+    legLbl.style.display=show?'inline':'none';
+  }
+
+  if(!arPts.length&&!nyPts.length&&!customPts.length)return;
 
   // Polynomial degree-2 least-squares (reuse soberanos inline)
   const mkFit=(data)=>{
@@ -1486,7 +1759,7 @@ function bndRenderCurve(){
     return x=>c0+c1*x+c2*x*x;
   };
 
-  const allPts=[...arPts,...nyPts];
+  const allPts=[...arPts,...nyPts,...customPts];
   const xMax=Math.max(...allPts.map(p=>p.x));
 
   // Extend curve from x=0 (so it "comes from below")
@@ -1502,9 +1775,10 @@ function bndRenderCurve(){
   const arFit=mkFit(arPts),nyFit=mkFit(nyPts);
   const arCurve=buildCurve(arPts,arFit),nyCurve=buildCurve(nyPts,nyFit);
 
-  // Bloomberg-like colors: Bonares=crimson, Globales=gold
+  // Bloomberg-like colors: Bonares=crimson, Globales=gold, Custom=purple
   const AR_LINE='#e05060',AR_DOT='rgba(210,70,90,.9)',AR_LBL='#e87080';
   const NY_LINE='#d4a020',NY_DOT='rgba(220,165,30,.9)',NY_LBL='#f0c040';
+  const CU_LINE='#a07aef',CU_DOT='rgba(160,122,239,.9)',CU_LBL='#c4a8ff';
 
   const dlabels={display:true,align:'top',anchor:'end',offset:5,
     font:{family:"'JetBrains Mono',monospace",size:9,weight:'700'},
@@ -1526,6 +1800,11 @@ function bndRenderCurve(){
      backgroundColor:NY_DOT,borderColor:NY_LINE,borderWidth:1.5,
      pointRadius:8,pointHoverRadius:11,pointStyle:'rectRot',
      order:2,datalabels:{...dlabels,color:NY_LBL,formatter:(v,c)=>nyPts[c.dataIndex].ticker}},
+    // Scatter — Custom bonds
+    ...(customPts.length>0?[{type:'scatter',label:'CUSTOM',data:customPts,
+     backgroundColor:CU_DOT,borderColor:CU_LINE,borderWidth:2,
+     pointRadius:9,pointHoverRadius:12,pointStyle:'star',
+     order:0,datalabels:{...dlabels,color:CU_LBL,formatter:(v,c)=>customPts[c.dataIndex].ticker+'★'}}]:[]),
   ];
 
   const allY=[...arPts,...nyPts].map(p=>p.y);
@@ -1562,12 +1841,27 @@ function bndRenderCurve(){
           titleFont:{family:"'JetBrains Mono',monospace",size:11,weight:'700'},
           bodyFont:{family:"'JetBrains Mono',monospace",size:11},
           callbacks:{
-            title:items=>{const s=items[0].datasetIndex===2?arPts:nyPts;const p=s[items[0].dataIndex];return p.ticker+' · '+(items[0].datasetIndex===2?'Ley AR':'Ley NY');},
-            label:item=>{const s=item.datasetIndex===2?arPts:nyPts;const p=s[item.dataIndex];return[
-              '  TIR (TEA): '+p.y.toFixed(2)+'%',
-              '  TNA [180/360]: '+p.tna.toFixed(2)+'%',
-              '  DurMod [180/360]: '+p.x.toFixed(3)+'y'
-            ];}
+            title:items=>{
+              const ds=items[0].datasetIndex;
+              const customOffset=customPts.length>0?1:0;
+              if(ds===2)return arPts[items[0].dataIndex]?.ticker+' · Ley AR';
+              if(ds===3)return nyPts[items[0].dataIndex]?.ticker+' · Ley NY';
+              if(ds===4&&customPts.length>0)return customPts[items[0].dataIndex]?.ticker+' · Custom ★';
+              return '';
+            },
+            label:item=>{
+              const ds=item.datasetIndex;
+              let p=null;
+              if(ds===2)p=arPts[item.dataIndex];
+              else if(ds===3)p=nyPts[item.dataIndex];
+              else if(ds===4&&customPts.length>0)p=customPts[item.dataIndex];
+              if(!p)return[];
+              return[
+                '  TIR (TEA): '+p.y.toFixed(2)+'%',
+                '  TNA [180/360]: '+p.tna.toFixed(2)+'%',
+                '  DurMod [180/360]: '+p.x.toFixed(3)+'y'
+              ];
+            }
           }
         }
       },
