@@ -1013,6 +1013,35 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 }
 .alta-add-row-btn:hover{background:rgba(160,122,239,.18);border-style:solid}
 
+/* excel drop zone */
+.alta-xls-drop{
+  border:2px dashed rgba(160,122,239,.3);border-radius:6px;
+  background:rgba(160,122,239,.04);
+  padding:14px 12px;text-align:center;cursor:pointer;
+  transition:all .15s;
+}
+.alta-xls-drop:hover,.alta-xls-drop.drag{
+  border-color:#a07aef;background:rgba(160,122,239,.12);
+}
+.alta-xls-icon{font-size:22px;margin-bottom:4px}
+.alta-xls-msg{font-size:11px;font-weight:700;color:#c4a8ff;font-family:var(--mono)}
+.alta-xls-sub{font-size:9px;color:rgba(160,122,239,.5);margin-top:3px;letter-spacing:.04em}
+
+/* saved bond chips */
+.alta-saved-chip{
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(160,122,239,.08);border:1px solid rgba(160,122,239,.2);
+  border-radius:4px;padding:6px 10px;margin-bottom:5px;
+}
+.alta-saved-ticker{font-family:var(--mono);font-size:12px;font-weight:800;color:#c4a8ff}
+.alta-saved-meta{font-family:var(--mono);font-size:9px;color:var(--gray);margin-top:1px}
+.alta-saved-del{
+  background:var(--red-bg);border:1px solid var(--red2);color:var(--red);
+  font-size:11px;padding:2px 8px;border-radius:3px;cursor:pointer;
+  font-family:var(--mono);font-weight:700;transition:all .12s;
+}
+.alta-saved-del:hover{background:rgba(204,58,85,.3)}
+
 /* footer buttons */
 .alta-footer{
   border-top:1px solid var(--border);padding:12px 18px;
@@ -1075,6 +1104,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <script>
@@ -1197,6 +1227,24 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
     <button class="alta-close" onclick="altaBonoClose()">✕</button>
   </div>
   <div class="alta-body">
+    <!-- EXCEL UPLOAD -->
+    <div class="alta-section">
+      <div class="alta-sec-title">⚡ Carga rápida desde Excel</div>
+      <div class="alta-xls-drop" id="alta-xls-drop" onclick="document.getElementById('alta-xls-input').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="altaHandleDrop(event)">
+        <div class="alta-xls-icon">📊</div>
+        <div class="alta-xls-msg">Arrastrá o hacé click para subir un Excel</div>
+        <div class="alta-xls-sub">Formato esperado: col B = fecha, col I = total por 100 VN · hoja = ticker base</div>
+        <input type="file" id="alta-xls-input" accept=".xlsx,.xls" style="display:none" onchange="altaHandleXLS(this.files[0])">
+      </div>
+      <div id="alta-xls-status" style="font-size:10px;font-family:var(--mono);margin-top:6px;min-height:16px"></div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:6px 0 10px">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <span style="font-size:9px;color:var(--gray2);letter-spacing:.1em;font-family:var(--mono)">ó cargá manualmente</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+
     <!-- DATOS GENERALES -->
     <div class="alta-section">
       <div class="alta-sec-title">① Datos del instrumento</div>
@@ -1237,6 +1285,13 @@ if(window!==window.top){document.addEventListener('DOMContentLoaded',function(){
         Incluí cupón + amortización en un solo número por fecha. El precio se trae en <strong>USD MEP (D)</strong> desde data912.
       </div>
     </div>
+
+    <!-- BONOS GUARDADOS -->
+    <div class="alta-section" id="alta-saved-section" style="display:none">
+      <div class="alta-sec-title">💾 Bonos guardados</div>
+      <div id="alta-saved-list"></div>
+    </div>
+
   </div>
   <div class="alta-footer">
     <button class="alta-btn cancel" onclick="altaBonoClose()">✕ Cancelar</button>
@@ -1414,7 +1469,58 @@ const CASHFLOW_DB = {
 };
 
 // ── BONOS CUSTOM (alta de usuario) ──────────────────────────────────────────
+// Persistencia via localStorage
+const CUSTOM_STORAGE_KEY = 'pi_custom_bonds_v1';
+
 let _customBonds = {}; // { ticker: {name, law, cashflow:[{date,total}]} }
+
+function customBondsSave(){
+  try{localStorage.setItem(CUSTOM_STORAGE_KEY, JSON.stringify(_customBonds));}
+  catch(e){console.warn('localStorage write fail:',e);}
+}
+
+function customBondsLoad(){
+  try{
+    const raw=localStorage.getItem(CUSTOM_STORAGE_KEY);
+    if(!raw) return;
+    const parsed=JSON.parse(raw);
+    if(typeof parsed==='object'&&parsed){
+      _customBonds=parsed;
+      // Inject all saved bonds into BOND_DEFS & CASHFLOW_DB
+      for(const [tk, data] of Object.entries(_customBonds)){
+        BOND_DEFS[tk]={name:data.name,law:data.law,_custom:true};
+        CASHFLOW_DB[tk]=data.cashflow;
+      }
+    }
+  }catch(e){console.warn('localStorage read fail:',e);}
+}
+
+function customBondDelete(ticker){
+  delete _customBonds[ticker];
+  delete BOND_DEFS[ticker];
+  delete CASHFLOW_DB[ticker];
+  customBondsSave();
+  altaRefreshSavedList();
+  bndFetch();
+}
+
+function altaRefreshSavedList(){
+  const section=document.getElementById('alta-saved-section');
+  const list=document.getElementById('alta-saved-list');
+  const tickers=Object.keys(_customBonds);
+  if(!tickers.length){section.style.display='none';return;}
+  section.style.display='block';
+  list.innerHTML=tickers.map(tk=>{
+    const d=_customBonds[tk];
+    return `<div class="alta-saved-chip">
+      <div>
+        <div class="alta-saved-ticker">${tk} <span style="font-size:9px;color:var(--gray);font-weight:400">★ ${d.law}</span></div>
+        <div class="alta-saved-meta">${d.name} · ${d.cashflow.length} flujos</div>
+      </div>
+      <button class="alta-saved-del" onclick="customBondDelete('${tk}')">✕ borrar</button>
+    </div>`;
+  }).join('');
+}
 
 let _altaSelectedLaw = 'AR';
 
@@ -1426,9 +1532,13 @@ function altaBonoOpen(){
   document.getElementById('alta-ticker-preview').className='alta-preview empty';
   document.getElementById('alta-cf-rows').innerHTML='';
   document.getElementById('alta-validation-msg').textContent='';
+  document.getElementById('alta-xls-status').textContent='';
+  document.getElementById('alta-xls-input').value='';
+  document.getElementById('alta-xls-drop').classList.remove('drag');
   _altaSelectedLaw='AR';
   ['AR','NY','OTRO'].forEach(l=>document.getElementById('alt-law-'+l).className='alta-law-tab');
   document.getElementById('alt-law-AR').classList.add('on-ar');
+  altaRefreshSavedList();
   // Add 3 empty rows to start
   altaBonoAddRow();altaBonoAddRow();altaBonoAddRow();
   document.getElementById('alta-overlay').classList.add('open');
@@ -1437,7 +1547,6 @@ function altaBonoClose(){document.getElementById('alta-overlay').classList.remov
 
 function altaBonoTickerChange(val){
   const raw=val.toUpperCase().replace(/\s+/g,'');
-  // Strip trailing D or C suffix to get base ticker
   const base=raw.replace(/[DC]$/,'');
   const prev=document.getElementById('alta-ticker-preview');
   if(base.length>=2){prev.textContent=base;prev.className='alta-preview';}
@@ -1452,6 +1561,100 @@ function altaSelectLaw(law){
   });
 }
 
+// ── Excel upload ─────────────────────────────────────────────────────────────
+function altaHandleDrop(e){
+  e.preventDefault();
+  document.getElementById('alta-xls-drop').classList.remove('drag');
+  const file=e.dataTransfer.files[0];
+  if(file) altaHandleXLS(file);
+}
+
+function altaHandleXLS(file){
+  if(!file) return;
+  const status=document.getElementById('alta-xls-status');
+  status.style.color='var(--amber)';status.textContent='⏳ Leyendo Excel...';
+
+  if(!window.XLSX){status.style.color='var(--red)';status.textContent='⚠ SheetJS no cargado aún, intentá de nuevo en un momento.';return;}
+
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const data=new Uint8Array(e.target.result);
+      const wb=XLSX.read(data,{type:'array',cellDates:true});
+
+      // Use first sheet name as ticker base
+      const sheetName=wb.SheetNames[0];
+      const baseTicker=sheetName.toUpperCase().replace(/\s+/g,'');
+
+      const ws=wb.Sheets[sheetName];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,dateNF:'yyyy-mm-dd'});
+
+      // Skip first 2 header rows, read col B (idx 1) = date, col I (idx 8) = total
+      const today=new Date();today.setHours(0,0,0,0);
+      const cashflow=[];
+      for(let i=2;i<rows.length;i++){
+        const row=rows[i];
+        if(!row||row.length<9) continue;
+        let dateRaw=row[1];
+        const totalRaw=row[8];
+        if(!dateRaw||totalRaw===undefined||totalRaw==='') continue;
+
+        // Parse date — SheetJS can return Date string or Date object
+        let dateStr='';
+        if(dateRaw instanceof Date){
+          dateStr=dateRaw.toISOString().slice(0,10);
+        } else {
+          // Try to parse as string (could be dd/mm/yyyy or yyyy-mm-dd)
+          const s=String(dateRaw).trim();
+          if(/^\d{4}-\d{2}-\d{2}/.test(s)){dateStr=s.slice(0,10);}
+          else if(/^\d{2}\/\d{2}\/\d{4}/.test(s)){const p=s.split('/');dateStr=`${p[2]}-${p[1]}-${p[0]}`;}
+          else{ // Try JS Date parse
+            const d=new Date(s);
+            if(!isNaN(d))dateStr=d.toISOString().slice(0,10);
+          }
+        }
+        if(!dateStr)continue;
+        const d=new Date(dateStr+'T00:00:00');
+        if(d<=today)continue; // only future
+
+        const total=parseFloat(String(totalRaw).replace(',','.'));
+        if(isNaN(total)||total<=0)continue;
+        cashflow.push({date:dateStr,total:Math.round(total*10000)/10000});
+      }
+
+      if(!cashflow.length){
+        status.style.color='var(--red)';
+        status.textContent='⚠ No se encontraron flujos futuros. Revisá que la fecha esté en col B y el total en col I.';
+        return;
+      }
+      cashflow.sort((a,b)=>a.date.localeCompare(b.date));
+
+      // Pre-fill the form
+      document.getElementById('alta-ticker-input').value=baseTicker+'D';
+      altaBonoTickerChange(baseTicker+'D');
+      document.getElementById('alta-name-input').value='Bono '+baseTicker;
+
+      // Fill cashflow rows
+      document.getElementById('alta-cf-rows').innerHTML='';
+      _altaRowId=0;
+      cashflow.forEach(cf=>{
+        altaBonoAddRow();
+        const id=_altaRowId-1;
+        document.getElementById('alta-date-'+id).value=cf.date;
+        document.getElementById('alta-total-'+id).value=cf.total.toFixed(4);
+      });
+
+      status.style.color='var(--green)';
+      status.textContent=`✓ ${baseTicker} · ${cashflow.length} flujos cargados desde "${sheetName}" — revisá y confirmá abajo`;
+    }catch(err){
+      status.style.color='var(--red)';
+      status.textContent='⚠ Error al leer el Excel: '+err.message;
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
 let _altaRowId=0;
 function altaBonoAddRow(){
   const id=_altaRowId++;
@@ -1459,7 +1662,7 @@ function altaBonoAddRow(){
   const row=document.createElement('div');
   row.className='alta-cf-row';row.id='alta-row-'+id;
   row.innerHTML=`
-    <input class="pi" type="date" id="alta-date-${id}" style="width:100%;font-size:11px" color-scheme="dark">
+    <input class="pi" type="date" id="alta-date-${id}" style="width:100%;font-size:11px">
     <input class="pi" type="number" id="alta-total-${id}" placeholder="0.000" step="0.001" min="0" style="width:100%;text-align:right">
     <button class="alta-cf-del" onclick="document.getElementById('alta-row-${id}').remove()" title="Eliminar">×</button>
   `;
@@ -1471,13 +1674,11 @@ function altaBonoSubmit(){
   const msg=document.getElementById('alta-validation-msg');
   msg.textContent='';
 
-  // 1. Ticker
   const rawTicker=document.getElementById('alta-ticker-input').value.toUpperCase().replace(/\s+/g,'');
   if(!rawTicker){msg.textContent='⚠ Ingresá el ticker';return;}
   const base=rawTicker.replace(/[DC]$/,'');
   if(base.length<2){msg.textContent='⚠ Ticker inválido';return;}
 
-  // 2. Cashflows — read all rows
   const rows=document.querySelectorAll('#alta-cf-rows .alta-cf-row');
   const cashflow=[];
   const today=new Date();today.setHours(0,0,0,0);
@@ -1487,22 +1688,21 @@ function altaBonoSubmit(){
     const totalVal=parseFloat(document.getElementById('alta-total-'+id)?.value);
     if(!dateVal||isNaN(totalVal)||totalVal<=0) continue;
     const d=new Date(dateVal+'T00:00:00');
-    if(d<=today) continue; // skip past dates silently
+    if(d<=today) continue;
     cashflow.push({date:dateVal,total:totalVal});
   }
   if(cashflow.length<1){msg.textContent='⚠ Necesitás al menos 1 flujo futuro';return;}
   cashflow.sort((a,b)=>a.date.localeCompare(b.date));
 
-  // 3. Name
   const name=document.getElementById('alta-name-input').value.trim()||('Bono '+base);
 
-  // 4. Register
+  // Register + persist
   _customBonds[base]={name,law:_altaSelectedLaw,cashflow};
   BOND_DEFS[base]={name,law:_altaSelectedLaw,_custom:true};
   CASHFLOW_DB[base]=cashflow;
+  customBondsSave(); // 💾 persist to localStorage
 
   altaBonoClose();
-  // Refresh with new bond included
   bndFetch();
 }
 
@@ -2078,6 +2278,8 @@ async function bndPanelPDF(){
   }
 }
 // Delay bonos fetch 3s so LECAP has time to cache _rawBondData
+// Cargar bonos guardados del localStorage ANTES del primer fetch
+customBondsLoad();
 setTimeout(bndFetch, 3000);
 setInterval(bndFetch, 30000);
 
