@@ -79,6 +79,12 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 .nav-tab:hover{color:var(--blue3);background:rgba(58,111,216,.08)}
 .nav-tab.active{color:var(--white);border-bottom-color:var(--blue);background:rgba(58,111,216,.12)}
 .nav-tab .tab-icon{font-size:14px}
+
+/* Noticias tab — accent amber para destacarla */
+.nav-tab.tab-news{color:var(--amber);opacity:.85}
+.nav-tab.tab-news:hover{color:var(--amber);opacity:1;background:rgba(240,180,41,.08)}
+.nav-tab.tab-news.active{color:var(--amber);border-bottom-color:var(--amber);background:rgba(240,180,41,.08);opacity:1}
+
 .nav-spacer{flex:1}
 .nav-meta{display:flex;align-items:center;gap:8px;padding:0 4px}
 .nav-meta-txt{font-size:10px;color:var(--gray2);letter-spacing:.06em;font-family:var(--mono)}
@@ -92,7 +98,7 @@ html,body{background:var(--navy);color:var(--white);font-family:var(--font);font
 .nav-dropdown-btn.open .dd-arrow{transform:rotate(180deg);opacity:1}
 .nav-dropdown-menu{display:none;position:absolute;top:42px;left:0;z-index:500;background:var(--navy3);border:1px solid var(--border);border-top:2px solid var(--blue);min-width:200px;padding:4px 0;box-shadow:0 8px 24px rgba(0,0,0,.5);}
 .nav-dropdown.open .nav-dropdown-menu{display:block}
-.nav-dropdown-item{display:flex;align-items:center;gap:9px;padding:8px 16px;font-family:var(--font);font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--gray2);cursor:pointer;border:none;background:none;width:100%;text-align:left;text-decoration:none;transition:all .12s;border-left:2px solid transparent;}
+.nav-dropdown-item{display:flex;align-items:center;gap:9px;padding:8px 16px;font-family:var(--font);font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--gray2);cursor:pointer;border:none;background:none;width:100%;text-align:left;text-decoration:none;transition:all .12px;border-left:2px solid transparent;}
 .nav-dropdown-item:hover{color:var(--white);background:rgba(58,111,216,.12);border-left-color:var(--blue);}
 .nav-dropdown-item.active{color:var(--blue3);background:rgba(58,111,216,.1);border-left-color:var(--blue2);}
 .nav-dropdown-item .di-icon{font-size:13px;width:16px;text-align:center}
@@ -162,6 +168,11 @@ html,body{height:100%;overflow:hidden}
     </div>
   </div>
 
+  <!-- NOTICIAS – tab directo, fuera del dropdown -->
+  <button class="nav-tab tab-news" id="nav-noticias" onclick="showPage('noticias')">
+    <span class="tab-icon">📰</span> Noticias
+  </button>
+
   <div class="nav-spacer"></div>
   <div class="nav-meta"><span class="nav-meta-txt">REF.06 · BYMA 2026</span></div>
 </div>
@@ -177,11 +188,12 @@ html,body{height:100%;overflow:hidden}
   <iframe class="page-frame"        id="frame-dolarlinked" src="dolarlinked.html"  title="Dólar Linked"></iframe>
   <iframe class="page-frame"        id="frame-arb"         src="arbitraje.html"    title="Arbitraje"></iframe>
   <iframe class="page-frame"        id="frame-opneta"      src="opneta.html"       title="Operación Neta"></iframe>
+  <!-- NUEVA PÁGINA: Noticias BYMA -->
+  <iframe class="page-frame"        id="frame-noticias"    src="noticias.html"     title="Market Data News"></iframe>
 </div>
 
 <script>
-// ACÁ ESTABA EL DETALLE: Agregué "opneta" a la lista de PAGE_IDS
-const PAGE_IDS = ["resumen", "tc", "cauc", "dcto", "opneta", "lecap", "bonos", "cer", "dolarlinked", "arb"];
+const PAGE_IDS = ["resumen", "tc", "cauc", "dcto", "opneta", "lecap", "bonos", "cer", "dolarlinked", "arb", "noticias"];
 const CALC_GROUP  = ['tc','cauc','dcto','opneta'];
 const BONOS_GROUP = ['lecap','bonos','cer','dolarlinked'];
 const ESTRAT_GROUP= ['arb'];
