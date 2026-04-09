@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Data News – BYMA</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --navy:   #0d1b2e;
+  --navy2:  #122540;
+  --navy3:  #172d4d;
+  --panel:  #1a3358;
+  --card:   #1e3a62;
+  --card2:  #243f6a;
+  --border: #2a4a7a;
+  --border2:#3a5a8a;
+  --blue:   #3a6fd8;
+  --blue2:  #5b8def;
+  --blue3:  #7aa3f0;
+  --blue4:  #a8c4f8;
+  --accent: #4f81e8;
+  --white:  #f0f4ff;
+  --white2: #d0ddf5;
+  --gray:   #7a99c4;
+  --gray2:  #4a6a9a;
+  --green:  #22d68a;
+  --green2: #16a86a;
+  --green-bg:#0a2a1a;
+  --red:    #ff4d6a;
+  --red2:   #cc3a55;
+  --red-bg: #2a0a12;
+  --amber:  #f0b429;
+  --cyan:   #22d4f0;
+  --yellow: #e8f43a;
+  --font:   'Inter', sans-serif;
+  --mono:   'JetBrains Mono', 'Courier New', monospace;
+}
+
+html,body{background:var(--navy);color:var(--white);font-family:var(--font);font-size:13px;min-height:100vh;overflow-y:auto}
+
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--navy2)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ── LAYOUT ── */
+.page-wrap{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.main-content{flex:1;overflow-y:auto;padding:16px 20px 24px}
+
+/* ── CREDENTIALS BAR ── */
+.cred-bar{
+  background:var(--navy2);
+  border-bottom:1px solid var(--border);
+  padding:0 20px;
+  overflow:hidden;
+  transition:max-height .25s ease;
+  max-height:0;
+}
+.cred-bar.open{max-height:120px}
+.cred-inner{display:flex;align-items:center;gap:12px;padding:10px 0;flex-wrap:wrap}
+.cred-label{font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+.cred-input{
+  background:var(--navy);border:1px solid var(--border);border-radius:4px;
+  color:var(--white2);font-family:var(--mono);font-size:11px;
+  padding:5px 10px;width:260px;outline:none;
+}
+.cred-input:focus{border-color:var(--blue2)}
+.cred-input::placeholder{color:var(--gray2)}
+
+/* ── SERVICE BAR ── */
+.svc-bar{
+  background:var(--navy3);border-bottom:2px solid var(--border);
+  display:flex;align-items:stretch;gap:0;padding:0 20px;
+  position:sticky;top:0;z-index:100;
+}
+.svc-tab{
+  display:flex;align-items:center;gap:7px;padding:0 18px;height:40px;
+  font-family:var(--font);font-size:11px;font-weight:600;
+  letter-spacing:.04em;text-transform:uppercase;
+  color:var(--gray);border:none;background:none;
+  cursor:pointer;border-bottom:2px solid transparent;
+  margin-bottom:-2px;transition:all .15s;white-space:nowrap;
+}
+.svc-tab:hover{color:var(--blue3);background:rgba(58,111,216,.08)}
+.svc-tab.active{color:var(--white);border-bottom-color:var(--blue);background:rgba(58,111,216,.12)}
+.svc-spacer{flex:1}
+
+/* ── TOP CONTROLS ── */
+.controls-row{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 0 14px;flex-wrap:wrap;
+}
+.ctrl-group{display:flex;align-items:center;gap:8px}
+.ctrl-label{font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.08em}
+
+input[type=date], .pi-input{
+  background:var(--navy2);border:1px solid var(--border);border-radius:4px;
+  color:var(--white2);font-family:var(--mono);font-size:12px;
+  padding:6px 10px;outline:none;
+}
+input[type=date]:focus,.pi-input:focus{border-color:var(--blue2)}
+input[type=date]{color-scheme:dark}
+.pi-input{width:120px}
+.pi-input::placeholder{color:var(--gray2);font-size:11px}
+
+/* ── BUTTONS ── */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:4px;border:none;
+  font-family:var(--font);font-size:11px;font-weight:700;
+  letter-spacing:.04em;cursor:pointer;transition:all .15s;
+  text-transform:uppercase;
+}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:var(--blue2)}
+.btn-primary:disabled{background:var(--gray2);cursor:not-allowed;opacity:.6}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--gray)}
+.btn-ghost:hover{border-color:var(--blue2);color:var(--blue3)}
+.btn-sm{padding:4px 9px;font-size:10px}
+.btn-green{background:var(--green2);color:#fff}
+.btn-green:hover{background:var(--green)}
+.btn-amber{background:#b87e10;color:#fff}
+.btn-amber:hover{background:var(--amber);color:#000}
+.btn-cred{background:transparent;border:1px solid var(--border2);color:var(--blue4);font-size:10px;padding:4px 10px;border-radius:3px;cursor:pointer;letter-spacing:.06em;font-family:var(--mono);transition:all .12s}
+.btn-cred:hover{border-color:var(--blue3);color:var(--white)}
+
+/* ── STATUS PILL ── */
+.status-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;
+  font-family:var(--mono);letter-spacing:.06em;
+}
+.pill-ok{background:rgba(34,214,138,.12);border:1px solid var(--green2);color:var(--green)}
+.pill-err{background:rgba(255,77,106,.12);border:1px solid var(--red2);color:var(--red)}
+.pill-idle{background:rgba(122,153,196,.1);border:1px solid var(--border);color:var(--gray)}
+.pill-loading{background:rgba(240,180,41,.1);border:1px solid #8a6a10;color:var(--amber)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+/* ── SECTION HEADER ── */
+.section-header{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:12px;padding-bottom:8px;
+  border-bottom:1px solid var(--border);
+}
+.section-title{font-size:13px;font-weight:700;color:var(--blue3);letter-spacing:.04em;text-transform:uppercase}
+.section-count{font-family:var(--mono);font-size:11px;color:var(--gray);background:var(--navy2);
+  border:1px solid var(--border);padding:1px 7px;border-radius:3px}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:6px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{
+  background:var(--navy3);color:var(--gray);
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+  padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
+tbody tr{border-bottom:1px solid rgba(42,74,122,.5);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(58,111,216,.07)}
+tbody td{padding:8px 12px;vertical-align:middle;color:var(--white2)}
+.td-date{font-family:var(--mono);font-size:11px;color:var(--gray);white-space:nowrap}
+.td-issuer{font-weight:700;color:var(--blue3);font-family:var(--mono);font-size:11px}
+.td-name{color:var(--white);max-width:220px;line-height:1.35}
+.td-symbol{font-family:var(--mono);font-size:11px;color:var(--cyan)}
+.td-ref{color:var(--white2);max-width:300px;line-height:1.4;font-size:11px}
+.td-fid{font-family:var(--mono);font-size:11px;color:var(--amber)}
+
+/* ── EMPTY / ERROR / LOADING ── */
+.state-box{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:60px 20px;gap:12px;color:var(--gray);
+  border:1px solid var(--border);border-radius:6px;background:var(--navy2);
+}
+.state-icon{font-size:32px;opacity:.5}
+.state-msg{font-size:13px;font-weight:500}
+.state-sub{font-size:11px;color:var(--gray2);text-align:center;max-width:380px;line-height:1.5}
+
+/* ── SPINNER ── */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{
+  width:22px;height:22px;border:2px solid var(--border);
+  border-top-color:var(--blue2);border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+
+/* ── PROSPECTS CARD ── */
+.prospects-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.prospect-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(58,111,216,.12);border:1px solid var(--border);
+  border-radius:3px;padding:3px 8px;font-size:10px;font-family:var(--mono);color:var(--blue4);
+}
+.prospect-tag .pt-name{color:var(--white2);font-family:var(--font)}
+
+/* ── FINANCIAL STATEMENTS ── */
+.fs-card{
+  background:var(--navy2);border:1px solid var(--border);border-radius:6px;
+  margin-bottom:14px;overflow:hidden;
+}
+.fs-card-header{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;background:var(--navy3);border-bottom:1px solid var(--border);
+}
+.fs-card-issuer{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue3)}
+.fs-card-name{font-size:12px;color:var(--white2)}
+.fs-statements{padding:0}
+
+.fs-stmt-row{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:9px 14px;border-bottom:1px solid rgba(42,74,122,.4);
+}
+.fs-stmt-row:last-child{border-bottom:none}
+.fs-stmt-row:hover{background:rgba(58,111,216,.06)}
+.fs-stmt-meta{flex:1;min-width:0}
+.fs-stmt-type{
+  display:inline-block;font-size:10px;font-weight:700;font-family:var(--mono);
+  letter-spacing:.06em;padding:2px 7px;border-radius:2px;margin-bottom:3px;
+  background:rgba(240,180,41,.1);border:1px solid #8a6a10;color:var(--amber);
+}
+.fs-stmt-outline{font-size:11px;color:var(--white2);line-height:1.4}
+.fs-stmt-date{font-size:10px;font-family:var(--mono);color:var(--gray);margin-top:2px}
+.fs-supls{margin-top:6px;padding-left:10px;border-left:2px solid var(--border)}
+.fs-supl{
+  display:flex;align-items:center;gap:8px;
+  padding:4px 0;font-size:10px;color:var(--gray);border-bottom:1px solid rgba(42,74,122,.25);
+}
+.fs-supl:last-child{border-bottom:none}
+.fs-supl-text{flex:1;line-height:1.35}
+
+/* ── TOP BAR WITHIN PAGE ── */
+.page-topbar{
+  background:var(--navy3);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:46px;flex-shrink:0;
+}
+.page-topbar-left{display:flex;align-items:center;gap:12px}
+.page-title{font-size:13px;font-weight:700;color:var(--white);letter-spacing:.02em}
+.page-sub{font-size:10px;font-family:var(--mono);color:var(--gray);letter-spacing:.06em}
+.page-topbar-right{display:flex;align-items:center;gap:10px}
+
+/* ── CORS WARNING ── */
+.cors-warn{
+  background:rgba(240,180,41,.06);border:1px solid #7a5a10;
+  border-radius:4px;padding:8px 12px;font-size:11px;color:#d0a020;
+  display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;line-height:1.5;
+}
+.cors-warn b{color:var(--amber)}
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- TOP BAR -->
+  <div class="page-topbar">
+    <div class="page-topbar-left">
+      <span class="page-title">📰 Market Data News</span>
+      <span class="page-sub">BYMA · API v1</span>
+    </div>
+    <div class="page-topbar-right">
+      <span id="token-status" class="status-pill pill-idle"><span class="dot"></span>Sin token</span>
+      <button class="btn-cred" onclick="toggleCreds()">⚙ Credenciales</button>
+    </div>
+  </div>
+
+  <!-- CREDENTIALS BAR -->
+  <div class="cred-bar" id="cred-bar">
+    <div class="cred-inner">
+      <span class="cred-label">Client ID</span>
+      <input class="cred-input" id="inp-cid" type="text" placeholder="Client ID (del portal BYMA)" autocomplete="off"/>
+      <span class="cred-label">Client Secret</span>
+      <input class="cred-input" id="inp-csec" type="password" placeholder="Client Secret"/>
+      <button class="btn btn-primary" id="btn-token" onclick="obtenerToken()">⚡ Obtener Token</button>
+      <button class="btn btn-ghost" onclick="clearToken()">✕ Limpiar</button>
+    </div>
+  </div>
+
+  <!-- SERVICE TABS -->
+  <div class="svc-bar">
+    <button class="svc-tab active" id="tab-relevante"  onclick="switchTab('relevante')">📄 Info Relevante</button>
+    <button class="svc-tab"        id="tab-avisos"     onclick="switchTab('avisos')">📢 Avisos BYMA</button>
+    <button class="svc-tab"        id="tab-boletines"  onclick="switchTab('boletines')">📋 Boletines</button>
+    <button class="svc-tab"        id="tab-balances"   onclick="switchTab('balances')">💼 Balances</button>
+    <div class="svc-spacer"></div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content" id="main-content">
+
+    <!-- CORS NOTE -->
+    <div class="cors-warn" id="cors-warn" style="display:none">
+      <span>⚠</span>
+      <span><b>Nota CORS:</b> Si la API no responde desde el browser, puede ser necesario un proxy server-side (ej: backend Node/Python local) ya que <code>apigw.byma.com.ar</code> puede rechazar requests desde páginas web por política de origen cruzado.</span>
+    </div>
+
+    <!-- PANEL: Info Relevante -->
+    <div id="panel-relevante">
+      <div class="controls-row">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Fecha</span>
+          <input type="date" id="date-relevante"/>
+        </div>
+        <button class="btn btn-primary" onclick="fetchRelevante()">🔍 Consultar</button>
+        <span id="meta-relevante" style="font-size:10px;font-family:var(--mono);color:var(--gray)"></span>
+      </div>
+      <div id="result-relevante"><div class="state-box"><span class="state-icon">📄</span><span class="state-msg">Ingresá tus credenciales y consultá</span><span class="state-sub">Si no especificás fecha se muestran las publicaciones más recientes</span></div></div>
+    </div>
+
+    <!-- PANEL: Avisos BYMA -->
+    <div id="panel-avisos" style="display:none">
+      <div class="controls-row">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Fecha</span>
+          <input type="date" id="date-avisos"/>
+        </div>
+        <button class="btn btn-primary" onclick="fetchAvisos()">🔍 Consultar</button>
+        <span id="meta-avisos" style="font-size:10px;font-family:var(--mono);color:var(--gray)"></span>
+      </div>
+      <div id="result-avisos"><div class="state-box"><span class="state-icon">📢</span><span class="state-msg">Ingresá tus credenciales y consultá</span></div></div>
+    </div>
+
+    <!-- PANEL: Boletines y Prospectos -->
+    <div id="panel-boletines" style="display:none">
+      <div class="controls-row">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Fecha <span style="color:var(--red);font-size:9px">*</span></span>
+          <input type="date" id="date-boletines"/>
+        </div>
+        <button class="btn btn-primary" onclick="fetchBoletines()">🔍 Consultar</button>
+        <span id="meta-boletines" style="font-size:10px;font-family:var(--mono);color:var(--gray)"></span>
+      </div>
+      <div id="result-boletines"><div class="state-box"><span class="state-icon">📋</span><span class="state-msg">Ingresá tus credenciales y consultá</span><span class="state-sub">La fecha es requerida para este servicio</span></div></div>
+    </div>
+
+    <!-- PANEL: Balances -->
+    <div id="panel-balances" style="display:none">
+      <div class="controls-row">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Emisor <span style="color:var(--red);font-size:9px">*</span></span>
+          <input class="pi-input" id="inp-issuer" type="text" placeholder="Ej: GGAL, YPF"/>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Año</span>
+          <input class="pi-input" id="inp-year" type="text" placeholder="YYYY" style="width:80px"/>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Fecha</span>
+          <input type="date" id="date-balances"/>
+        </div>
+        <button class="btn btn-primary" onclick="fetchBalances()">🔍 Consultar</button>
+        <span id="meta-balances" style="font-size:10px;font-family:var(--mono);color:var(--gray)"></span>
+      </div>
+      <div id="result-balances"><div class="state-box"><span class="state-icon">💼</span><span class="state-msg">Ingresá tus credenciales y el emisor</span></div></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  CONFIG
+// ─────────────────────────────────────────────
+const ENV_URL = 'https://apigw.byma.com.ar';
+const BASE    = `${ENV_URL}/market-data-news/v1`;
+const TOKEN_URL = `${ENV_URL}/oauth/token/`;
+const SCOPE   = 'marketDataNews.read';
+
+let accessToken = null;
+let currentTab  = 'relevante';
+
+// ─────────────────────────────────────────────
+//  PERSISTENCE
+// ─────────────────────────────────────────────
+function loadSavedCreds(){
+  try{
+    const cid  = localStorage.getItem('byma_cid')  || '';
+    const csec = localStorage.getItem('byma_csec') || '';
+    document.getElementById('inp-cid').value  = cid;
+    document.getElementById('inp-csec').value = csec;
+  }catch(e){}
+}
+function saveCreds(){
+  try{
+    localStorage.setItem('byma_cid',  document.getElementById('inp-cid').value.trim());
+    localStorage.setItem('byma_csec', document.getElementById('inp-csec').value.trim());
+  }catch(e){}
+}
+
+// ─────────────────────────────────────────────
+//  UI HELPERS
+// ─────────────────────────────────────────────
+function toggleCreds(){
+  const bar = document.getElementById('cred-bar');
+  bar.classList.toggle('open');
+}
+function setTokenStatus(state, msg){
+  const el = document.getElementById('token-status');
+  el.className = 'status-pill';
+  if(state==='ok')      { el.classList.add('pill-ok');      el.innerHTML=`<span class="dot"></span>${msg}`; }
+  else if(state==='err'){ el.classList.add('pill-err');     el.innerHTML=`<span class="dot"></span>${msg}`; }
+  else if(state==='load'){el.classList.add('pill-loading'); el.innerHTML=`<span class="dot"></span>${msg}`; }
+  else                  { el.classList.add('pill-idle');    el.innerHTML=`<span class="dot"></span>${msg}`; }
+}
+
+function showLoading(panelId){
+  document.getElementById('result-'+panelId).innerHTML =
+    `<div class="state-box"><div class="spinner"></div><span class="state-msg">Cargando datos…</span></div>`;
+}
+function showError(panelId, msg){
+  document.getElementById('result-'+panelId).innerHTML =
+    `<div class="state-box"><span class="state-icon">⚠</span><span class="state-msg" style="color:var(--red)">${msg}</span><span class="state-sub">Verificá el token y los parámetros.</span></div>`;
+}
+function showEmpty(panelId){
+  document.getElementById('result-'+panelId).innerHTML =
+    `<div class="state-box"><span class="state-icon">🔍</span><span class="state-msg">Sin resultados</span><span class="state-sub">No se encontraron registros para los parámetros ingresados.</span></div>`;
+}
+
+function setMeta(id, txt){
+  document.getElementById('meta-'+id).textContent = txt;
+}
+
+function switchTab(tab){
+  ['relevante','avisos','boletines','balances'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('panel-'+t).style.display = t===tab ? '' : 'none';
+  });
+  currentTab = tab;
+}
+
+// ─────────────────────────────────────────────
+//  AUTH – GET TOKEN
+// ─────────────────────────────────────────────
+async function obtenerToken(){
+  const cid  = document.getElementById('inp-cid').value.trim();
+  const csec = document.getElementById('inp-csec').value.trim();
+  if(!cid || !csec){ setTokenStatus('err','Faltan credenciales'); return; }
+
+  saveCreds();
+  setTokenStatus('load','Obteniendo token…');
+  document.getElementById('btn-token').disabled = true;
+
+  try{
+    const body = new URLSearchParams({
+      grant_type:    'client_credentials',
+      client_id:      cid,
+      client_secret:  csec,
+      scope:          SCOPE
+    });
+
+    const res = await fetch(TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString()
+    });
+
+    if(!res.ok){
+      const txt = await res.text();
+      throw new Error(`HTTP ${res.status} – ${txt.slice(0,120)}`);
+    }
+
+    const data = await res.json();
+    accessToken = data.access_token;
+
+    // calc expiry
+    const expiresMin = Math.round((data.expires_in || 86400) / 60);
+    setTokenStatus('ok', `Token OK · ${expiresMin}min`);
+    document.getElementById('cors-warn').style.display = 'none';
+
+    // auto-close creds bar
+    document.getElementById('cred-bar').classList.remove('open');
+
+  } catch(e){
+    console.error(e);
+    accessToken = null;
+    setTokenStatus('err','Error de auth');
+    document.getElementById('cors-warn').style.display = 'flex';
+  }
+
+  document.getElementById('btn-token').disabled = false;
+}
+
+function clearToken(){
+  accessToken = null;
+  setTokenStatus('idle','Sin token');
+  document.getElementById('inp-cid').value='';
+  document.getElementById('inp-csec').value='';
+  try{ localStorage.removeItem('byma_cid'); localStorage.removeItem('byma_csec'); }catch(e){}
+}
+
+// ─────────────────────────────────────────────
+//  AUTH GUARD
+// ─────────────────────────────────────────────
+function checkToken(panelId){
+  if(!accessToken){
+    showError(panelId, 'Token requerido – ingresá las credenciales y hacé click en "Obtener Token"');
+    document.getElementById('cred-bar').classList.add('open');
+    return false;
+  }
+  return true;
+}
+
+function authHeaders(){
+  return { 'Authorization': `Bearer ${accessToken}`, 'Accept': 'application/json' };
+}
+
+// ─────────────────────────────────────────────
+//  FETCH HELPERS
+// ─────────────────────────────────────────────
+async function apiFetch(url){
+  const res = await fetch(url, { headers: authHeaders() });
+  if(!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+function fmtDate(str){
+  if(!str) return '—';
+  return str.replace('T',' ').replace('.0','').substring(0,16);
+}
+
+// ─────────────────────────────────────────────
+//  1. INFO RELEVANTE
+// ─────────────────────────────────────────────
+async function fetchRelevante(){
+  if(!checkToken('relevante')) return;
+  const date = document.getElementById('date-relevante').value;
+  showLoading('relevante');
+
+  try{
+    const url = `${BASE}/relevant-events.json/${date ? '?date='+date : ''}`;
+    const data = await apiFetch(url);
+    const rows = data.result || [];
+    setMeta('relevante', `${rows.length} registros · ${fmtDate(data.meta?.date)}`);
+    if(!rows.length){ showEmpty('relevante'); return; }
+    renderRelevanteTable(rows);
+  } catch(e){
+    showError('relevante', 'Error al consultar: ' + e.message);
+  }
+}
+
+function renderRelevanteTable(rows){
+  const html = `
+    <div class="section-header">
+      <span class="section-title">Info Relevante de Emisores</span>
+      <span class="section-count">${rows.length} reg.</span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Fecha</th>
+          <th>Emisor</th>
+          <th>Denominación</th>
+          <th>Especie</th>
+          <th>Reseña</th>
+          <th>FileID</th>
+          <th>PDF</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(r=>`
+          <tr>
+            <td class="td-date">${fmtDate(r.date)}</td>
+            <td class="td-issuer">${r.issuer||'—'}</td>
+            <td class="td-name">${esc(r.issuerName||'—')}</td>
+            <td class="td-symbol">${r.symbol||'—'}</td>
+            <td class="td-ref">${esc(r.reference||'—')}</td>
+            <td class="td-fid">${r.fileId||'—'}</td>
+            <td>${r.fileId ? btnPDF(r.fileId, r.reference) : '—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  document.getElementById('result-relevante').innerHTML = html;
+}
+
+// ─────────────────────────────────────────────
+//  2. AVISOS BYMA
+// ─────────────────────────────────────────────
+async function fetchAvisos(){
+  if(!checkToken('avisos')) return;
+  const date = document.getElementById('date-avisos').value;
+  showLoading('avisos');
+
+  try{
+    const url = `${BASE}/byma-ads.json/${date ? '?date='+date : ''}`;
+    const data = await apiFetch(url);
+    const rows = data.result || [];
+    setMeta('avisos', `${rows.length} registros · ${fmtDate(data.meta?.date)}`);
+    if(!rows.length){ showEmpty('avisos'); return; }
+    renderAvisosTable(rows);
+  } catch(e){
+    showError('avisos', 'Error al consultar: ' + e.message);
+  }
+}
+
+function renderAvisosTable(rows){
+  const html = `
+    <div class="section-header">
+      <span class="section-title">Avisos BYMA</span>
+      <span class="section-count">${rows.length} reg.</span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Fecha</th>
+          <th>Emisor</th>
+          <th>Denominación</th>
+          <th>Símbolo</th>
+          <th>Descripción</th>
+          <th>FileID</th>
+          <th>PDF</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(r=>`
+          <tr>
+            <td class="td-date">${fmtDate(r.date)}</td>
+            <td class="td-issuer">${r.issuer||'—'}</td>
+            <td class="td-name">${esc(r.issuerName||'—')}</td>
+            <td class="td-symbol">${r.symbol||'—'} <span style="color:var(--gray);font-size:10px">${esc(r.symbolName||'')}</span></td>
+            <td class="td-ref">${esc(r.reference||'—')}</td>
+            <td class="td-fid">${r.fileId||'—'}</td>
+            <td>${r.fileId ? btnPDF(r.fileId, r.reference) : '—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  document.getElementById('result-avisos').innerHTML = html;
+}
+
+// ─────────────────────────────────────────────
+//  3. BOLETINES Y PROSPECTOS
+// ─────────────────────────────────────────────
+async function fetchBoletines(){
+  if(!checkToken('boletines')) return;
+  const date = document.getElementById('date-boletines').value;
+  if(!date){ showError('boletines','La fecha es obligatoria para boletines'); return; }
+  showLoading('boletines');
+
+  try{
+    const url = `${BASE}/newsletters-prospects.json/?newsletterDate=${date}`;
+    const data = await apiFetch(url);
+    const rows = data.result || [];
+    setMeta('boletines', `${rows.length} boletines · ${fmtDate(data.meta?.date)}`);
+    if(!rows.length){ showEmpty('boletines'); return; }
+    renderBoletinesCards(rows);
+  } catch(e){
+    showError('boletines', 'Error al consultar: ' + e.message);
+  }
+}
+
+function renderBoletinesCards(rows){
+  const cards = rows.map(b=>{
+    const prospects = (b.prospects||[]).map(p=>`
+      <div class="fs-supl">
+        <span style="color:var(--cyan);font-family:var(--mono);font-size:10px;min-width:40px">${esc(p.prospectIssuer||'')}</span>
+        <span class="fs-supl-text">${esc(p.prospectIssuerName||'')} · ${esc(p.prospectInstrumentType||'')}</span>
+        ${p.prospectFileId ? btnPDF(p.prospectFileId, p.prospectIssuerName, 'sm') : ''}
+      </div>`).join('');
+
+    return `
+      <div class="fs-card">
+        <div class="fs-card-header">
+          <span class="fs-card-issuer">📋</span>
+          <span class="fs-card-name">${esc(b.reference||'Boletín')}</span>
+          <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+            <span class="td-date">${fmtDate(b.newsletterDate)}</span>
+            ${b.fileId ? btnPDF(b.fileId, b.reference) : ''}
+          </span>
+        </div>
+        ${prospects ? `<div class="fs-statements"><div style="padding:8px 14px 2px;font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.07em;font-weight:700">Prospectos</div>${prospects}</div>` : ''}
+      </div>`;
+  }).join('');
+
+  document.getElementById('result-boletines').innerHTML = `
+    <div class="section-header">
+      <span class="section-title">Boletines y Prospectos</span>
+      <span class="section-count">${rows.length} boletines</span>
+    </div>${cards}`;
+}
+
+// ─────────────────────────────────────────────
+//  4. BALANCES / ESTADOS CONTABLES
+// ─────────────────────────────────────────────
+async function fetchBalances(){
+  if(!checkToken('balances')) return;
+  const issuer = document.getElementById('inp-issuer').value.trim().toUpperCase();
+  const year   = document.getElementById('inp-year').value.trim();
+  const date   = document.getElementById('date-balances').value;
+
+  if(!issuer){ showError('balances','El código de emisor es obligatorio'); return; }
+  showLoading('balances');
+
+  try{
+    let params = `issuer=${issuer}`;
+    if(year)  params += `&year=${year}`;
+    if(date && !year) params += `&financialStatementDate=${date}`;
+
+    const url = `${BASE}/financial-statements.json/?${params}`;
+    const data = await apiFetch(url);
+    const rows = data.result || [];
+    setMeta('balances', `${rows.length} emisores · ${fmtDate(data.meta?.date)}`);
+    if(!rows.length){ showEmpty('balances'); return; }
+    renderBalancesCards(rows);
+  } catch(e){
+    showError('balances', 'Error al consultar: ' + e.message);
+  }
+}
+
+function renderBalancesCards(rows){
+  const cards = rows.map(em=>{
+    const stmts = (em.financialStatements||[]).map(fs=>{
+      const supls = (fs.suplements||[]).map(s=>`
+        <div class="fs-supl">
+          <span style="color:var(--gray);font-size:9px;min-width:150px;font-family:var(--mono)">${fmtDate(s.suplementSubmitDate)}</span>
+          <span class="fs-supl-text">${esc(s.suplementOutline||s.suplementType||'')}</span>
+          ${s.fileId ? btnPDF(s.fileId, s.suplementOutline, 'sm') : ''}
+        </div>`).join('');
+
+      return `
+        <div class="fs-stmt-row">
+          <div class="fs-stmt-meta" style="flex:1">
+            <span class="fs-stmt-type">${esc(fs.financialStatementType||'')}</span>
+            <div class="fs-stmt-outline">${esc(fs.financialStatementOutline||'')}</div>
+            <div class="fs-stmt-date">${fmtDate(fs.financialStatementDate)} · Publicado: ${fmtDate(fs.submitDate)}</div>
+            ${supls ? `<div class="fs-supls" style="margin-top:8px">${supls}</div>` : ''}
+          </div>
+          <div>${fs.fileId ? btnPDF(fs.fileId, fs.financialStatementOutline) : ''}</div>
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="fs-card">
+        <div class="fs-card-header">
+          <span class="fs-card-issuer">${esc(em.issuer||'')}</span>
+          <span class="fs-card-name">${esc(em.issuerName||'')}</span>
+        </div>
+        <div class="fs-statements">${stmts||'<div style="padding:12px 14px;color:var(--gray);font-size:11px">Sin estados financieros</div>'}</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('result-balances').innerHTML = `
+    <div class="section-header">
+      <span class="section-title">Estados Contables</span>
+      <span class="section-count">${rows.length} emisores</span>
+    </div>${cards}`;
+}
+
+// ─────────────────────────────────────────────
+//  DOWNLOAD PDF
+// ─────────────────────────────────────────────
+function btnPDF(fileId, label, size=''){
+  const safeLabel = (label||'documento').replace(/"/g,'').substring(0,40);
+  return `<button class="btn btn-amber ${size==='sm'?'btn-sm':''}" onclick="downloadPDF(${fileId},'${safeLabel.replace(/'/g,'')}')">⬇ PDF</button>`;
+}
+
+async function downloadPDF(fileId, label){
+  if(!accessToken){
+    alert('Necesitás un token válido para descargar documentos.');
+    document.getElementById('cred-bar').classList.add('open');
+    return;
+  }
+
+  // Find button and show loading state
+  const btns = document.querySelectorAll('button');
+  let clickedBtn = null;
+  btns.forEach(b=>{ if(b.onclick && b.onclick.toString().includes(fileId)){ clickedBtn=b; }});
+  const origText = clickedBtn?.innerHTML;
+  if(clickedBtn){ clickedBtn.innerHTML='⏳'; clickedBtn.disabled=true; }
+
+  try{
+    const url = `${ENV_URL}/market-data-news/v1/download-file.raw/${fileId}`;
+    const res = await fetch(url, { headers: authHeaders() });
+
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const blob = await res.blob();
+    const contentType = res.headers.get('content-type') || 'application/pdf';
+    const finalBlob = new Blob([blob], { type: contentType.includes('pdf') ? 'application/pdf' : contentType });
+
+    const objUrl = URL.createObjectURL(finalBlob);
+    const a = document.createElement('a');
+    a.href = objUrl;
+    a.download = `BYMA_${fileId}_${label.replace(/[^a-zA-Z0-9_]/g,'_').substring(0,40)}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(objUrl), 5000);
+
+  } catch(e){
+    alert(`Error al descargar fileId ${fileId}: ${e.message}`);
+  } finally{
+    if(clickedBtn){ clickedBtn.innerHTML = origText; clickedBtn.disabled=false; }
+  }
+}
+
+// ─────────────────────────────────────────────
+//  UTILS
+// ─────────────────────────────────────────────
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Default date = today
+function setDefaultDates(){
+  const today = new Date().toISOString().split('T')[0];
+  ['date-relevante','date-avisos','date-boletines','date-balances'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value = today;
+  });
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+setDefaultDates();
+loadSavedCreds();
+</script>
+</body>
+</html>
