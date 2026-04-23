@@ -108,6 +108,25 @@ html,body{height:100%;overflow:hidden}
 .iframe-container{position:fixed;top:98px;left:0;right:0;bottom:0}
 .page-frame{display:none;width:100%;height:100%;border:none;background:var(--navy)}
 .page-frame.active{display:block}
+
+/* ── Hidden Auth Modal ── */
+.auth-modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(13,27,46,.95);backdrop-filter:blur(8px);align-items:center;justify-content:center}
+.auth-modal.show{display:flex}
+.auth-box{background:var(--navy2);border:2px solid var(--border);padding:32px 40px;min-width:340px;box-shadow:0 12px 40px rgba(0,0,0,.6)}
+.auth-title{font-size:13px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--blue3);margin-bottom:6px;font-family:var(--mono)}
+.auth-subtitle{font-size:11px;color:var(--gray2);margin-bottom:24px;font-family:var(--mono);letter-spacing:.05em}
+.auth-input{width:100%;padding:12px 16px;font-family:var(--mono);font-size:14px;font-weight:600;letter-spacing:.25em;text-align:center;background:var(--navy);border:1px solid var(--border2);color:var(--white);margin-bottom:16px;outline:none;transition:all .15s}
+.auth-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(58,111,216,.15)}
+.auth-input.error{border-color:var(--red);animation:shake .3s}
+.auth-actions{display:flex;gap:10px}
+.auth-btn{flex:1;padding:10px 20px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border:none;cursor:pointer;transition:all .15s}
+.auth-btn.primary{background:var(--blue);color:var(--navy)}
+.auth-btn.primary:hover{background:var(--blue2)}
+.auth-btn.secondary{background:transparent;color:var(--gray);border:1px solid var(--border2)}
+.auth-btn.secondary:hover{color:var(--white);border-color:var(--border)}
+.logo-area{cursor:pointer;user-select:none}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
 </style>
 </head>
 <body>
@@ -190,13 +209,29 @@ html,body{height:100%;overflow:hidden}
   <iframe class="page-frame"        id="frame-opneta"      src="opneta.html"       title="Operación Neta"></iframe>
   <!-- NUEVA PÁGINA: Noticias BYMA -->
   <iframe class="page-frame"        id="frame-noticias"    src="noticias.html"     title="Market Data News"></iframe>
+  <!-- OCULTA: Dist. Utilidades (solo accesible con código) -->
+  <iframe class="page-frame"        id="frame-dist"        src="dist_utilidades.html" title="Dist. Utilidades"></iframe>
+</div>
+
+<!-- Auth Modal (hidden by default) -->
+<div class="auth-modal" id="authModal">
+  <div class="auth-box">
+    <div class="auth-title">⬢ Acceso Restringido</div>
+    <div class="auth-subtitle">Ingresá el código de acceso</div>
+    <input type="password" class="auth-input" id="authCode" placeholder="••••" maxlength="4" autocomplete="off">
+    <div class="auth-actions">
+      <button class="auth-btn secondary" onclick="closeAuthModal()">Cancelar</button>
+      <button class="auth-btn primary" onclick="verifyAuth()">Ingresar</button>
+    </div>
+  </div>
 </div>
 
 <script>
-const PAGE_IDS = ["resumen", "tc", "cauc", "dcto", "opneta", "lecap", "bonos", "cer", "dolarlinked", "arb", "noticias"];
+const PAGE_IDS = ["resumen", "tc", "cauc", "dcto", "opneta", "lecap", "bonos", "cer", "dolarlinked", "arb", "noticias", "dist"];
 const CALC_GROUP  = ['tc','cauc','dcto','opneta'];
 const BONOS_GROUP = ['lecap','bonos','cer','dolarlinked'];
 const ESTRAT_GROUP= ['arb'];
+const AUTH_CODE = '4411';
 
 // Clock
 function tick(){const n=new Date(),p=v=>String(v).padStart(2,'0');document.getElementById('clock').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;}
@@ -241,6 +276,48 @@ document.querySelectorAll('.nav-dropdown-btn').forEach(btn=>{
 document.addEventListener('click',()=>{
   document.querySelectorAll('.nav-dropdown').forEach(d=>d.classList.remove('open'));
   document.querySelectorAll('.nav-dropdown-btn').forEach(b=>b.classList.remove('open'));
+});
+
+// ── AUTH MODAL LOGIC ──
+function showAuthModal(){
+  const modal = document.getElementById('authModal');
+  const input = document.getElementById('authCode');
+  modal.classList.add('show');
+  input.value = '';
+  input.classList.remove('error');
+  setTimeout(() => input.focus(), 100);
+}
+
+function closeAuthModal(){
+  document.getElementById('authModal').classList.remove('show');
+}
+
+function verifyAuth(){
+  const input = document.getElementById('authCode');
+  const code = input.value.trim();
+  if(code === AUTH_CODE){
+    closeAuthModal();
+    showPage('dist');
+  } else {
+    input.classList.add('error');
+    input.value = '';
+    setTimeout(() => input.classList.remove('error'), 300);
+  }
+}
+
+// Logo click → show auth modal
+document.querySelector('.logo-area').addEventListener('click', showAuthModal);
+
+// Enter key in auth input
+document.getElementById('authCode').addEventListener('keypress', function(e){
+  if(e.key === 'Enter') verifyAuth();
+});
+
+// ESC to close modal
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape' && document.getElementById('authModal').classList.contains('show')){
+    closeAuthModal();
+  }
 });
 
 </script>
