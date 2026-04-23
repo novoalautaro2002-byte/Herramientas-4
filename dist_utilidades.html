@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dist. Utilidades · Portfolio Investment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #07101f;
+    --bg-2: #0c1a30;
+    --panel: #0f203b;
+    --panel-2: #132a4e;
+    --border: #1e3966;
+    --border-soft: #182e55;
+    --text: #d8e1ee;
+    --text-dim: #7e8fa8;
+    --text-faint: #4e5d75;
+    --amber: #ff9e1b;
+    --amber-dim: #b86f10;
+    --green: #00d68f;
+    --red: #ff5261;
+    --blue: #4fc3ff;
+    --violet: #b490ff;
+    --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(255,158,27,0.08), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(79,195,255,0.05), transparent 45%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 28px 36px 80px;
+  }
+
+  /* ========== HEADER ========== */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .brand-mark {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--amber), var(--amber-dim));
+    color: #07101f;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: -0.5px;
+    clip-path: polygon(0 0, 100% 0, 100% 80%, 80% 100%, 0 100%);
+  }
+
+  .brand-text h1 {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .brand-text p {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .status .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+  }
+
+  .status.busy .dot { background: var(--amber); box-shadow: 0 0 8px var(--amber); animation: pulse 1.2s infinite; }
+  .status.error .dot { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ========== PANELS ========== */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 24px;
+    background: var(--amber);
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-soft);
+    background: var(--bg-2);
+  }
+
+  .panel-head h2 {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .panel-head h2 .num {
+    color: var(--amber);
+    margin-right: 8px;
+  }
+
+  .panel-meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--text-faint);
+    text-transform: uppercase;
+  }
+
+  .panel-body {
+    padding: 20px;
+  }
+
+  /* ========== DROPZONE ========== */
+  .dropzone {
+    border: 1.5px dashed var(--border);
+    background: var(--bg-2);
+    padding: 44px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dropzone:hover,
+  .dropzone.drag {
+    border-color: var(--amber);
+    background: rgba(255, 158, 27, 0.04);
+  }
+
+  .dropzone::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(45deg, transparent 48%, rgba(255,158,27,0.03) 50%, transparent 52%);
+    background-size: 20px 20px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .dropzone:hover::after { opacity: 1; }
+
+  .dz-icon {
+    width: 38px;
+    height: 38px;
+    margin: 0 auto 14px;
+    color: var(--amber);
+    opacity: 0.7;
+  }
+
+  .dz-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .dz-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .options {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-soft);
+    flex-wrap: wrap;
+  }
+
+  .options label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    letter-spacing: 0.05em;
+    cursor: pointer;
+  }
+
+  .options input[type="checkbox"] {
+    accent-color: var(--amber);
+    width: 13px;
+    height: 13px;
+  }
+
+  /* ========== BUTTONS ========== */
+  button {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 9px 16px;
+    background: var(--amber);
+    color: #07101f;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  button:hover { background: #ffb04a; }
+  button:active { transform: translateY(1px); }
+
+  button.secondary {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+
+  button.secondary:hover {
+    color: var(--amber);
+    border-color: var(--amber);
+  }
+
+  button.ghost {
+    background: transparent;
+    color: var(--text-dim);
+    padding: 6px 10px;
+    border: 1px solid var(--border-soft);
+  }
+
+  button.ghost:hover { color: var(--text); border-color: var(--border); }
+
+  .actions { display: flex; gap: 8px; }
+
+  /* ========== GROUPS ========== */
+  .group {
+    border: 1px solid var(--border-soft);
+    background: var(--bg-2);
+    margin-bottom: 14px;
+  }
+
+  .group-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-soft);
+    background: var(--panel-2);
+  }
+
+  .group-id {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+  }
+
+  .group-swatch {
+    width: 14px;
+    height: 14px;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .group-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--text);
+    text-transform: uppercase;
+  }
+
+  .group-label .sep { color: var(--text-faint); margin: 0 8px; }
+
+  .group-rule {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    padding: 3px 8px;
+    background: rgba(255,158,27,0.1);
+    color: var(--amber);
+    border: 1px solid rgba(255,158,27,0.25);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .group-rule.multi { background: rgba(79,195,255,0.1); color: var(--blue); border-color: rgba(79,195,255,0.25); }
+  .group-rule.caja { background: rgba(180,144,255,0.1); color: var(--violet); border-color: rgba(180,144,255,0.25); }
+
+  /* ========== TABLES ========== */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
+  th {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-soft);
+    font-weight: 500;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    background: rgba(0,0,0,0.2);
+  }
+
+  td {
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(30, 57, 102, 0.3);
+    color: var(--text);
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .op-buy { color: var(--blue); }
+  .op-sell { color: var(--amber); }
+  .cuenta-caja { color: var(--violet); }
+  .acct { font-weight: 500; }
+
+  .pos { color: var(--green); }
+  .neg { color: var(--red); }
+  .zero { color: var(--text-faint); }
+
+  .group-calc {
+    padding: 12px 14px;
+    background: rgba(0,0,0,0.18);
+    border-top: 1px solid var(--border-soft);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+  }
+
+  .calc-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    color: var(--text-dim);
+  }
+
+  .calc-row .val { color: var(--text); font-weight: 500; }
+  .calc-row .val.amber { color: var(--amber); }
+
+  .calc-dist {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-soft);
+  }
+
+  .calc-dist-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 12px;
+    padding: 4px 0;
+    align-items: center;
+  }
+
+  .calc-dist-row .acct-badge {
+    padding: 2px 7px;
+    background: var(--panel);
+    border: 1px solid var(--border-soft);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .calc-dist-row .acct-badge.caja { color: var(--violet); border-color: rgba(180,144,255,0.3); }
+
+  .calc-dist-row .mech {
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: 0.05em;
+  }
+
+  .calc-dist-row .amount {
+    font-weight: 600;
+    text-align: right;
+  }
+
+  .calc-dist-row .currency {
+    font-size: 9px;
+    color: var(--text-faint);
+    letter-spacing: 0.1em;
+    min-width: 36px;
+    text-align: right;
+  }
+
+  /* ========== SUMMARY ========== */
+  .summary-section {
+    margin-bottom: 24px;
+  }
+
+  .summary-section:last-child { margin-bottom: 0; }
+
+  .summary-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+  }
+
+  .summary-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border-soft);
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: border-color 0.15s;
+  }
+
+  .summary-card:hover { border-color: var(--amber); }
+  .summary-card.caja { border-left: 2px solid var(--violet); }
+  .summary-card.total {
+    background: rgba(255,158,27,0.06);
+    border-color: rgba(255,158,27,0.3);
+    border-left: 2px solid var(--amber);
+    grid-column: 1 / -1;
+  }
+
+  .sc-left { display: flex; flex-direction: column; gap: 2px; }
+  .sc-acct {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text);
+    letter-spacing: 0.05em;
+  }
+  .sc-titular {
+    font-size: 10px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .sc-amount {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ========== EMPTY ========== */
+  .empty {
+    padding: 40px;
+    text-align: center;
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ========== ERROR ========== */
+  .error-box {
+    background: rgba(255,82,97,0.08);
+    border: 1px solid rgba(255,82,97,0.3);
+    padding: 12px 16px;
+    color: var(--red);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    margin-top: 12px;
+  }
+
+  /* ========== RESPONSIVE ========== */
+  @media (max-width: 720px) {
+    .app { padding: 16px; }
+    header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .summary-grid { grid-template-columns: 1fr; }
+    table { font-size: 10px; }
+    th, td { padding: 6px 6px; }
+    .brand-text h1 { font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="brand-mark">PI</div>
+      <div class="brand-text">
+        <h1>DIST · UTILIDADES</h1>
+        <p>Liquidación diaria · Portfolio Investment</p>
+      </div>
+    </div>
+    <div class="status" id="status">
+      <span class="dot"></span>
+      <span id="statusText">LISTO</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- SECTION 01: UPLOAD -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2><span class="num">01</span>Input</h2>
+        <span class="panel-meta">.xlsx con grupos por color de fondo</span>
+      </div>
+      <div class="panel-body">
+        <div id="dropzone" class="dropzone">
+          <svg class="dz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 3v12m0-12l-4 4m4-4l4 4M3 17v2a2 2 0 002 2h14a2 2 0 002-2v-2"/>
+          </svg>
+          <p class="dz-title">Arrastrá el Excel o hacé click</p>
+          <p class="dz-sub">Detecta grupos por color de fondo · .xlsx / .xlsm</p>
+          <input type="file" id="fileInput" accept=".xlsx,.xlsm" hidden>
+        </div>
+        <div class="options">
+          <label><input type="checkbox" id="hasHeader"> Primera fila es encabezado</label>
+          <label><input type="checkbox" id="showCalc" checked> Mostrar detalle de cálculo</label>
+          <span style="flex:1"></span>
+          <span id="fileInfo" style="font-family:var(--font-mono);font-size:10px;color:var(--text-faint);letter-spacing:0.1em;"></span>
+        </div>
+        <div id="errorBox"></div>
+      </div>
+    </section>
+
+    <!-- SECTION 02: GROUPS -->
+    <section class="panel" id="groupsPanel" hidden>
+      <div class="panel-head">
+        <h2><span class="num">02</span>Grupos detectados</h2>
+        <span class="panel-meta" id="groupCount">0 grupos</span>
+      </div>
+      <div class="panel-body">
+        <div id="groups"></div>
+      </div>
+    </section>
+
+    <!-- SECTION 03: SUMMARY -->
+    <section class="panel" id="summaryPanel" hidden>
+      <div class="panel-head">
+        <h2><span class="num">03</span>Utilidad por cuenta</h2>
+        <div class="actions">
+          <button id="btnCopy" class="secondary">Copiar TSV</button>
+          <button id="btnExport">Exportar xlsx</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div id="summary"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ============================================================
+   DISTRIBUCIÓN DE UTILIDADES · PORTFOLIO INVESTMENT
+   ============================================================ */
+
+// Column mapping (0-indexed). Ajustable si el Excel cambia.
+const COL = {
+  FECHA_CONCERT: 0,
+  FECHA_LIQ:     1,
+  ESPECIE:       2,
+  OPERACION:     3, // Compramos / Vendemos
+  CUENTA:        4,
+  TITULAR:       5,
+  PLAZA:         6,
+  MONEDA:        7,
+  VN:            8,
+  PRECIO:        9,
+  MONTO:         10,
+  MONEDA_UTIL:   11,
+  UTILIDAD:      12
+};
+
+const CUENTA_CAJA = '16002';  // Regla especial: 16002 no participa en el reparto
+
+// Si cuenta=16002 pero el titular contiene '16002(' en el nombre, NO es la caja.
+// Se trata como cuenta distinta, y cada titular con ese patrón queda separado del resto.
+function resolveAccount(cuenta, titular) {
+  const t = String(titular || '').trim();
+  if (cuenta === CUENTA_CAJA && /16002\s*\(/i.test(t)) {
+    return { ak: `${cuenta}::${t}`, isCaja: false };
+  }
+  return { ak: cuenta, isCaja: cuenta === CUENTA_CAJA };
+}
+
+/* ----------- HELPERS ----------- */
+const $  = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+
+function setStatus(text, kind='ok') {
+  $('#statusText').textContent = text.toUpperCase();
+  const s = $('#status');
+  s.classList.remove('busy','error');
+  if (kind === 'busy')  s.classList.add('busy');
+  if (kind === 'error') s.classList.add('error');
+}
+
+function showError(msg) {
+  $('#errorBox').innerHTML = `<div class="error-box">⚠ ${msg}</div>`;
+  setStatus('ERROR','error');
+}
+
+function clearError() { $('#errorBox').innerHTML = ''; }
+
+function fmtN(n, dec=2) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return n.toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+
+function parseNumber(val) {
+  if (val === null || val === undefined || val === '') return 0;
+  if (typeof val === 'number') return val;
+  if (typeof val === 'object' && val.result !== undefined) return parseNumber(val.result);
+  let s = String(val).trim();
+  if (!s) return 0;
+  // Argentine format: 1.234.567,89  or  1234567.89
+  const hasComma = s.includes(',');
+  const hasDot = s.includes('.');
+  if (hasComma && hasDot) { s = s.replace(/\./g,'').replace(',','.'); }
+  else if (hasComma)      { s = s.replace(/\./g,'').replace(',','.'); }
+  // Else leave as is (dot is decimal)
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+function getCellText(cell) {
+  if (!cell || cell.value === null || cell.value === undefined) return '';
+  const v = cell.value;
+  if (typeof v === 'object') {
+    if (v.text) return String(v.text);
+    if (v.result !== undefined) return String(v.result);
+    if (v.richText) return v.richText.map(r => r.text).join('');
+    return '';
+  }
+  return String(v);
+}
+
+function getFillColor(cell) {
+  const fill = cell?.fill;
+  if (!fill || fill.type !== 'pattern') return null;
+  const c = fill.fgColor || fill.bgColor;
+  if (!c) return null;
+  if (c.argb) return c.argb.toUpperCase();
+  if (c.rgb)  return c.rgb.toUpperCase();
+  // Theme color: ignore for now, treat as unique string
+  if (c.theme !== undefined) return `T${c.theme}_${c.tint||0}`;
+  return null;
+}
+
+/* ----------- PARSING ----------- */
+async function parseExcel(file) {
+  const wb = new ExcelJS.Workbook();
+  const buf = await file.arrayBuffer();
+  await wb.xlsx.load(buf);
+  const ws = wb.worksheets[0];
+
+  const rows = [];
+  ws.eachRow({ includeEmpty: false }, (row, rn) => {
+    const cells = [];
+    let bestColor = null;
+    // Read 13 columns and find the first non-null fill color
+    for (let c = 1; c <= 13; c++) {
+      const cell = row.getCell(c);
+      cells.push(getCellText(cell));
+      const col = getFillColor(cell);
+      if (col && col !== '00000000' && col !== 'FFFFFFFF' && !bestColor) {
+        bestColor = col;
+      }
+    }
+    // Skip fully empty rows
+    if (cells.every(c => !c || !String(c).trim())) return;
+    rows.push({ rowNumber: rn, cells, color: bestColor || 'NONE' });
+  });
+
+  return rows;
+}
+
+function detectHeader(rows) {
+  if (!rows.length) return rows;
+  const first = rows[0].cells;
+  const looksLikeHeader = first.some(v =>
+    typeof v === 'string' &&
+    /fecha|especie|cuenta|moneda|precio|titular|plaza|operaci|utilidad|monto|\bvn\b/i.test(v)
+  );
+  if (looksLikeHeader || $('#hasHeader').checked) return rows.slice(1);
+  return rows;
+}
+
+function normalize(rows) {
+  return rows.map(r => {
+    const op = String(r.cells[COL.OPERACION] || '').trim().toLowerCase();
+    return {
+      fechaConcert: r.cells[COL.FECHA_CONCERT],
+      fechaLiq:     r.cells[COL.FECHA_LIQ],
+      especie:      String(r.cells[COL.ESPECIE]   || '').trim(),
+      operacion:    String(r.cells[COL.OPERACION] || '').trim(),
+      isBuy:        op.startsWith('compr'),
+      isSell:       op.startsWith('vend'),
+      cuenta:       String(r.cells[COL.CUENTA]    || '').trim(),
+      titular:      String(r.cells[COL.TITULAR]   || '').trim(),
+      plaza:        String(r.cells[COL.PLAZA]     || '').trim(),
+      moneda:       String(r.cells[COL.MONEDA]    || '').trim(),
+      vn:           parseNumber(r.cells[COL.VN]),
+      precio:       parseNumber(r.cells[COL.PRECIO]),
+      monto:        parseNumber(r.cells[COL.MONTO]),
+      monedaUtil:   String(r.cells[COL.MONEDA_UTIL] || '').trim(),
+      utilidad:     parseNumber(r.cells[COL.UTILIDAD]),
+      color:        r.color
+    };
+  }).filter(r => r.cuenta)  // Drop rows without account
+    .map(r => {
+      const acct = resolveAccount(r.cuenta, r.titular);
+      r.ak = acct.ak;
+      r.isCaja = acct.isCaja;
+      return r;
+    });
+}
+
+function groupByColor(rows) {
+  const groups = [];
+  let current = null;
+  for (const r of rows) {
+    if (!current || current.color !== r.color) {
+      current = { color: r.color, rows: [], idx: groups.length + 1 };
+      groups.push(current);
+    }
+    current.rows.push(r);
+  }
+  return groups;
+}
+
+/* ----------- DISTRIBUTION RULES ----------- */
+function distributeGroup(g) {
+  const rows = g.rows;
+  
+  // Si hay una sola operación, no hay contraparte → utilidad = 0
+  if (rows.length === 1) {
+    const r = rows[0];
+    const acct = resolveAccount(r.cuenta, r.titular);
+    const dist = {};
+    dist[acct.ak] = 0;
+    const titulares = {};
+    titulares[acct.ak] = r.titular;
+    const cuentas = {};
+    cuentas[acct.ak] = r.cuenta;
+    return {
+      totalUtil: 0,
+      currency: r.monedaUtil || r.moneda || '',
+      dist,
+      accounts: [acct.ak],
+      rows,
+      rule: 'Op única (sin contraparte)',
+      steps: [{ cuenta: acct.ak, mech: 'Sin contraparte', amount: 0 }],
+      titulares,
+      cuentas
+    };
+  }
+  
+  // Calcular utilidad: sum(ventas.monto) - sum(compras.monto)
+  const totalUtil = rows.reduce((sum, r) => {
+    if (r.isSell) return sum + r.monto;
+    if (r.isBuy)  return sum - r.monto;
+    return sum;
+  }, 0);
+
+  // Currency: take from monedaUtil first, fall back to moneda
+  const currency =
+    rows.find(r => r.monedaUtil)?.monedaUtil ||
+    rows[0].moneda ||
+    '';
+
+  // Unique accounts (usa accountKey para diferenciar sub-cuentas con titular 16002())
+  const accounts = [...new Set(rows.map(r => r.ak))];
+  const titulares = {};
+  const cuentas = {};  // ak -> cuenta (display)
+  rows.forEach(r => {
+    if (!titulares[r.ak]) titulares[r.ak] = r.titular;
+    if (!cuentas[r.ak])   cuentas[r.ak]   = r.cuenta;
+  });
+
+  // VN breakdown per account per side
+  const buys = {}, sells = {};
+  rows.forEach(r => {
+    if (r.isBuy)  buys[r.ak]  = (buys[r.ak]  || 0) + r.vn;
+    if (r.isSell) sells[r.ak] = (sells[r.ak] || 0) + r.vn;
+  });
+
+  const dist = {};
+  const steps = [];
+  accounts.forEach(a => dist[a] = 0);
+
+  let rule = '';
+
+  if (accounts.length === 1) {
+    // Only one account — assign everything to it
+    rule = 'Una sola cuenta';
+    dist[accounts[0]] = totalUtil;
+    steps.push({ cuenta: accounts[0], mech: '100% (única cuenta)', amount: totalUtil });
+  }
+  else if (accounts.length === 2) {
+    if (accounts.includes(CUENTA_CAJA)) {
+      rule = '2-op · 16002';
+      const other = accounts.find(a => a !== CUENTA_CAJA);
+      dist[other] = totalUtil;
+      dist[CUENTA_CAJA] = 0;
+      steps.push({ cuenta: other,       mech: '100% (contraparte de 16002)', amount: totalUtil });
+      steps.push({ cuenta: CUENTA_CAJA, mech: '0% (caja 16002)',             amount: 0 });
+    } else {
+      rule = '2-op · 50/50';
+      dist[accounts[0]] = totalUtil / 2;
+      dist[accounts[1]] = totalUtil / 2;
+      steps.push({ cuenta: accounts[0], mech: '50%', amount: totalUtil / 2 });
+      steps.push({ cuenta: accounts[1], mech: '50%', amount: totalUtil / 2 });
+    }
+  }
+  else {
+    // Multi-op (3+ cuentas únicas)
+    const buyAccts  = Object.keys(buys);
+    const sellAccts = Object.keys(sells);
+    let singleSide = null, otherSide = null, otherVN = null, singleLabel = '';
+
+    if (buyAccts.length === 1) {
+      singleSide = buyAccts[0]; otherSide = sellAccts; otherVN = sells;
+      singleLabel = 'compra';
+    } else if (sellAccts.length === 1) {
+      singleSide = sellAccts[0]; otherSide = buyAccts; otherVN = buys;
+      singleLabel = 'venta';
+    }
+
+    if (singleSide) {
+      const totalOther = otherSide.reduce((s,a) => s + otherVN[a], 0);
+
+      if (singleSide === CUENTA_CAJA) {
+        rule = 'Multi · 16002 única';
+        dist[CUENTA_CAJA] = 0;
+        steps.push({ cuenta: CUENTA_CAJA, mech: `0% (única en ${singleLabel}, caja)`, amount: 0 });
+        // Entire profit distributed to other side, weighted by VN
+        otherSide.forEach(a => {
+          const share = totalUtil * (otherVN[a] / totalOther);
+          dist[a] = (dist[a] || 0) + share;
+          steps.push({
+            cuenta: a,
+            mech: `100% · VN ${fmtN(otherVN[a],0)} / ${fmtN(totalOther,0)}`,
+            amount: share
+          });
+        });
+      } else {
+        rule = `Multi · única en ${singleLabel}`;
+        dist[singleSide] = totalUtil / 2;
+        steps.push({
+          cuenta: singleSide,
+          mech: `50% (única cuenta en ${singleLabel})`,
+          amount: totalUtil / 2
+        });
+        otherSide.forEach(a => {
+          const share = (totalUtil / 2) * (otherVN[a] / totalOther);
+          dist[a] = (dist[a] || 0) + share;
+          const mech = a === CUENTA_CAJA
+            ? `50% VN pond. → redistribuye (caja)`
+            : `50% · VN ${fmtN(otherVN[a],0)} / ${fmtN(totalOther,0)}`;
+          steps.push({ cuenta: a, mech, amount: share });
+        });
+
+        // If 16002 is on the other side, redistribute its share to non-caja others
+        if (dist[CUENTA_CAJA] && CUENTA_CAJA !== singleSide && otherSide.includes(CUENTA_CAJA)) {
+          const cajaShare = dist[CUENTA_CAJA];
+          dist[CUENTA_CAJA] = 0;
+          const rest = otherSide.filter(a => a !== CUENTA_CAJA);
+          const restVN = rest.reduce((s,a) => s + otherVN[a], 0);
+          rest.forEach(a => {
+            const add = cajaShare * (otherVN[a] / restVN);
+            dist[a] += add;
+            steps.push({
+              cuenta: a,
+              mech: `+ redistrib. caja · VN ${fmtN(otherVN[a],0)}/${fmtN(restVN,0)}`,
+              amount: add
+            });
+          });
+        }
+      }
+    } else {
+      // Many-to-many: distribute by total VN across all accounts, ex-caja
+      rule = 'Multi · N×N (pond. VN)';
+      const totalVN = {};
+      accounts.forEach(a => { totalVN[a] = (buys[a]||0) + (sells[a]||0); });
+      const nonCaja = accounts.filter(a => a !== CUENTA_CAJA);
+      const sumNonCaja = nonCaja.reduce((s,a) => s + totalVN[a], 0);
+
+      if (accounts.includes(CUENTA_CAJA)) {
+        dist[CUENTA_CAJA] = 0;
+        steps.push({ cuenta: CUENTA_CAJA, mech: '0% (caja 16002)', amount: 0 });
+      }
+      nonCaja.forEach(a => {
+        const share = totalUtil * (totalVN[a] / sumNonCaja);
+        dist[a] = share;
+        steps.push({
+          cuenta: a,
+          mech: `VN ${fmtN(totalVN[a],0)} / ${fmtN(sumNonCaja,0)} (N×N)`,
+          amount: share
+        });
+      });
+    }
+  }
+
+  return { totalUtil, currency, dist, accounts, rows, rule, steps, titulares, cuentas };
+}
+
+/* ----------- RENDER ----------- */
+function renderGroup(gr, idx) {
+  const showCalc = $('#showCalc').checked;
+  const swatchColor = gr.rows[0].color && gr.rows[0].color !== 'NONE'
+    ? `#${gr.rows[0].color.slice(-6)}`
+    : '#333';
+
+  const opsRows = gr.rows.map(r => `
+    <tr>
+      <td class="${r.isBuy ? 'op-buy' : 'op-sell'}">${r.operacion}</td>
+      <td class="acct ${r.isCaja ? 'cuenta-caja' : ''}">${r.cuenta}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-dim)">${r.titular}</td>
+      <td>${r.especie}</td>
+      <td style="color:var(--text-dim)">${r.plaza}</td>
+      <td style="color:var(--text-dim)">${r.moneda}</td>
+      <td class="num">${fmtN(r.vn,2)}</td>
+      <td class="num">${fmtN(r.precio,3)}</td>
+      <td class="num">${fmtN(r.monto,2)}</td>
+      <td class="num ${r.utilidad > 0 ? 'pos' : r.utilidad < 0 ? 'neg' : 'zero'}">${r.utilidad ? fmtN(r.utilidad,2) : '—'}</td>
+    </tr>
+  `).join('');
+
+  const ruleClass = gr.accounts.includes(CUENTA_CAJA) ? 'caja'
+                  : gr.accounts.length > 2 ? 'multi' : '';
+
+  const especies = [...new Set(gr.rows.map(r => r.especie))].join(' / ');
+
+  let calcHTML = '';
+  if (showCalc) {
+    const distHTML = gr.steps.map(st => `
+      <div class="calc-dist-row">
+        <span class="acct-badge ${st.cuenta === CUENTA_CAJA ? 'caja' : ''}">${gr.cuentas[st.cuenta] || st.cuenta}</span>
+        <span class="mech">${st.mech}</span>
+        <span class="amount ${st.amount > 0 ? 'pos' : st.amount < 0 ? 'neg' : 'zero'}">${fmtN(st.amount,2)}</span>
+        <span class="currency">${gr.currency}</span>
+      </div>
+    `).join('');
+
+    calcHTML = `
+      <div class="group-calc">
+        <div class="calc-row">
+          <span>Utilidad total del grupo</span>
+          <span class="val amber">${fmtN(gr.totalUtil,2)} ${gr.currency}</span>
+        </div>
+        <div class="calc-row">
+          <span>Cuentas únicas</span>
+          <span class="val">${gr.accounts.length}</span>
+        </div>
+        <div class="calc-row">
+          <span>Operaciones</span>
+          <span class="val">${gr.rows.filter(r=>r.isBuy).length} compras · ${gr.rows.filter(r=>r.isSell).length} ventas</span>
+        </div>
+        <div class="calc-dist">
+          ${distHTML}
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="group">
+      <div class="group-head">
+        <div class="group-id">
+          <div class="group-swatch" style="background:${swatchColor}"></div>
+          <div class="group-label">
+            GRUPO ${String(idx).padStart(2,'0')}
+            <span class="sep">·</span>
+            ${especies}
+            <span class="sep">·</span>
+            ${gr.rows.length} ops
+          </div>
+        </div>
+        <div class="group-rule ${ruleClass}">${gr.rule}</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Op</th><th>Cta</th><th>Titular</th><th>Esp</th><th>Plaza</th><th>Mon</th>
+            <th class="num">VN</th><th class="num">Precio</th><th class="num">Monto</th><th class="num">Utilidad</th>
+          </tr>
+        </thead>
+        <tbody>${opsRows}</tbody>
+      </table>
+      ${calcHTML}
+    </div>
+  `;
+}
+
+function renderSummary(groupResults) {
+  // Per currency, per accountKey, total utilidad
+  const byCurrency = {};
+  const titulares = {};
+  const cuentasMap = {};  // ak -> cuenta number for display
+  groupResults.forEach(gr => {
+    if (!byCurrency[gr.currency]) byCurrency[gr.currency] = {};
+    Object.entries(gr.dist).forEach(([ak, val]) => {
+      byCurrency[gr.currency][ak] = (byCurrency[gr.currency][ak] || 0) + val;
+      if (!titulares[ak] && gr.titulares[ak]) titulares[ak] = gr.titulares[ak];
+      if (!cuentasMap[ak] && gr.cuentas[ak]) cuentasMap[ak] = gr.cuentas[ak];
+    });
+  });
+
+  const sectionsHTML = Object.entries(byCurrency).map(([cur, accts]) => {
+    const total = Object.values(accts).reduce((a,b) => a+b, 0);
+    const sortedAccts = Object.entries(accts)
+      .sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]));
+
+    const cards = sortedAccts.map(([ak, val]) => {
+      const tit = titulares[ak] || '';
+      const cta = cuentasMap[ak] || ak;
+      const cls = ak === CUENTA_CAJA ? 'caja' : '';
+      const valClass = val > 0.005 ? 'pos' : val < -0.005 ? 'neg' : 'zero';
+      return `
+        <div class="summary-card ${cls}">
+          <div class="sc-left">
+            <span class="sc-acct">${cta}</span>
+            <span class="sc-titular">${tit}</span>
+          </div>
+          <span class="sc-amount ${valClass}">${fmtN(val,2)}</span>
+        </div>
+      `;
+    }).join('');
+
+    const totalClass = total > 0.005 ? 'pos' : total < -0.005 ? 'neg' : 'zero';
+
+    return `
+      <div class="summary-section">
+        <div class="summary-title">${cur || 'SIN MONEDA'}</div>
+        <div class="summary-grid">
+          ${cards}
+          <div class="summary-card total">
+            <div class="sc-left">
+              <span class="sc-acct">TOTAL ${cur}</span>
+              <span class="sc-titular">Control · suma debería ≈ utilidad bruta</span>
+            </div>
+            <span class="sc-amount ${totalClass}">${fmtN(total,2)}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return sectionsHTML;
+}
+
+/* ----------- STATE ----------- */
+let LAST_RESULTS = null;
+let LAST_SUMMARY = null;
+
+/* ----------- MAIN FLOW ----------- */
+async function processFile(file) {
+  clearError();
+  setStatus('Leyendo...', 'busy');
+  $('#fileInfo').textContent = `${file.name} · ${(file.size/1024).toFixed(1)} kB`;
+
+  try {
+    let rows = await parseExcel(file);
+    if (!rows.length) throw new Error('Excel vacío o no se pudieron leer filas.');
+
+    rows = detectHeader(rows);
+    const ops = normalize(rows);
+    if (!ops.length) throw new Error('No se detectaron operaciones válidas (chequear columna de cuenta).');
+
+    // Warn if no colors detected
+    const uniqueColors = new Set(ops.map(o => o.color));
+    if (uniqueColors.size === 1 && uniqueColors.has('NONE')) {
+      showError('No se detectaron colores de fondo en el Excel. Asegurate de guardar el archivo con el formato de colores aplicado (no como CSV). Se tratará todo como un único grupo.');
+    }
+
+    const groups = groupByColor(ops);
+    const results = groups.map(distributeGroup);
+    LAST_RESULTS = results;
+
+    // Render groups
+    const html = results.map((gr, i) => renderGroup(gr, i+1)).join('');
+    $('#groups').innerHTML = html;
+    $('#groupsPanel').hidden = false;
+    $('#groupCount').textContent = `${results.length} grupo${results.length===1?'':'s'} · ${ops.length} ops`;
+
+    // Render summary
+    $('#summary').innerHTML = renderSummary(results);
+    $('#summaryPanel').hidden = false;
+
+    setStatus('Procesado', 'ok');
+
+    // Scroll to groups
+    $('#groupsPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    console.error(err);
+    showError(err.message);
+  }
+}
+
+/* ----------- EXPORT ----------- */
+function buildExportRows() {
+  if (!LAST_RESULTS) return [];
+  const byKey = {}; // key: currency||ak
+  const titulares = {};
+  const cuentasMap = {};
+  LAST_RESULTS.forEach(gr => {
+    Object.entries(gr.dist).forEach(([ak, val]) => {
+      const key = `${gr.currency}||${ak}`;
+      byKey[key] = (byKey[key] || 0) + val;
+      if (!titulares[ak] && gr.titulares[ak]) titulares[ak] = gr.titulares[ak];
+      if (!cuentasMap[ak] && gr.cuentas[ak]) cuentasMap[ak] = gr.cuentas[ak];
+    });
+  });
+  const rows = [['Moneda', 'Cuenta', 'Titular', 'Utilidad']];
+  Object.entries(byKey).forEach(([k, v]) => {
+    const [cur, ak] = k.split('||');
+    rows.push([cur, cuentasMap[ak] || ak, titulares[ak] || '', +v.toFixed(2)]);
+  });
+  return rows;
+}
+
+function exportXlsx() {
+  if (!LAST_RESULTS) return;
+  const rows = buildExportRows();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:10},{wch:10},{wch:40},{wch:16}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Utilidades');
+
+  // Add detail sheet
+  const detail = [['Grupo','Moneda','Cuenta','Titular','Mecánica','Monto']];
+  LAST_RESULTS.forEach((gr, idx) => {
+    gr.steps.forEach(st => {
+      detail.push([idx+1, gr.currency, gr.cuentas[st.cuenta]||st.cuenta, gr.titulares[st.cuenta]||'', st.mech, +st.amount.toFixed(2)]);
+    });
+  });
+  const ws2 = XLSX.utils.aoa_to_sheet(detail);
+  ws2['!cols'] = [{wch:7},{wch:10},{wch:10},{wch:40},{wch:45},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Detalle');
+
+  const today = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `utilidades_${today}.xlsx`);
+}
+
+function copyTSV() {
+  if (!LAST_RESULTS) return;
+  const rows = buildExportRows();
+  const tsv = rows.map(r => r.join('\t')).join('\n');
+  navigator.clipboard.writeText(tsv).then(() => {
+    const btn = $('#btnCopy');
+    const old = btn.textContent;
+    btn.textContent = 'OK · copiado';
+    setTimeout(() => btn.textContent = old, 1500);
+  });
+}
+
+/* ----------- EVENT WIRING ----------- */
+const dz = $('#dropzone');
+const fi = $('#fileInput');
+
+dz.addEventListener('click', () => fi.click());
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => {
+  e.preventDefault();
+  dz.classList.remove('drag');
+  if (e.dataTransfer.files.length) processFile(e.dataTransfer.files[0]);
+});
+fi.addEventListener('change', e => {
+  if (e.target.files.length) processFile(e.target.files[0]);
+});
+$('#btnExport').addEventListener('click', exportXlsx);
+$('#btnCopy').addEventListener('click', copyTSV);
+$('#showCalc').addEventListener('change', () => {
+  if (LAST_RESULTS) {
+    $('#groups').innerHTML = LAST_RESULTS.map((gr, i) => renderGroup(gr, i+1)).join('');
+  }
+});
+</script>
+</body>
+</html>
