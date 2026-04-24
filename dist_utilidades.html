@@ -650,14 +650,22 @@ const COL = {
 
 const CUENTA_CAJA = '16002';  // Regla especial: 16002 no participa en el reparto
 
-// Si cuenta=16002 pero el titular contiene '16002(' en el nombre, NO es la caja.
-// Se trata como cuenta distinta, y cada titular con ese patrón queda separado del resto.
+// 16002 es CAJA solo si titular = 'SINAC' exacto (sin paréntesis ni nada más) o vacío
+// Si dice 'SINAC (algo)' o cualquier otro texto → NO es caja, se reparte normal
 function resolveAccount(cuenta, titular) {
   const t = String(titular || '').trim();
-  if (cuenta === CUENTA_CAJA && /16002\s*\(/i.test(t)) {
-    return { ak: `${cuenta}::${t}`, isCaja: false };
+  
+  // Si cuenta es 16002, checkear si es la caja real o una sub-cuenta
+  if (cuenta === CUENTA_CAJA) {
+    const isCaja = t === '' || /^SINAC$/i.test(t);  // Vacío o "SINAC" exacto
+    if (!isCaja) {
+      // Es 16002 pero con titular diferente → cuenta aparte
+      return { ak: `${cuenta}::${t}`, isCaja: false };
+    }
+    return { ak: cuenta, isCaja: true };
   }
-  return { ak: cuenta, isCaja: cuenta === CUENTA_CAJA };
+  
+  return { ak: cuenta, isCaja: false };
 }
 
 /* ----------- HELPERS ----------- */
@@ -905,19 +913,39 @@ function distributeGroup(g) {
     }
 
     if (singleSide) {
-      const totalOther = otherSide.reduce((s,a) => s + otherVN[a], 0);
+      // Calculate price-weighted distribution for the multi-side
+      // Get the reference price from the single-side operation
+      const refPrice = rows.find(r => 
+        (r.isBuy && buyAccts.includes(singleSide)) || 
+        (r.isSell && sellAccts.includes(singleSide))
+      )?.precio || 0;
+
+      // For each account on the other side, compute: (price_diff × VN)
+      const weights = {};
+      let totalWeight = 0;
+      otherSide.forEach(a => {
+        const ops = rows.filter(r => r.ak === a);
+        let w = 0;
+        ops.forEach(op => {
+          const priceDiff = Math.abs(op.precio - refPrice);
+          w += priceDiff * op.vn;
+        });
+        weights[a] = w;
+        totalWeight += w;
+      });
 
       if (singleSide === CUENTA_CAJA) {
         rule = 'Multi · 16002 única';
         dist[CUENTA_CAJA] = 0;
         steps.push({ cuenta: CUENTA_CAJA, mech: `0% (única en ${singleLabel}, caja)`, amount: 0 });
-        // Entire profit distributed to other side, weighted by VN
+        // Entire profit distributed to other side, weighted by (price_diff × VN)
         otherSide.forEach(a => {
-          const share = totalUtil * (otherVN[a] / totalOther);
+          const share = totalUtil * (weights[a] / totalWeight);
           dist[a] = (dist[a] || 0) + share;
+          const priceDiff = weights[a] / otherVN[a];
           steps.push({
             cuenta: a,
-            mech: `100% · VN ${fmtN(otherVN[a],0)} / ${fmtN(totalOther,0)}`,
+            mech: `100% · Δp ${fmtN(priceDiff,3)} × VN ${fmtN(otherVN[a],0)}`,
             amount: share
           });
         });
@@ -930,11 +958,12 @@ function distributeGroup(g) {
           amount: totalUtil / 2
         });
         otherSide.forEach(a => {
-          const share = (totalUtil / 2) * (otherVN[a] / totalOther);
+          const share = (totalUtil / 2) * (weights[a] / totalWeight);
           dist[a] = (dist[a] || 0) + share;
+          const priceDiff = weights[a] / otherVN[a];
           const mech = a === CUENTA_CAJA
-            ? `50% VN pond. → redistribuye (caja)`
-            : `50% · VN ${fmtN(otherVN[a],0)} / ${fmtN(totalOther,0)}`;
+            ? `50% pond. → redistribuye (caja)`
+            : `50% · Δp ${fmtN(priceDiff,3)} × VN ${fmtN(otherVN[a],0)}`;
           steps.push({ cuenta: a, mech, amount: share });
         });
 
@@ -943,13 +972,14 @@ function distributeGroup(g) {
           const cajaShare = dist[CUENTA_CAJA];
           dist[CUENTA_CAJA] = 0;
           const rest = otherSide.filter(a => a !== CUENTA_CAJA);
-          const restVN = rest.reduce((s,a) => s + otherVN[a], 0);
+          const restWeight = rest.reduce((s,a) => s + weights[a], 0);
           rest.forEach(a => {
-            const add = cajaShare * (otherVN[a] / restVN);
+            const add = cajaShare * (weights[a] / restWeight);
             dist[a] += add;
+            const priceDiff = weights[a] / otherVN[a];
             steps.push({
               cuenta: a,
-              mech: `+ redistrib. caja · VN ${fmtN(otherVN[a],0)}/${fmtN(restVN,0)}`,
+              mech: `+ redistrib. caja · Δp ${fmtN(priceDiff,3)}`,
               amount: add
             });
           });
