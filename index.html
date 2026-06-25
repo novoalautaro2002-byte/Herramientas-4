@@ -187,6 +187,9 @@ html,body{height:100%;overflow:hidden}
     </div>
   </div>
 
+  <!-- MONITOR MAV – tab directo -->
+  <button class="nav-tab" id="nav-mav" onclick="showPage('mav')"><span class="tab-icon">🧾</span> Monitor MAV</button>
+
   <!-- NOTICIAS – tab directo, fuera del dropdown -->
   <button class="nav-tab tab-news" id="nav-noticias" onclick="showPage('noticias')">
     <span class="tab-icon">📰</span> Noticias
@@ -209,6 +212,8 @@ html,body{height:100%;overflow:hidden}
   <iframe class="page-frame"        id="frame-opneta"      src="opneta.html"       title="Operación Neta"></iframe>
   <!-- NUEVA PÁGINA: Noticias BYMA -->
   <iframe class="page-frame"        id="frame-noticias"    src="noticias.html"     title="Market Data News"></iframe>
+  <!-- NUEVA PÁGINA: Monitor Diario MAV -->
+  <iframe class="page-frame"        id="frame-mav"         src="monitor-diario-mav.html" title="Monitor Diario MAV"></iframe>
   <!-- OCULTA: Dist. Utilidades (solo accesible con código) -->
   <iframe class="page-frame"        id="frame-dist"        src="dist_utilidades.html" title="Dist. Utilidades"></iframe>
 </div>
@@ -227,7 +232,7 @@ html,body{height:100%;overflow:hidden}
 </div>
 
 <script>
-const PAGE_IDS = ["resumen", "tc", "cauc", "dcto", "opneta", "lecap", "bonos", "cer", "dolarlinked", "arb", "noticias", "dist"];
+const PAGE_IDS = ["resumen", "tc", "cauc", "dcto", "opneta", "lecap", "bonos", "cer", "dolarlinked", "arb", "noticias", "mav", "dist"];
 const CALC_GROUP  = ['tc','cauc','dcto','opneta'];
 const BONOS_GROUP = ['lecap','bonos','cer','dolarlinked'];
 const ESTRAT_GROUP= ['arb'];
