@@ -280,7 +280,14 @@ const CONFIG = {
     "Garantizado": "Mercado",
     "No Garantizado": "Librador",
     "No Garantizado Calificado": "Librador"
-  }
+  },
+  // ── Saneamiento de tasas (anti dato corrupto del origen) ──
+  // Si TASA V. es anómala (mayor a tnaMax, o diverge groseramente de TASA C.
+  // por un factor > tnaDivergeFactor, típico error de carga tipo "192" en vez de "20"),
+  // se usa TASA C. en su lugar. Si TASA C. tampoco sirve, se excluye del promedio.
+  // El monto igual se cuenta en los totales. Las correcciones se listan en Diagnóstico.
+  tnaMax: 200,            // TNA tope plausible (%). Por encima -> sospechosa
+  tnaDivergeFactor: 4     // TASA V. > TASA C. × factor (o < /factor) -> sospechosa
 };
 
 const REQUIRED_COLS = ["FEC.SUB.","SEGMENTO","MONEDA","MONTO","TASA V.","PPV","ESTADO","NOMBRE RESPONSABLE","TIPO INSTRUMENTO"];
@@ -320,6 +327,18 @@ function mapMoneda(raw){
 }
 function foldSegmento(raw){ const v=(raw||'').trim(); return CONFIG.segmentosFold[v]||v; }
 function segName(seg){ return CONFIG.segDisplay[seg]||seg; }
+// Resuelve la TNA a usar: TASA V. salvo que sea anómala -> fallback a TASA C.
+// fix: null = ok | 'C' = corregida con TASA C. | 'excl' = sin tasa usable (fuera del promedio)
+function resolveTna(tv, tc){
+  const max=CONFIG.tnaMax, f=CONFIG.tnaDivergeFactor;
+  const vBad = isNaN(tv) || tv<=0 || tv>max ||
+               (!isNaN(tc) && tc>0 && (tv>tc*f || tv<tc/f));
+  if(vBad){
+    if(!isNaN(tc) && tc>0 && tc<=max) return {tna:tc, fix:'C'};
+    return {tna:NaN, fix:'excl'};
+  }
+  return {tna:tv, fix:null};
+}
 
 /* ============================================================
    AGREGACIONES
@@ -399,13 +418,15 @@ function processText(text, fileName){
     if(!row || (row.length===1 && (row[0]||'').trim()==='')) continue;
     if(row.every(c=>(c||'').trim()==='')) continue;
     const monedaRaw=(get(row,'MONEDA')||'').trim();
+    const _tv=parseNum(get(row,'TASA V.')), _tc=parseNum(get(row,'TASA C.'));
+    const _rt=resolveTna(_tv,_tc);
     all.push({
       fecha:(get(row,'FEC.SUB.')||'').trim(),
       segmentoRaw:(get(row,'SEGMENTO')||'').trim(),
       segmento:foldSegmento(get(row,'SEGMENTO')),
       monedaRaw, moneda:mapMoneda(monedaRaw),
       monto:parseNum(get(row,'MONTO')),
-      tna:parseNum(get(row,'TASA V.')),
+      tna:_rt.tna, tnaRaw:_tv, tnaC:_tc, tnaFix:_rt.fix,
       ppv:parsePlazo(get(row,'PPV')),
       entidad:(get(row,'NOMBRE RESPONSABLE')||'').trim(),
       tipo:(get(row,'TIPO INSTRUMENTO')||'').trim(),
@@ -509,27 +530,18 @@ function cardHTML(cur,seg,colorClass){
 
 function colorOf(seg){ return CONFIG.segmentosDestacados.includes(seg)?'blue':(seg==='No Garantizado Calificado'?'slate':'navy'); }
 
-// min/max de TNA ponderada por segmento ARS
-function segMinMaxARS(){
-  const arr=CONFIG.ordenSegmentosARS.map(seg=>({seg,tna:wAvg(recsBy('ARS',seg),'tna'),n:recsBy('ARS',seg).length}))
-    .filter(x=>x.n>0 && !isNaN(x.tna));
-  if(!arr.length) return {mn:null,mx:null};
-  let mn=arr[0],mx=arr[0];
-  for(const s of arr){ if(s.tna<mn.tna)mn=s; if(s.tna>mx.tna)mx=s; }
-  return {mn,mx};
-}
-
 function renderARS(){
   const ars=DATA.neg.filter(r=>r.moneda==='ARS');
   const usd=DATA.neg.filter(r=>r.moneda==='HD'||r.moneda==='DL');
-  const {mn,mx}=segMinMaxARS();
   const prom=wAvg(ars,'tna');
+  const avRecs=recsBy('ARS','Avalado'), ngRecs=recsBy('ARS','No Garantizado');
+  const tnaAv=wAvg(avRecs,'tna'),      tnaNg=wAvg(ngRecs,'tna');
 
   const kpis=`<div class="kpiband">
     <div class="kpi"><span class="kl">Monto ARS</span><span class="kv">${fmtARS(sum(ars,'monto'))}</span><span class="ks">${ars.length} operaciones</span></div>
     <div class="kpi"><span class="kl">Monto USD</span><span class="kv">${fmtUSD(sum(usd,'monto'))}</span><span class="ks">${usd.length} ops · HD + DL</span></div>
-    <div class="kpi"><span class="kl">Tasa mínima</span><span class="kv">${mn?fmtPct(mn.tna):'—'}</span><span class="ks">${mn?esc(segName(mn.seg)):'—'}</span></div>
-    <div class="kpi"><span class="kl">Tasa máxima</span><span class="kv">${mx?fmtPct(mx.tna):'—'}</span><span class="ks">${mx?esc(segName(mx.seg)):'—'}</span></div>
+    <div class="kpi"><span class="kl">TNA Avalado</span><span class="kv">${fmtPct(tnaAv)}</span><span class="ks">ponderada · ${avRecs.length} ops</span></div>
+    <div class="kpi"><span class="kl">TNA No Garantizado</span><span class="kv">${fmtPct(tnaNg)}</span><span class="ks">ponderada · ${ngRecs.length} ops</span></div>
     <div class="kpi"><span class="kl">Promedio mercado</span><span class="kv">${fmtPct(prom)}</span><span class="ks">TNA ponderada ARS</span></div>
   </div>`;
 
@@ -545,13 +557,15 @@ function renderUSD(){
   const hd=DATA.neg.filter(r=>r.moneda==='HD');
   const dl=DATA.neg.filter(r=>r.moneda==='DL');
   const usd=hd.concat(dl);
-  const {mn,mx}=segMinMaxARS();
+  const avRecs=usd.filter(r=>r.segmento==='Avalado'), ngRecs=usd.filter(r=>r.segmento==='No Garantizado');
+  const tnaAv=wAvg(avRecs,'tna'), tnaNg=wAvg(ngRecs,'tna'), prom=wAvg(usd,'tna');
 
   const kpis=`<div class="kpiband">
-    <div class="kpi"><span class="kl">HD — Dólar MEP</span><span class="kv">${fmtUSD(sum(hd,'monto'))}</span><span class="ks">${hd.length} ops · ${fmtPct(wAvg(hd,'tna'))}</span></div>
-    <div class="kpi"><span class="kl">DL — Dólar Linked</span><span class="kv">${fmtUSD(sum(dl,'monto'))}</span><span class="ks">${dl.length} ops · ${fmtPct(wAvg(dl,'tna'))}</span></div>
-    <div class="kpi"><span class="kl">Total USD</span><span class="kv">${fmtUSD(sum(usd,'monto'))}</span><span class="ks">${usd.length} operaciones</span></div>
-    <div class="kpi"><span class="kl">Ref. ARS mín / máx</span><span class="kv">${mn?fmtPct1(mn.tna):'—'} – ${mx?fmtPct1(mx.tna):'—'}</span><span class="ks">${mn?esc(segName(mn.seg)):'—'} / ${mx?esc(segName(mx.seg)):'—'}</span></div>
+    <div class="kpi"><span class="kl">Monto HD</span><span class="kv">${fmtUSD(sum(hd,'monto'))}</span><span class="ks">${hd.length} ops · Dólar MEP</span></div>
+    <div class="kpi"><span class="kl">Monto DL</span><span class="kv">${fmtUSD(sum(dl,'monto'))}</span><span class="ks">${dl.length} ops · Dólar Linked</span></div>
+    <div class="kpi"><span class="kl">TNA Avalado</span><span class="kv">${fmtPct(tnaAv)}</span><span class="ks">ponderada · ${avRecs.length} ops</span></div>
+    <div class="kpi"><span class="kl">TNA No Garantizado</span><span class="kv">${fmtPct(tnaNg)}</span><span class="ks">ponderada · ${ngRecs.length} ops</span></div>
+    <div class="kpi"><span class="kl">Promedio mercado</span><span class="kv">${fmtPct(prom)}</span><span class="ks">TNA ponderada USD</span></div>
   </div>`;
 
   const hdCards=CONFIG.ordenSegmentosUSD.map(seg=>cardHTML('HD',seg,colorOf(seg))).join('');
@@ -585,6 +599,21 @@ function renderDiag(){
   html+=`<div style="font-size:11px;color:var(--ink2);margin-top:8px">* Montos sumados sin distinguir moneda, solo como control de que no se "perdió" plata en el filtro de estado.</div>`;
   if(d.unmapped.length){
     html+=`<div class="diag-warn"><b>⚠ Monedas no mapeadas:</b> ${d.unmapped.map(esc).join(', ')}. Cayeron por default en <b>Dólar Linked (DL)</b>. Editá <code>CONFIG.moneda</code> si corresponde otra clasificación.</div>`;
+  }
+  // ── Saneamiento de tasas ──
+  const corr=d.neg.filter(r=>r.tnaFix==='C');
+  const excl=d.neg.filter(r=>r.tnaFix==='excl');
+  if(corr.length || excl.length){
+    let w=`<div class="diag-warn"><b>⚠ Saneamiento de tasas:</b> ${corr.length} operación(es) con <code>TASA V.</code> anómala (probable error de carga del MAV) — se usó <code>TASA C.</code> en su lugar`;
+    if(excl.length) w+=`; ${excl.length} sin tasa usable, excluida(s) del promedio (el monto igual se cuenta)`;
+    w+='.';
+    if(corr.length){
+      w+='<div style="margin-top:8px;font-family:var(--mono);font-size:10.5px;line-height:1.6">'+
+        corr.slice(0,10).map(r=>`• ${esc(segName(r.segmento))} · ${esc(r.moneda)} · ${esc(r.entidad||'(s/nombre)')}: TASA V. ${fmtPct(r.tnaRaw)} → ${fmtPct(r.tnaC)} (TASA C.) · ${fmtMonto(r.moneda==='ARS'?'ARS':'USD',r.monto)}`).join('<br>')+
+        (corr.length>10?`<br>… y ${corr.length-10} más`:'')+'</div>';
+    }
+    w+='</div>';
+    html+=w;
   }
   document.getElementById('diag-body').innerHTML=html;
 }
