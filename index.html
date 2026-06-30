@@ -184,6 +184,7 @@ html,body{height:100%;overflow:hidden}
     <button class="nav-dropdown-btn" id="ddbtn-estrat">⚡ Estrategias <span class="dd-arrow">▼</span></button>
     <div class="nav-dropdown-menu">
       <button class="nav-dropdown-item" onclick="showPage('arb')"><span class="di-icon">⇄</span> Arbitraje GD30/AL30</button>
+      <button class="nav-dropdown-item" onclick="showPage('ced')"><span class="di-icon">🌎</span> Arbitraje CEDEAR / Acción</button>
     </div>
   </div>
 
@@ -209,6 +210,7 @@ html,body{height:100%;overflow:hidden}
   <iframe class="page-frame"        id="frame-cer"         src="cer.html"          title="Bonos CER"></iframe>
   <iframe class="page-frame"        id="frame-dolarlinked" src="dolarlinked.html"  title="Dólar Linked"></iframe>
   <iframe class="page-frame"        id="frame-arb"         src="arbitraje.html"    title="Arbitraje"></iframe>
+  <iframe class="page-frame"        id="frame-ced"         src="cedears-arb.html"  title="Arbitraje CEDEAR / Acción"></iframe>
   <iframe class="page-frame"        id="frame-opneta"      src="opneta.html"       title="Operación Neta"></iframe>
   <!-- NUEVA PÁGINA: Noticias BYMA -->
   <iframe class="page-frame"        id="frame-noticias"    src="noticias.html"     title="Market Data News"></iframe>
@@ -232,10 +234,10 @@ html,body{height:100%;overflow:hidden}
 </div>
 
 <script>
-const PAGE_IDS = ["resumen", "tc", "cauc", "dcto", "opneta", "lecap", "bonos", "cer", "dolarlinked", "arb", "noticias", "mav", "dist"];
+const PAGE_IDS = ["resumen", "tc", "cauc", "dcto", "opneta", "lecap", "bonos", "cer", "dolarlinked", "arb", "ced", "noticias", "mav", "dist"];
 const CALC_GROUP  = ['tc','cauc','dcto','opneta'];
 const BONOS_GROUP = ['lecap','bonos','cer','dolarlinked'];
-const ESTRAT_GROUP= ['arb'];
+const ESTRAT_GROUP= ['arb','ced'];
 const AUTH_CODE = '4411';
 
 // Clock

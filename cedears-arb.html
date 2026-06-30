@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Investment — Arbitraje CEDEAR / Acción USD</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --navy:   #0d1b2e; --navy2:  #122540; --navy3:  #172d4d;
+  --panel:  #1a3358; --card:   #1e3a62; --card2:  #243f6a;
+  --border: #2a4a7a; --border2:#3a5a8a;
+  --blue:   #3a6fd8; --blue2:  #5b8def; --blue3:  #7aa3f0; --blue4:  #a8c4f8;
+  --accent: #4f81e8; --white:  #f0f4ff; --white2: #d0ddf5;
+  --gray:   #7a99c4; --gray2:  #4a6a9a;
+  --green:  #22d68a; --green2: #16a86a; --green-bg:#0a2a1a;
+  --red:    #ff4d6a; --red2:   #cc3a55; --red-bg: #2a0a12;
+  --amber:  #f0b429; --cyan:   #22d4f0; --yellow: #e8f43a;
+  --font:   'Inter', sans-serif; --mono:   'JetBrains Mono', 'Courier New', monospace;
+}
+
+html,body{background:var(--navy);color:var(--white);font-family:var(--font);font-size:13px;min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--navy2)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ─── TOP BAR ─── */
+.top-bar{background:linear-gradient(135deg, var(--navy2) 0%, var(--navy3) 100%);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:56px;position:sticky;top:0;z-index:200;box-shadow:0 2px 16px rgba(0,0,0,.4)}
+.logo-area{display:flex;align-items:center;gap:12px}
+.logo-svg{width:40px;height:40px;flex-shrink:0}
+.logo-text{display:flex;flex-direction:column;line-height:1.1}
+.logo-text strong{font-size:16px;font-weight:800;color:var(--white);letter-spacing:-.02em}
+.logo-text span{font-size:10px;font-weight:500;color:var(--blue3);letter-spacing:.08em;text-transform:uppercase}
+.top-right{display:flex;align-items:center;gap:16px}
+.top-badge{font-size:10px;font-weight:600;color:var(--blue4);letter-spacing:.06em;font-family:var(--mono)}
+#clock{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--blue3);letter-spacing:.04em;background:var(--navy);padding:3px 8px;border:1px solid var(--border);border-radius:4px}
+
+/* ─── NAV ─── */
+.nav-bar{background:var(--navy2);border-bottom:2px solid var(--border);display:flex;align-items:stretch;padding:0 20px;gap:0}
+.nav-tab{display:flex;align-items:center;gap:8px;padding:0 22px;height:42px;font-family:var(--font);font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--gray);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap}
+.nav-tab:hover{color:var(--blue3);background:rgba(58,111,216,.08)}
+.nav-tab.active{color:var(--white);border-bottom-color:var(--blue);background:rgba(58,111,216,.12)}
+.nav-tab .tab-icon{font-size:14px}
+.nav-spacer{flex:1}
+.nav-meta{display:flex;align-items:center;gap:8px;padding:0 4px}
+.nav-meta-txt{font-size:10px;color:var(--gray2);letter-spacing:.06em;font-family:var(--mono)}
+
+/* ─── PAGE ─── */
+.ca-page{min-height:calc(100vh - 98px);display:flex;flex-direction:column;background:var(--navy2)}
+
+/* ─── TOOLBAR ─── */
+.ca-toolbar{background:linear-gradient(90deg,var(--navy3),var(--navy2));border-bottom:1px solid var(--border);padding:8px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ca-title{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue2);letter-spacing:.06em}
+.ca-sub{font-size:10px;color:var(--gray);letter-spacing:.08em;text-transform:uppercase}
+.ca-spacer{flex:1}
+.ca-filters{display:flex;gap:4px}
+.ca-ftab{background:var(--navy3);border:1px solid var(--border);color:var(--gray);font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 10px;cursor:pointer;letter-spacing:.06em;border-radius:3px;height:26px;display:flex;align-items:center;transition:all .12s}
+.ca-ftab:hover{color:var(--white);border-color:var(--blue2)}
+.ca-ftab.on{background:rgba(58,111,216,.2);color:var(--blue2);border-color:var(--blue)}
+.ca-ftab.on-green{background:rgba(22,168,106,.15);color:var(--green);border-color:var(--green2)}
+.ca-ftab.on-red{background:rgba(204,58,85,.15);color:var(--red);border-color:var(--red2)}
+.ca-pill{font-size:10px;font-family:var(--mono);padding:2px 10px;border-radius:10px;border:1px solid;letter-spacing:.06em;font-weight:600}
+.ca-pill.ok{color:var(--green);border-color:var(--green2);background:var(--green-bg)}
+.ca-pill.loading{color:var(--amber);border-color:#7a5a10;background:rgba(120,80,10,.2);animation:pillblink 1s step-end infinite}
+.ca-pill.err{color:var(--red);border-color:var(--red2);background:var(--red-bg)}
+@keyframes pillblink{0%,100%{opacity:1}50%{opacity:.4}}
+.ca-canje{font-size:10px;color:var(--gray);font-family:var(--mono)}
+.ca-canje b{color:var(--amber)}
+.ca-refresh-btn{background:var(--navy3);border:1px solid var(--border2);color:var(--blue3);font-family:var(--mono);font-size:10px;font-weight:700;padding:0 12px;cursor:pointer;height:28px;border-radius:4px;letter-spacing:.06em;transition:all .15s;display:flex;align-items:center;gap:6px}
+.ca-refresh-btn:hover{border-color:var(--blue);background:rgba(58,111,216,.15);color:var(--white)}
+.ca-refresh-btn.loading{opacity:.6;pointer-events:none}
+.ca-auto{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--gray);font-family:var(--mono);cursor:pointer;user-select:none}
+.ca-auto input{accent-color:var(--blue)}
+
+/* ─── EXPLAINER ─── */
+.ca-note{background:rgba(58,111,216,.06);border-bottom:1px solid var(--border);padding:7px 20px;font-size:10px;color:var(--blue3);letter-spacing:.02em;line-height:1.7;font-family:var(--mono)}
+.ca-note b{color:var(--white2)}
+.ca-note .pos{color:var(--green)}
+.ca-note .neg{color:var(--red)}
+
+/* ─── TABLE ─── */
+.ca-table-wrap{flex:1;overflow:auto}
+.ca-table{width:100%;border-collapse:collapse;font-family:var(--mono)}
+.ca-table thead tr{background:#0a1525;border-bottom:2px solid var(--border)}
+.ca-table thead th{padding:8px 12px;font-size:10px;font-weight:700;color:#f0b429;letter-spacing:.1em;text-transform:uppercase;text-align:right;white-space:nowrap;border-right:1px solid rgba(42,74,122,.4);cursor:pointer;user-select:none;transition:color .12s;position:sticky;top:0;background:#0a1525;z-index:2}
+.ca-table thead th:first-child{text-align:left}
+.ca-table thead th:last-child{border-right:none}
+.ca-table thead th:hover{color:var(--white)}
+.ca-table thead th .sort-arrow{opacity:.4;margin-left:4px;font-size:9px}
+.ca-table thead th.sort-asc .sort-arrow::after{content:'▲';opacity:1}
+.ca-table thead th.sort-desc .sort-arrow::after{content:'▼';opacity:1}
+.ca-table thead th:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
+.ca-table tbody tr{border-bottom:1px solid rgba(42,74,122,.4);transition:background .1s}
+.ca-table tbody tr:hover{background:rgba(58,111,216,.12)}
+.ca-table tbody tr:nth-child(even){background:rgba(10,21,37,.4)}
+.ca-table tbody tr:nth-child(even):hover{background:rgba(58,111,216,.12)}
+.ca-table tbody td{padding:7px 12px;font-size:12px;text-align:right;color:var(--white2);border-right:1px solid rgba(42,74,122,.25);white-space:nowrap}
+.ca-table tbody td:first-child{text-align:left}
+.ca-table tbody td:last-child{border-right:none}
+.ca-tk-wrap{display:flex;align-items:center;gap:8px}
+.ca-tk{font-weight:700;font-size:13px;color:var(--white);letter-spacing:.04em}
+.ca-tk-name{font-size:9px;color:var(--gray2);font-family:var(--font);font-weight:500}
+.ca-adr{font-size:8px;font-weight:700;letter-spacing:.06em;padding:1px 4px;border-radius:2px;border:1px solid #1a9ab0;color:var(--cyan);background:rgba(34,212,240,.08);font-family:var(--mono)}
+.ca-ratio{color:var(--blue3);font-weight:600}
+.ca-px{color:var(--white)}
+.ca-prem{font-weight:700;font-size:13px}
+.ca-prem.pos{color:var(--red)}     /* CEDEAR caro */
+.ca-prem.neg{color:var(--green)}   /* CEDEAR barato */
+.ca-prem.neu{color:var(--gray)}
+.ca-canjecol{color:var(--amber)}
+.ca-sig{font-size:9px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:3px;border:1px solid;white-space:nowrap}
+.ca-sig.buy{color:var(--green);border-color:var(--green2);background:var(--green-bg)}
+.ca-sig.sell{color:var(--red);border-color:var(--red2);background:var(--red-bg)}
+.ca-sig.neu{color:var(--gray);border-color:var(--border);background:transparent}
+.ca-vol{color:var(--gray);font-size:10px}
+.ca-row-flag td{opacity:.45}
+.ca-flag-tag{font-size:8px;color:var(--amber);border:1px solid #8a6820;background:rgba(240,180,41,.08);padding:1px 4px;border-radius:2px;margin-left:6px}
+
+.ca-skel td{opacity:.4}
+.ca-skel-bar{height:12px;background:linear-gradient(90deg,var(--border) 25%,var(--border2) 50%,var(--border) 75%);border-radius:2px;animation:shimmer 1.4s infinite;background-size:200% 100%}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+.ca-statusbar{background:var(--navy3);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:5px 16px;font-size:10px;font-family:var(--mono)}
+.s-ok{color:var(--green)}.s-warn{color:var(--amber)}.s-err{color:var(--red)}
+.ca-disc{padding:6px 20px;font-size:9px;color:var(--gray2);letter-spacing:.02em;line-height:1.7;font-family:var(--mono);border-top:1px solid var(--border);background:var(--navy)}
+</style>
+</head>
+<body>
+
+<!-- Oculta top-bar y nav cuando está dentro de un iframe -->
+<script>
+if (window !== window.top) {
+  document.addEventListener('DOMContentLoaded', function() {
+    var s = document.createElement('style');
+    s.textContent = '.top-bar,.nav-bar{display:none!important} .ca-page{min-height:100vh!important}';
+    document.head.appendChild(s);
+  });
+}
+</script>
+
+<div class="top-bar">
+  <div class="logo-area">
+    <svg class="logo-svg" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="20" cy="20" r="19" fill="url(#lgOuter)" stroke="#2a4a8a" stroke-width="1"/>
+      <path d="M20 20 L20 2 A18 18 0 0 1 38 20 Z" fill="url(#lgSlice)"/>
+      <path d="M20 20 L2 20 A18 18 0 0 1 20 2 Z" fill="#3a6fd8" opacity=".6"/>
+      <circle cx="20" cy="20" r="7" fill="url(#lgInner)" stroke="#1a3358" stroke-width="1.5"/>
+      <circle cx="20" cy="20" r="3" fill="#0d1b2e"/>
+      <defs>
+        <radialGradient id="lgOuter" cx="40%" cy="35%"><stop offset="0%" stop-color="#3a6fd8"/><stop offset="100%" stop-color="#1a2d5a"/></radialGradient>
+        <linearGradient id="lgSlice" x1="20" y1="2" x2="38" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5b8def"/><stop offset="100%" stop-color="#2a5abf"/></linearGradient>
+        <radialGradient id="lgInner" cx="40%" cy="35%"><stop offset="0%" stop-color="#5b8def"/><stop offset="100%" stop-color="#1a3870"/></radialGradient>
+      </defs>
+    </svg>
+    <div class="logo-text">
+      <strong>Portfolio Investment</strong>
+      <span>Sistema de Cálculo Financiero</span>
+    </div>
+  </div>
+  <div class="top-right">
+    <span class="top-badge">BYMA · CEDEAR · NYSE/NASDAQ</span>
+    <span id="clock">--:--:--</span>
+  </div>
+</div>
+
+<div class="nav-bar">
+  <button class="nav-tab" id="nav-resumen" onclick="location.href='resumen.html'"><span class="tab-icon">◉</span> Resumen</button>
+  <button class="nav-tab" id="nav-lecap" onclick="location.href='lecap.html'"><span class="tab-icon">◆</span> LECAP</button>
+  <button class="nav-tab" id="nav-bonos" onclick="location.href='bonos.html'"><span class="tab-icon">◇</span> Bonos</button>
+  <button class="nav-tab" id="nav-arb" onclick="location.href='arbitraje.html'"><span class="tab-icon">⇄</span> Arbitraje GD/AL</button>
+  <button class="nav-tab active" id="nav-ced"><span class="tab-icon">🌎</span> Arb. CEDEAR</button>
+  <div class="nav-spacer"></div>
+  <div class="nav-meta"><span class="nav-meta-txt">REF.06 · BYMA 2026</span></div>
+</div>
+
+<div class="ca-page">
+  <div class="ca-toolbar">
+    <div>
+      <div class="ca-title">ARBITRAJE CEDEAR ↔ ACCIÓN (USD)</div>
+      <div class="ca-sub">CEDEAR en BYMA vs. subyacente en NYSE/NASDAQ · ajustado por canje</div>
+    </div>
+    <div class="ca-filters">
+      <button class="ca-ftab on" id="ca-f-all" onclick="caSetFilter('all')">TODOS</button>
+      <button class="ca-ftab" id="ca-f-buy" onclick="caSetFilter('buy')">COMPRAR CEDEAR</button>
+      <button class="ca-ftab" id="ca-f-sell" onclick="caSetFilter('sell')">CEDEAR CARO</button>
+    </div>
+    <div class="ca-spacer"></div>
+    <span class="ca-canje" id="ca-canje-txt">Canje: <b>—</b></span>
+    <label class="ca-auto"><input type="checkbox" id="ca-auto-chk" onchange="caToggleAuto()"> auto 30s</label>
+    <span class="ca-pill loading" id="ca-pill">CARGANDO...</span>
+    <button class="ca-refresh-btn" id="ca-refresh-btn" onclick="caFetch()">↻ ACTUALIZAR</button>
+  </div>
+
+  <div class="ca-note">
+    <b>Cómo leerlo:</b> el <b>premio/descuento</b> compara el CEDEAR (en cable) contra la acción afuera, por lo que el <b>canje queda neutralizado</b>.
+    <span class="neg">Descuento (verde) → el CEDEAR está barato → conviene COMPRAR CEDEAR.</span>
+    <span class="pos">Premio (rojo) → el CEDEAR está caro → conviene la acción / vender CEDEAR.</span>
+    Ratios oficiales de Comafi / Caja de Valores. El tag <span style="color:var(--cyan)">ADR</span> indica que el subyacente es un ADR en NY. Las filas marcadas <i>split?</i> se excluyen de señales.
+  </div>
+
+  <div class="ca-table-wrap">
+    <table class="ca-table" id="ca-table">
+      <thead><tr>
+        <th onclick="caSort('ticker')" data-col="ticker">CEDEAR <span class="sort-arrow"></span></th>
+        <th onclick="caSort('ratio')" data-col="ratio">RATIO <span class="sort-arrow"></span></th>
+        <th onclick="caSort('stock')" data-col="stock">ACCIÓN u$s <span class="sort-arrow"></span></th>
+        <th onclick="caSort('cedearD')" data-col="cedearD">CEDEAR u$s (D) <span class="sort-arrow"></span></th>
+        <th onclick="caSort('teorico')" data-col="teorico">TEÓRICO u$s (D) <span class="sort-arrow"></span></th>
+        <th onclick="caSort('premio')" data-col="premio">PREMIO/DESC. <span class="sort-arrow"></span></th>
+        <th onclick="caSort('canje')" data-col="canje">CANJE <span class="sort-arrow"></span></th>
+        <th onclick="caSort('vol')" data-col="vol">VOL CEDEAR <span class="sort-arrow"></span></th>
+        <th onclick="caSort('premio')" data-col="sig">SEÑAL <span class="sort-arrow"></span></th>
+      </tr></thead>
+      <tbody id="ca-tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="ca-statusbar">
+    <span id="ca-status" class="s-warn">INICIANDO…</span>
+    <span class="ca-canje" id="ca-upd">—</span>
+  </div>
+
+  <div class="ca-disc">
+    Cálculo orientativo. Precios de CEDEAR (especies C/cable y D/MEP) vía data912.com · subyacente vía Yahoo Finance.
+    El precio de la acción en EE.UU. puede estar desfasado fuera del horario de rueda americano. No constituye recomendación de inversión.
+  </div>
+</div>
+
+<script>
+const $$=id=>document.getElementById(id);
+function tick(){const n=new Date(),p=v=>String(v).padStart(2,'0');$$('clock').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;}
+tick();setInterval(tick,1000);
+
+/* ── Watchlist: CEDEARs líquidos con RATIO OFICIAL (Comafi/Caja de Valores, lista 13.03.2025).
+   {sym: símbolo data912 (base), r: ratio CEDEAR:acción, t: subyacente STK|ADR, name, y: símbolo Yahoo si difiere} ── */
+const WATCH=[
+  {sym:'AAPL',r:20,t:'STK',name:'Apple'},
+  {sym:'MSFT',r:30,t:'STK',name:'Microsoft'},
+  {sym:'AMZN',r:144,t:'STK',name:'Amazon'},
+  {sym:'META',r:24,t:'STK',name:'Meta Platforms'},
+  {sym:'TSLA',r:15,t:'STK',name:'Tesla'},
+  {sym:'NVDA',r:24,t:'STK',name:'Nvidia'},
+  {sym:'AMD',r:10,t:'STK',name:'AMD'},
+  {sym:'NFLX',r:48,t:'STK',name:'Netflix'},
+  {sym:'KO',r:5,t:'STK',name:'Coca-Cola'},
+  {sym:'MELI',r:120,t:'STK',name:'MercadoLibre'},
+  {sym:'BABA',r:9,t:'ADR',name:'Alibaba'},
+  {sym:'JPM',r:15,t:'STK',name:'JPMorgan'},
+  {sym:'WMT',r:18,t:'STK',name:'Walmart'},
+  {sym:'PG',r:15,t:'STK',name:'Procter & Gamble'},
+  {sym:'DISN',r:12,t:'STK',name:'Disney',y:'DIS'},
+  {sym:'PFE',r:4,t:'STK',name:'Pfizer'},
+  {sym:'XOM',r:10,t:'STK',name:'Exxon Mobil'},
+  {sym:'V',r:18,t:'STK',name:'Visa'},
+  {sym:'MA',r:33,t:'STK',name:'Mastercard'},
+  {sym:'INTC',r:5,t:'STK',name:'Intel'},
+  {sym:'MCD',r:24,t:'STK',name:"McDonald's"},
+  {sym:'NKE',r:12,t:'STK',name:'Nike'},
+  {sym:'PYPL',r:8,t:'STK',name:'PayPal'},
+  {sym:'SBUX',r:12,t:'STK',name:'Starbucks'},
+  {sym:'QCOM',r:11,t:'STK',name:'Qualcomm'},
+  {sym:'VZ',r:4,t:'STK',name:'Verizon'},
+  {sym:'CVX',r:16,t:'STK',name:'Chevron'},
+  {sym:'JNJ',r:15,t:'STK',name:'Johnson & Johnson'},
+  {sym:'GE',r:8,t:'STK',name:'GE Aerospace'},
+  {sym:'GS',r:13,t:'STK',name:'Goldman Sachs'},
+  {sym:'BA',r:24,t:'STK',name:'Boeing'},
+  {sym:'CAT',r:20,t:'STK',name:'Caterpillar'},
+  {sym:'BRKB',r:22,t:'STK',name:'Berkshire H.',y:'BRK-B'},
+  {sym:'VIST',r:3,t:'ADR',name:'Vista Energy'},
+  {sym:'GLOB',r:18,t:'STK',name:'Globant'},
+  {sym:'MMM',r:10,t:'STK',name:'3M'},
+  {sym:'MRK',r:5,t:'STK',name:'Merck'},
+  {sym:'HD',r:32,t:'STK',name:'Home Depot'},
+  {sym:'COST',r:48,t:'STK',name:'Costco'},
+  {sym:'ARCO',r:0.5,t:'STK',name:'Arcos Dorados'},
+  {sym:'BBD',r:1,t:'ADR',name:'Banco Bradesco'},
+  {sym:'AXP',r:15,t:'STK',name:'American Express'},
+  {sym:'ABBV',r:10,t:'STK',name:'AbbVie'},
+];
+
+const SIG_THRESHOLD=0.5;   // % a partir del cual marcamos señal
+const RATIO_TOL=0.15;      // si el ratio oficial no cierra con el precio en vivo (split posterior), marcamos la fila
+
+let caRows=[];
+let caSortCol='premio', caSortDir='desc';
+let caFilter='all';
+let caAutoTimer=null;
+
+/* ── Fetch helpers (mismo patrón que el resto del sistema) ── */
+async function pfetch(url){
+  try{const r=await fetch(url);if(r.ok)return r.json();}catch(e){}
+  try{
+    const r2=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url));
+    if(!r2.ok)throw 0;
+    const d=await r2.json();return JSON.parse(d.contents);
+  }catch(e){}
+  try{const r3=await fetch('https://corsproxy.io/?'+encodeURIComponent(url));if(r3.ok)return r3.json();}catch(e){}
+  throw new Error('unreachable: '+url);
+}
+
+/* Precio de un registro data912: usa último operado (c); si no, punto medio bid/ask */
+function pxOf(rec){
+  if(!rec)return 0;
+  const c=parseFloat(rec.c);
+  if(c>0)return c;
+  const b=parseFloat(rec.px_bid),a=parseFloat(rec.px_ask);
+  if(b>0&&a>0)return (b+a)/2;
+  return a>0?a:(b>0?b:0);
+}
+
+const df2=n=>Number(n).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const dfPx=n=>{const v=Math.abs(Number(n));const dec=v>=100?2:v>=1?2:4;return Number(n).toLocaleString('es-AR',{minimumFractionDigits:dec,maximumFractionDigits:dec});};
+const dfVol=n=>{const v=Number(n);return v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':String(Math.round(v));};
+const median=arr=>{if(!arr.length)return 0;const s=[...arr].sort((a,b)=>a-b);const m=Math.floor(s.length/2);return s.length%2?s[m]:(s[m-1]+s[m])/2;};
+
+async function caFetch(){
+  const btn=$$('ca-refresh-btn'),pill=$$('ca-pill');
+  btn.classList.add('loading');pill.className='ca-pill loading';pill.textContent='CARGANDO...';
+  $$('ca-status').className='s-warn';$$('ca-status').textContent='Trayendo precios…';
+  if(!caRows.length)renderSkeleton();
+
+  let cedears;
+  try{
+    cedears=await pfetch('https://data912.com/live/arg_cedears');
+  }catch(e){
+    pill.className='ca-pill err';pill.textContent='ERROR DATA912';
+    $$('ca-status').className='s-err';$$('ca-status').textContent='No se pudieron traer los CEDEARs.';
+    btn.classList.remove('loading');return;
+  }
+
+  // Índice por símbolo
+  const idx={};
+  if(Array.isArray(cedears))for(const r of cedears)idx[(r.symbol||'').trim().toUpperCase()]=r;
+
+  // Subyacentes (Yahoo) en paralelo
+  const ysym=w=>w.y||w.sym;
+  const yResults=await Promise.allSettled(WATCH.map(w=>
+    pfetch('https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(ysym(w))+'?interval=1d&range=1d')
+  ));
+  const stockPx={};
+  yResults.forEach((res,i)=>{
+    if(res.status==='fulfilled'){
+      const m=res.value?.chart?.result?.[0]?.meta;
+      const p=m?parseFloat(m.regularMarketPrice):0;
+      if(p>0)stockPx[WATCH[i].sym]=p;
+    }
+  });
+
+  // Construcción de filas
+  const rows=[];
+  for(const w of WATCH){
+    const base=idx[w.sym], c=idx[w.sym+'C'], d=idx[w.sym+'D'];
+    const stock=stockPx[w.sym]||0;
+    const pc=pxOf(c), pd=pxOf(d);              // cable (CCL) y MEP (D), en USD
+    if(!(stock>0)||!(pc>0)||!(pd>0))continue;
+
+    const ratio=w.r;                                     // ratio OFICIAL (Comafi)
+    const rawRatio=stock/pc;                              // ratio implícito por precios (control)
+    const ratioFit=Math.abs(ratio-rawRatio)/ratio;       // si difiere mucho → posible split posterior
+    const canje=(pd/pc-1)*100;                            // CCL/MEP - 1
+    // teórico del CEDEAR en MEP (D): valor de la acción / ratio, llevado a dólares MEP
+    const teorico=(stock/ratio)*(pd/pc);
+    // premio cable-vs-cable (canje neutralizado)
+    const premio=(pc*ratio/stock-1)*100;
+    const vol=parseFloat((d&&d.v)||0)+parseFloat((c&&c.v)||0);
+    const flagged=ratioFit>RATIO_TOL;                     // ratio oficial no cierra con precios live
+
+    let sig='neu';
+    if(!flagged){
+      if(premio<=-SIG_THRESHOLD)sig='buy';
+      else if(premio>=SIG_THRESHOLD)sig='sell';
+    }
+    rows.push({ticker:w.sym,name:w.name,type:w.t,ratio,rawRatio,stock,cedearD:pd,cedearC:pc,teorico,premio,canje,vol,flagged,sig});
+  }
+
+  // Canje global de mercado (mediana de filas válidas)
+  const canjeArr=rows.filter(r=>!r.flagged).map(r=>r.canje);
+  const gCanje=median(canjeArr);
+  $$('ca-canje-txt').innerHTML='Canje mkt: <b>'+(gCanje?df2(gCanje)+'%':'—')+'</b>';
+
+  caRows=rows;
+  caSortAndRender();
+
+  const okN=rows.length, buyN=rows.filter(r=>r.sig==='buy').length, sellN=rows.filter(r=>r.sig==='sell').length;
+  pill.className='ca-pill ok';pill.textContent='LIVE · '+okN+' CEDEARs';
+  $$('ca-status').className='s-ok';
+  $$('ca-status').textContent=`OK · ${okN} pares · ${buyN} barato(s) · ${sellN} caro(s)`;
+  $$('ca-upd').textContent='Actualizado '+new Date().toLocaleTimeString('es-AR');
+  btn.classList.remove('loading');
+}
+
+function renderSkeleton(){
+  let h='';
+  for(let i=0;i<12;i++){
+    h+='<tr class="ca-skel">';
+    for(let j=0;j<9;j++)h+='<td><div class="ca-skel-bar"></div></td>';
+    h+='</tr>';
+  }
+  $$('ca-tbody').innerHTML=h;
+}
+
+function caSortAndRender(){
+  let rows=[...caRows];
+  if(caFilter==='buy')rows=rows.filter(r=>r.sig==='buy');
+  else if(caFilter==='sell')rows=rows.filter(r=>r.sig==='sell');
+
+  const dir=caSortDir==='asc'?1:-1;
+  rows.sort((a,b)=>{
+    let va,vb;
+    switch(caSortCol){
+      case'ticker':return dir*a.ticker.localeCompare(b.ticker);
+      case'ratio':va=a.ratio;vb=b.ratio;break;
+      case'stock':va=a.stock;vb=b.stock;break;
+      case'cedearD':va=a.cedearD;vb=b.cedearD;break;
+      case'teorico':va=a.teorico;vb=b.teorico;break;
+      case'canje':va=a.canje;vb=b.canje;break;
+      case'vol':va=a.vol;vb=b.vol;break;
+      case'premio':default:
+        // ordena por magnitud de oportunidad; las marcadas al fondo
+        va=a.flagged?-1e9:Math.abs(a.premio);vb=b.flagged?-1e9:Math.abs(b.premio);
+        return (caSortDir==='asc'?1:-1)*(va-vb);
+    }
+    return dir*(va-vb);
+  });
+
+  // Header arrows
+  document.querySelectorAll('.ca-table thead th').forEach(th=>{
+    th.classList.remove('sort-asc','sort-desc');
+    if(th.dataset.col===caSortCol)th.classList.add(caSortDir==='asc'?'sort-asc':'sort-desc');
+  });
+
+  if(!rows.length){$$('ca-tbody').innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--gray2);padding:24px">Sin filas para este filtro.</td></tr>';return;}
+
+  let h='';
+  for(const r of rows){
+    const pc=r.premio<=-SIG_THRESHOLD?'neg':r.premio>=SIG_THRESHOLD?'pos':'neu';
+    const sgn=r.premio>=0?'+':'';
+    const sig=r.sig==='buy'?'<span class="ca-sig buy">COMPRAR CEDEAR</span>'
+            :r.sig==='sell'?'<span class="ca-sig sell">CEDEAR CARO</span>'
+            :'<span class="ca-sig neu">—</span>';
+    const flag=r.flagged?'<span class="ca-flag-tag" title="El ratio oficial no cierra con el precio en vivo: posible split/ajuste posterior o cable ilíquido.">split?</span>':'';
+    const adr=r.type==='ADR'?'<span class="ca-adr" title="El subyacente es un ADR cotizando en NY">ADR</span>':'';
+    const rs=r.ratio>=1?(r.ratio+':1'):('1:'+Math.round(1/r.ratio));
+    h+=`<tr class="${r.flagged?'ca-row-flag':''}">
+      <td><div class="ca-tk-wrap"><span class="ca-tk">${r.ticker}</span><span class="ca-tk-name">${r.name}</span>${adr}${flag}</div></td>
+      <td class="ca-ratio">${rs}</td>
+      <td class="ca-px">u$s ${dfPx(r.stock)}</td>
+      <td class="ca-px">u$s ${dfPx(r.cedearD)}</td>
+      <td class="ca-px">u$s ${dfPx(r.teorico)}</td>
+      <td class="ca-prem ${pc}">${sgn}${df2(r.premio)}%</td>
+      <td class="ca-canjecol">${df2(r.canje)}%</td>
+      <td class="ca-vol">${dfVol(r.vol)}</td>
+      <td style="text-align:center">${sig}</td>
+    </tr>`;
+  }
+  $$('ca-tbody').innerHTML=h;
+}
+
+function caSort(col){
+  if(caSortCol===col){caSortDir=caSortDir==='asc'?'desc':'asc';}
+  else{caSortCol=col;caSortDir=(col==='ticker')?'asc':'desc';}
+  caSortAndRender();
+}
+
+function caSetFilter(f){
+  caFilter=f;
+  $$('ca-f-all').className='ca-ftab'+(f==='all'?' on':'');
+  $$('ca-f-buy').className='ca-ftab'+(f==='buy'?' on-green':'');
+  $$('ca-f-sell').className='ca-ftab'+(f==='sell'?' on-red':'');
+  caSortAndRender();
+}
+
+function caToggleAuto(){
+  const on=$$('ca-auto-chk').checked;
+  if(caAutoTimer){clearInterval(caAutoTimer);caAutoTimer=null;}
+  if(on)caAutoTimer=setInterval(caFetch,30000);
+}
+
+caFetch();
+</script>
+</body>
+</html>
