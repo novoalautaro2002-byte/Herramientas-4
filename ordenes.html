@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resumen de Órdenes · Portfolio Investment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --navy:   #0d1b2e;
+  --navy2:  #122540;
+  --navy3:  #172d4d;
+  --panel:  #1a3358;
+  --border: #2a4a7a;
+  --border2:#3a5a8a;
+  --blue:   #3a6fd8;
+  --blue2:  #5b8def;
+  --blue3:  #7aa3f0;
+  --white:  #f0f4ff;
+  --gray:   #7a99c4;
+  --gray2:  #4a6a9a;
+  --green:  #22d68a;
+  --green2: #16a86a;
+  --red:    #ff4d6a;
+  --amber:  #f0b429;
+  --cyan:   #22d4f0;
+  --font:   'Inter', sans-serif;
+  --mono:   'JetBrains Mono', 'Courier New', monospace;
+  --bg:     #e8edf4;
+  --ink:    #0d1b2e;
+  --ink2:   #5a6b86;
+  --line:   #d4dded;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;-webkit-font-smoothing:antialiased}
+.outer{max-width:1100px;margin:0 auto;padding:16px}
+
+/* ---------- Loader / file input ---------- */
+.loader{
+  background:linear-gradient(135deg,var(--navy2),var(--panel));color:var(--white);
+  border:1px dashed var(--border2);border-radius:14px;padding:46px 26px;text-align:center;margin-bottom:18px;transition:.2s;
+}
+.loader.drag{border-color:var(--blue2);background:var(--navy3)}
+.loader h2{font-size:18px;font-weight:700;margin-bottom:6px}
+.loader p{color:var(--gray);font-size:13px;margin-bottom:18px}
+.btn{display:inline-flex;align-items:center;gap:8px;cursor:pointer;border:none;border-radius:9px;
+  font-family:var(--font);font-weight:600;font-size:13px;padding:10px 18px;transition:.15s}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:var(--blue2)}
+.btn-ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn-ghost:hover{background:#f2f6fc}
+.filebar{display:none;align-items:center;justify-content:space-between;gap:14px;
+  background:#fff;border:1px solid var(--line);border-radius:11px;padding:11px 18px;margin-bottom:14px}
+.filebar .fb-left{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink2)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--green2);box-shadow:0 0 8px var(--green)}
+.errbox{display:none;background:#fde7ea;border:1px solid var(--red);color:#8a1226;border-radius:11px;padding:14px 18px;margin-bottom:18px;font-size:13px}
+.errbox b{color:var(--red)}
+.toolbar{display:none;gap:9px;justify-content:flex-end;margin-bottom:14px}
+
+/* ---------- Filtros ---------- */
+.filters{display:none;gap:12px;align-items:flex-end;background:#fff;border:1px solid var(--line);
+  border-radius:11px;padding:12px 18px;margin-bottom:14px;flex-wrap:wrap}
+.filter-group{display:flex;flex-direction:column;gap:4px}
+.filter-group label{font-size:9.5px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.6px}
+.filter-group select{font-family:var(--font);font-size:13px;padding:7px 10px;border:1px solid var(--line);
+  border-radius:8px;background:#f8fafd;color:var(--ink);min-width:130px;cursor:pointer}
+.filter-group select:focus{outline:none;border-color:var(--blue2)}
+.skip-note{font-size:11.5px;color:var(--ink2);margin-left:auto;align-self:center}
+
+/* ---------- Reporte ---------- */
+#report{display:none}
+.sheet{background:var(--bg);border-radius:8px;overflow:hidden;box-shadow:0 8px 30px rgba(13,27,46,.22);margin-bottom:26px}
+.s-head{background:linear-gradient(115deg,var(--navy) 0%,var(--navy2) 45%,var(--navy3) 100%);
+  display:flex;align-items:center;justify-content:space-between;padding:12px 22px;color:#fff}
+.s-brand{display:flex;align-items:center;gap:11px}
+.s-brand svg{width:34px;height:34px}
+.s-brand .b-name{font-size:15px;font-weight:800;letter-spacing:.3px;line-height:1.1}
+.s-brand .b-sub{font-size:9px;color:var(--blue3);text-transform:uppercase;letter-spacing:.6px}
+.s-title{text-align:right}
+.s-title .t1{font-size:19px;font-weight:800;letter-spacing:.3px}
+.s-title .t1 b{color:var(--blue3);font-weight:600;margin:0 6px}
+.s-title .t2{font-size:9.5px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-top:1px}
+.accent{height:3px;background:linear-gradient(90deg,var(--blue),var(--blue2),var(--cyan))}
+
+/* KPI band */
+.kpiband{background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:stretch}
+.kpi{flex:1;display:flex;flex-direction:column;justify-content:center;padding:10px 20px;border-right:1px solid var(--line)}
+.kpi:last-child{border-right:none}
+.kpi .kl{font-size:8.5px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.6px}
+.kpi .kv{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--blue);line-height:1.15;margin-top:3px}
+.kpi .ks{font-size:8.5px;color:var(--ink2);margin-top:1px}
+
+/* Secciones y tablas */
+.s-main{padding:14px 16px 6px}
+.sec-label{font-size:10px;font-weight:800;color:var(--ink2);text-transform:uppercase;letter-spacing:1.2px;
+  margin:6px 2px 8px;display:flex;align-items:center;gap:8px}
+.sec-label .sec-count{font-family:var(--mono);font-weight:600;background:var(--navy2);color:var(--blue3);
+  border-radius:20px;padding:1px 9px;font-size:9.5px;letter-spacing:0}
+.tcard{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;overflow-x:auto;margin-bottom:16px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{background:var(--navy2);color:var(--blue3);font-size:9.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.6px;padding:8px 12px;text-align:left;white-space:nowrap}
+thead th.num{text-align:right}
+tbody td{padding:7px 12px;border-top:1px solid var(--line);white-space:nowrap}
+tbody tr:nth-child(even){background:#f6f9fd}
+tbody tr:hover{background:#eef4fc}
+td.num{font-family:var(--mono);text-align:right;font-weight:600}
+td.mono{font-family:var(--mono);font-weight:500}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;letter-spacing:.3px}
+.b-toma {background:#fdeee0;color:#b05e10}
+.b-coloca{background:#e2f7ec;color:#0e7a4a}
+.b-compra{background:#e2f7ec;color:#0e7a4a}
+.b-venta{background:#fde7ea;color:#a3132e}
+.b-estado{background:#e6efff;color:#2455b8}
+.b-parcial{background:#fdf5dc;color:#8a6d0a}
+.merge-hint{font-size:9.5px;color:var(--ink2);font-family:var(--mono);margin-left:6px}
+.empty-row td{text-align:center;color:var(--ink2);padding:18px;font-size:12.5px}
+
+/* footer */
+.s-foot{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 18px;font-size:8.5px;color:var(--ink2);border-top:1px solid var(--line);background:#fff}
+.s-foot .f-brand{display:flex;align-items:center;gap:6px;font-weight:700;color:var(--gray2)}
+.s-foot .f-brand svg{width:13px;height:13px}
+
+@media print{
+  body{background:#fff}
+  .loader,.filebar,.errbox,.toolbar,.filters{display:none!important}
+  .sheet{box-shadow:none}
+}
+</style>
+</head>
+<body>
+<div class="outer">
+
+  <!-- ===== Loader ===== -->
+  <div class="loader" id="loader">
+    <h2>Cargá el export de Histórico de Órdenes</h2>
+    <p>Arrastrá el Excel (.xlsx) exportado del OMS, o seleccionalo manualmente.<br>El archivo se procesa 100% en tu navegador — no se sube a ningún servidor.</p>
+    <button class="btn btn-primary" id="btn-pick">📁 Seleccionar archivo</button>
+    <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none">
+  </div>
+
+  <!-- ===== File bar ===== -->
+  <div class="filebar" id="filebar">
+    <div class="fb-left"><span class="dot"></span><span>Archivo cargado: <b id="fb-name">—</b></span></div>
+    <button class="btn btn-ghost" id="btn-change">Cambiar archivo</button>
+  </div>
+
+  <!-- ===== Error ===== -->
+  <div class="errbox" id="errbox"></div>
+
+  <!-- ===== Filtros ===== -->
+  <div class="filters" id="filters">
+    <div class="filter-group"><label>Estado</label><select id="f-estado"><option value="">Todos</option></select></div>
+    <div class="filter-group"><label>Moneda</label><select id="f-moneda"><option value="">Todas</option></select></div>
+    <div class="filter-group"><label>Cuenta</label><select id="f-cuenta"><option value="">Todas</option></select></div>
+    <div class="skip-note" id="skip-note"></div>
+  </div>
+
+  <!-- ===== Toolbar ===== -->
+  <div class="toolbar" id="toolbar">
+    <button class="btn btn-ghost" id="btn-print">🖨️ Imprimir / PDF</button>
+    <button class="btn btn-ghost" id="btn-png">🖼️ Exportar PNG</button>
+  </div>
+
+  <!-- ===== Reporte ===== -->
+  <div id="report">
+    <div class="sheet" id="sheet">
+      <div class="s-head">
+        <div class="s-brand">
+          <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="19" fill="#1a2d5a"/><path d="M20 20 L20 2 A18 18 0 0 1 38 20 Z" fill="#5b8def"/><circle cx="20" cy="20" r="6" fill="#3a6fd8"/></svg>
+          <div><div class="b-name">Portfolio Investment</div><div class="b-sub">Mesa de Operaciones</div></div>
+        </div>
+        <div class="s-title">
+          <div class="t1">Resumen de Órdenes<b>|</b><span id="rep-fecha">—</span></div>
+          <div class="t2" id="rep-sub">OMS · Histórico de Órdenes</div>
+        </div>
+      </div>
+      <div class="accent"></div>
+
+      <div class="kpiband" id="kpiband"></div>
+
+      <div class="s-main">
+        <div class="sec-label">⬡ Cauciones · REPO <span class="sec-count" id="count-repo">0</span></div>
+        <div class="tcard">
+          <table>
+            <thead><tr>
+              <th>Cuenta</th><th>Toma / Coloca</th><th>Especie</th><th>Plazo</th><th>Moneda</th>
+              <th class="num">Tasa</th><th class="num">Cantidad ejec.</th><th class="num">Monto ejec.</th><th>Estado</th>
+            </tr></thead>
+            <tbody id="tbody-repo"></tbody>
+          </table>
+        </div>
+
+        <div class="sec-label">◈ Operaciones <span class="sec-count" id="count-ops">0</span></div>
+        <div class="tcard">
+          <table>
+            <thead><tr>
+              <th>Cuenta</th><th>C / V</th><th>Especie</th><th>Plazo</th><th>Moneda</th>
+              <th class="num">Precio ejec.</th><th class="num">Cantidad ejec.</th><th class="num">Monto ejec.</th><th>Estado</th>
+            </tr></thead>
+            <tbody id="tbody-ops"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="s-foot">
+        <div>Fuente: OMS · Solo órdenes ejecutadas o parcialmente ejecutadas · Filas consolidadas por cuenta + especie + tipo de operación · Tasa/Precio promedio ponderado por cantidad · Solo para uso informativo</div>
+        <div class="f-brand">
+          <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="19" fill="#1a2d5a"/><path d="M20 20 L20 2 A18 18 0 0 1 38 20 Z" fill="#5b8def"/><circle cx="20" cy="20" r="6" fill="#3a6fd8"/></svg>
+          Portfolio Investment
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let DATA=null; // {fileName, repFecha, rows:[...], skipped}
+
+/* ---------- helpers ---------- */
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const normKey=s=>String(s==null?'':s).toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g,'');
+const fmtNum=(n,dMin,dMax)=>n==null||isNaN(n)?'—':n.toLocaleString('es-AR',{minimumFractionDigits:dMin,maximumFractionDigits:dMax==null?dMin:dMax});
+const fmtPct=n=>n==null||isNaN(n)?'—':(n*100).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+/* Parser numérico: detecta formato (punto decimal estilo "1707119.06" del OMS,
+   o coma decimal / puntos de miles estilo AR "1.707.119,06") */
+const num=v=>{
+  if(v==null||v==='')return null;
+  if(typeof v==='number')return isNaN(v)?null:v;
+  let s=String(v).trim().replace(/\s/g,'');
+  if(!s)return null;
+  const lastDot=s.lastIndexOf('.'), lastCom=s.lastIndexOf(',');
+  if(lastDot>=0&&lastCom>=0){
+    if(lastDot>lastCom) s=s.replace(/,/g,'');             // 1,234.56
+    else s=s.replace(/\./g,'').replace(',','.');          // 1.234,56
+  }else if(lastCom>=0){
+    s=/,.*,/.test(s)?s.replace(/,/g,''):s.replace(',','.'); // varias comas = miles; una = decimal
+  }else if(/\..*\./.test(s)){
+    s=s.replace(/\./g,'');                                 // varios puntos = miles
+  }                                                        // un solo punto = decimal
+  const n=parseFloat(s);
+  return isNaN(n)?null:n;
+};
+
+function parseFecha(v){
+  if(v instanceof Date && !isNaN(v)) return v;
+  if(typeof v==='number'){ const d=XLSX.SSF.parse_date_code(v); if(d) return new Date(d.y,d.m-1,d.d); }
+  const m=String(v||'').match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(m) return new Date(+m[3],+m[2]-1,+m[1]);
+  const m2=String(v||'').match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if(m2) return new Date(+m2[1],+m2[2]-1,+m2[3]);
+  return null;
+}
+const fmtFecha=d=>d?`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`:'—';
+
+/* Estado: solo ejecutadas / parcialmente ejecutadas */
+function estadoAceptado(e){
+  const s=normKey(e);
+  if(!s) return false;
+  if(/^(not|no|non)/.test(s)) return false;
+  return s.includes('execut')||s.includes('ejecut')||s.includes('partial')||s.includes('parcial');
+}
+function estadoLabel(e){
+  const s=normKey(e);
+  if(s.includes('partial')||s.includes('parcial')) return 'PARCIAL';
+  return 'EJECUTADA';
+}
+
+/* Plazo REPO: fecha DDMM embebida en la especie (ej. PESOS-0607-...) menos fecha de operación */
+function plazoRepo(especie,fechaOp){
+  const m=String(especie||'').match(/-(\d{2})(\d{2})-/);
+  if(!m||!fechaOp) return null;
+  const dd=+m[1],mm=+m[2];
+  let venc=new Date(fechaOp.getFullYear(),mm-1,dd);
+  if(venc<fechaOp) venc=new Date(fechaOp.getFullYear()+1,mm-1,dd); // cruce de año
+  return Math.round((venc-fechaOp)/86400000);
+}
+
+/* ---------- parseo del Excel ---------- */
+function processWorkbook(wb,fileName){
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const grid=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null,cellDates:true});
+  if(!grid.length) throw new Error('El archivo está vacío.');
+
+  // metadata del reporte (fecha de generación en las primeras filas)
+  let repFecha=null;
+  for(let i=0;i<Math.min(4,grid.length);i++){
+    const txt=(grid[i]||[]).map(c=>String(c==null?'':c)).join(' ');
+    const m=txt.match(/(\d{2})-(\d{2})-(\d{4})/);
+    if(m){ repFecha=`${m[1]}/${m[2]}/${m[3]}`; break; }
+  }
+
+  // fila de encabezados: la que empieza con "ID" y contiene "C/V"
+  let hIdx=-1;
+  for(let i=0;i<Math.min(15,grid.length);i++){
+    const r=grid[i]||[];
+    if(normKey(r[0])==='id' && r.some(c=>normKey(c)==='cv')){ hIdx=i; break; }
+  }
+  if(hIdx<0) throw new Error('No encontré la fila de encabezados (ID / C/V). ¿Es el export de Histórico de Órdenes?');
+
+  const headers=(grid[hIdx]||[]).map(normKey);
+  const col=pref=>{
+    const i=headers.findIndex(h=>h===pref);
+    if(i>=0) return i;
+    return headers.findIndex(h=>h.startsWith(pref));
+  };
+  const C={
+    cv:col('cv'), cuenta:col('cuenta'), producto:col('producto'), especie:col('especie'),
+    moneda:col('moneda'), plazo:col('plazo'), tasa:col('tasa'), tejec:col('tejec'),
+    precio:col('precio'), pejec:col('pejec'), cantidad:col('cantidad'), cejec:col('cejec'),
+    montoejec:col('montoejecutado'), estado:col('estado'), fechaop:col('fechaoperaci')
+  };
+  const faltan=['cv','cuenta','producto','especie','moneda','estado'].filter(k=>C[k]<0);
+  if(faltan.length) throw new Error('Faltan columnas en el archivo: '+faltan.join(', '));
+
+  const rows=[]; let skipped=0;
+  for(let i=hIdx+1;i<grid.length;i++){
+    const r=grid[i]||[];
+    const cuenta=r[C.cuenta], especie=r[C.especie];
+    if(cuenta==null && especie==null) continue; // fila vacía
+    const estado=r[C.estado];
+    if(!estadoAceptado(estado)){ skipped++; continue; }
+    const esRepo=normKey(r[C.producto])==='repo';
+    const fechaOp=C.fechaop>=0?parseFecha(r[C.fechaop]):null;
+    const cant=num(r[C.cejec])!=null?num(r[C.cejec]):num(r[C.cantidad]);
+    rows.push({
+      esRepo,
+      cuenta:String(cuenta==null?'—':cuenta),
+      cv:normKey(r[C.cv])==='buy'?'BUY':'SELL',
+      especie:String(especie==null?'—':especie),
+      moneda:String(r[C.moneda]==null?'—':r[C.moneda]),
+      plazoOp:r[C.plazo]==null?'—':String(r[C.plazo]),
+      plazoDias:esRepo?plazoRepo(especie,fechaOp):null,
+      tasa:esRepo?(num(r[C.tejec])!=null?num(r[C.tejec]):num(r[C.tasa])):null,
+      precio:!esRepo?(num(r[C.pejec])!=null?num(r[C.pejec]):num(r[C.precio])):null,
+      cantidad:cant,
+      monto:num(r[C.montoejec]),
+      estado:estadoLabel(estado)
+    });
+  }
+  if(!rows.length) throw new Error('No hay órdenes ejecutadas en el archivo ('+skipped+' órdenes con otros estados).');
+
+  DATA={fileName,repFecha,rows,skipped};
+  buildFilters();
+  render();
+}
+
+/* ---------- consolidación: una fila por cuenta + especie + C/V ---------- */
+function consolidar(rows){
+  const map=new Map();
+  for(const r of rows){
+    const k=r.cuenta+'|'+r.especie+'|'+r.cv;
+    if(!map.has(k)) map.set(k,{...r,n:0,_tSum:0,_tW:0,_pSum:0,_pW:0,cantidad:0,monto:0,estados:new Set()});
+    const g=map.get(k);
+    g.n++;
+    g.estados.add(r.estado);
+    const w=r.cantidad||1;
+    g.cantidad+=r.cantidad||0;
+    g.monto+=r.monto||0;
+    if(r.tasa!=null){ g._tSum+=r.tasa*w; g._tW+=w; }
+    if(r.precio!=null){ g._pSum+=r.precio*w; g._pW+=w; }
+  }
+  const out=[...map.values()].map(g=>({
+    ...g,
+    tasa:g._tW>0?g._tSum/g._tW:null,
+    precio:g._pW>0?g._pSum/g._pW:null,
+    estado:g.estados.size===1?[...g.estados][0]:'PARCIAL'
+  }));
+  out.sort((a,b)=>a.cuenta.localeCompare(b.cuenta,undefined,{numeric:true})||a.especie.localeCompare(b.especie)||a.cv.localeCompare(b.cv));
+  return out;
+}
+
+/* ---------- filtros ---------- */
+function buildFilters(){
+  const fill=(id,vals)=>{
+    const sel=document.getElementById(id);
+    const cur=sel.value;
+    sel.length=1;
+    vals.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
+    if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
+  };
+  fill('f-estado',[...new Set(DATA.rows.map(r=>r.estado))].sort());
+  fill('f-moneda',[...new Set(DATA.rows.map(r=>r.moneda))].sort());
+  fill('f-cuenta',[...new Set(DATA.rows.map(r=>r.cuenta))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})));
+}
+['f-estado','f-moneda','f-cuenta'].forEach(id=>document.getElementById(id).addEventListener('change',()=>DATA&&render()));
+
+function rowsFiltradas(){
+  const fe=document.getElementById('f-estado').value;
+  const fm=document.getElementById('f-moneda').value;
+  const fc=document.getElementById('f-cuenta').value;
+  return DATA.rows.filter(r=>(!fe||r.estado===fe)&&(!fm||r.moneda===fm)&&(!fc||r.cuenta===fc));
+}
+
+/* ---------- render ---------- */
+function badgeCV(r){
+  if(r.esRepo) return r.cv==='BUY'?'<span class="badge b-toma">TOMA</span>':'<span class="badge b-coloca">COLOCA</span>';
+  return r.cv==='BUY'?'<span class="badge b-compra">COMPRA</span>':'<span class="badge b-venta">VENTA</span>';
+}
+const badgeEstado=e=>`<span class="badge ${e==='PARCIAL'?'b-parcial':'b-estado'}">${e}</span>`;
+
+function render(){
+  document.getElementById('loader').style.display='none';
+  document.getElementById('filebar').style.display='flex';
+  document.getElementById('fb-name').textContent=DATA.fileName;
+  document.getElementById('filters').style.display='flex';
+  document.getElementById('toolbar').style.display='flex';
+  document.getElementById('report').style.display='block';
+  document.getElementById('skip-note').textContent=DATA.skipped?`${DATA.skipped} órdenes no ejecutadas excluidas`:'';
+  document.getElementById('rep-fecha').textContent=DATA.repFecha||'—';
+
+  const rows=rowsFiltradas();
+  const repo=consolidar(rows.filter(r=>r.esRepo));
+  const ops =consolidar(rows.filter(r=>!r.esRepo));
+
+  document.getElementById('count-repo').textContent=repo.length;
+  document.getElementById('count-ops').textContent=ops.length;
+
+  document.getElementById('tbody-repo').innerHTML=repo.length?repo.map(r=>`<tr>
+    <td class="mono">${esc(r.cuenta)}</td>
+    <td>${badgeCV(r)}${r.n>1?`<span class="merge-hint">×${r.n}</span>`:''}</td>
+    <td class="mono">${esc(r.especie)}</td>
+    <td class="mono">${r.plazoDias!=null?r.plazoDias+' días':'—'}</td>
+    <td>${esc(r.moneda)}</td>
+    <td class="num">${fmtPct(r.tasa)}</td>
+    <td class="num">${fmtNum(r.cantidad,0,2)}</td>
+    <td class="num">${fmtNum(r.monto,2)}</td>
+    <td>${badgeEstado(r.estado)}</td>
+  </tr>`).join(''):'<tr class="empty-row"><td colspan="9">Sin cauciones para los filtros seleccionados</td></tr>';
+
+  document.getElementById('tbody-ops').innerHTML=ops.length?ops.map(r=>`<tr>
+    <td class="mono">${esc(r.cuenta)}</td>
+    <td>${badgeCV(r)}${r.n>1?`<span class="merge-hint">×${r.n}</span>`:''}</td>
+    <td class="mono">${esc(r.especie)}</td>
+    <td class="mono">${esc(r.plazoOp)}</td>
+    <td>${esc(r.moneda)}</td>
+    <td class="num">${fmtNum(r.precio,2,3)}</td>
+    <td class="num">${fmtNum(r.cantidad,0,2)}</td>
+    <td class="num">${fmtNum(r.monto,2)}</td>
+    <td>${badgeEstado(r.estado)}</td>
+  </tr>`).join(''):'<tr class="empty-row"><td colspan="9">Sin operaciones para los filtros seleccionados</td></tr>';
+
+  // KPIs: montos por moneda
+  const kpis=[];
+  const sum=(arr,mon)=>arr.filter(r=>r.moneda===mon).reduce((a,r)=>a+(r.monto||0),0);
+  for(const mon of [...new Set(rows.map(r=>r.moneda))].sort()){
+    const sr=sum(repo,mon), so=sum(ops,mon);
+    if(sr>0) kpis.push({l:`REPO · ${mon}`,v:fmtNum(sr,2),s:'monto ejecutado'});
+    if(so>0) kpis.push({l:`Operaciones · ${mon}`,v:fmtNum(so,2),s:'monto ejecutado'});
+  }
+  kpis.push({l:'Órdenes procesadas',v:String(rows.length),s:`${repo.length+ops.length} filas consolidadas`});
+  document.getElementById('kpiband').innerHTML=kpis.map(k=>
+    `<div class="kpi"><div class="kl">${esc(k.l)}</div><div class="kv">${esc(k.v)}</div><div class="ks">${esc(k.s)}</div></div>`).join('');
+}
+
+/* ---------- UI: errores, file input, drag&drop, export ---------- */
+function showError(msg){
+  const e=document.getElementById('errbox');
+  e.innerHTML='<b>No se pudo procesar el archivo.</b><br>'+msg; e.style.display='block';
+  document.getElementById('report').style.display='none';
+  document.getElementById('filters').style.display='none';
+  document.getElementById('toolbar').style.display='none';
+}
+function hideError(){ document.getElementById('errbox').style.display='none'; }
+
+function readFile(file){
+  if(!file) return;
+  hideError();
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true,codepage:1252});
+      processWorkbook(wb,file.name);
+    }catch(err){ showError('Error inesperado: '+esc(err.message)); console.error(err); }
+  };
+  reader.onerror=()=>showError('No se pudo leer el archivo.');
+  reader.readAsArrayBuffer(file);
+}
+
+const fileInput=document.getElementById('file-input');
+document.getElementById('btn-pick').addEventListener('click',()=>fileInput.click());
+document.getElementById('btn-change').addEventListener('click',()=>fileInput.click());
+fileInput.addEventListener('change',e=>{ if(e.target.files[0]) readFile(e.target.files[0]); e.target.value=''; });
+
+const loader=document.getElementById('loader');
+['dragenter','dragover'].forEach(ev=>loader.addEventListener(ev,e=>{e.preventDefault();loader.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>loader.addEventListener(ev,e=>{e.preventDefault();loader.classList.remove('drag');}));
+loader.addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(f) readFile(f); });
+window.addEventListener('dragover',e=>e.preventDefault());
+window.addEventListener('drop',e=>{ e.preventDefault(); if(e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]); });
+
+document.getElementById('btn-print').addEventListener('click',()=>window.print());
+document.getElementById('btn-png').addEventListener('click',async()=>{
+  const btn=document.getElementById('btn-png'); const old=btn.textContent;
+  btn.textContent='Generando…'; btn.disabled=true;
+  try{
+    const canvas=await html2canvas(document.getElementById('sheet'),{scale:2,backgroundColor:'#e8edf4'});
+    const a=document.createElement('a');
+    a.download='resumen-ordenes-'+(DATA&&DATA.repFecha?DATA.repFecha.replace(/\//g,'-'):'export')+'.png';
+    a.href=canvas.toDataURL('image/png'); a.click();
+  }catch(err){ showError('No se pudo exportar la imagen: '+esc(err.message)); }
+  btn.textContent=old; btn.disabled=false;
+});
+</script>
+</body>
+</html>
