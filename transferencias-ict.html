@@ -110,6 +110,11 @@ thead th{position:sticky;top:0;z-index:2;background:var(--navy3);color:var(--blu
   text-transform:uppercase;letter-spacing:.07em;padding:9px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border)}
 thead th.num{text-align:right}
 thead th.chk{width:44px;text-align:center}
+thead th.sortable{cursor:pointer;user-select:none;transition:color .12s}
+thead th.sortable:hover{color:var(--blue2)}
+thead th .sort-arrow{font-size:8px;margin-left:4px;opacity:.35}
+thead th.sorted{color:var(--amber)}
+thead th.sorted .sort-arrow{opacity:1}
 tbody td{padding:8px 12px;border-top:1px solid var(--border);white-space:nowrap;color:var(--white2)}
 tbody td.chk{text-align:center}
 tbody tr:hover{background:var(--navy3)}
@@ -128,8 +133,14 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--amber);cursor:poi
 /* ---------- Action bar ---------- */
 .actionbar{display:none;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
   background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:14px 18px}
+.actionbar .ab-left{display:flex;flex-direction:column;gap:5px}
 .actionbar .ab-info{font-size:12px;color:var(--gray)}
 .actionbar .ab-info b{color:var(--amber);font-family:var(--mono)}
+.actionbar .ab-total{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--white)}
+.actionbar .ab-total .t-lbl{font-size:10px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.07em;margin-right:8px}
+.actionbar .ab-total .t-amt{color:var(--amber)}
+.actionbar .ab-total .t-cur{color:var(--blue3);font-size:11px;font-weight:600;margin-right:3px}
+.actionbar .ab-total .t-sep{color:var(--border2);margin:0 8px}
 
 /* ---------- Preview ---------- */
 .preview{display:none;margin-top:16px;background:var(--navy2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
@@ -195,7 +206,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--amber);cursor:poi
       <table>
         <thead><tr>
           <th class="chk"><input type="checkbox" id="chk-all" title="Seleccionar / deseleccionar todo"></th>
-          <th>N° de cuenta</th>
+          <th class="sortable" id="th-acct" title="Ordenar por número de cuenta">N° de cuenta <span class="sort-arrow" id="acct-arrow">⇅</span></th>
           <th>Titular</th>
           <th>Moneda</th>
           <th>Sistema de pago</th>
@@ -210,7 +221,10 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--amber);cursor:poi
 
   <!-- ===== Action bar ===== -->
   <div class="actionbar" id="actionbar">
-    <div class="ab-info" id="ab-info"></div>
+    <div class="ab-left">
+      <div class="ab-total" id="ab-total"></div>
+      <div class="ab-info" id="ab-info"></div>
+    </div>
     <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
       <div class="ctl fname">
         <label>Nombre del archivo</label>
@@ -342,6 +356,25 @@ let CANDIDATES=[];   // cuentas USD-EXTERNO con saldo válido (candidatas a tran
 let ZERO_COUNT=0;    // filas con saldo 0/vacío omitidas
 let OTHER_PS_COUNT=0;// filas con otro sistema de pago (≠ USD-EXTERNO) omitidas
 let FILE_NAME='';
+let SORT_DIR=0;      // 0 = orden original del CSV · 1 = ascendente · -1 = descendente
+
+// clave numérica del número de cuenta para ordenar ("8/50225" -> 50225)
+function acctKey(source){
+  const s=String(source==null?'':source);
+  const i=s.indexOf('/');
+  const tail=(i>=0?s.slice(i+1):s).replace(/\D/g,'');
+  const n=parseInt(tail,10);
+  return isNaN(n)?Infinity:n;
+}
+function sortCandidates(){
+  if(SORT_DIR!==0) CANDIDATES.sort((a,b)=>(acctKey(a.source)-acctKey(b.source))*SORT_DIR);
+}
+// total de montos seleccionados agrupado por moneda
+function totalsByCurrency(list){
+  const m=new Map();
+  for(const a of list){ const c=(a.currency||'—'); m.set(c,(m.get(c)||0)+a.amount); }
+  return m;
+}
 
 /* ===================== Parseo del CSV ===================== */
 function processCSV(text, fileName){
@@ -393,6 +426,7 @@ function fmtSaldoDisplay(n){
 }
 
 function renderTable(){
+  sortCandidates();
   const q=normKey(document.getElementById('search').value);
   const tb=document.getElementById('tbody');
   tb.innerHTML=CANDIDATES.map((a,i)=>{
@@ -433,7 +467,14 @@ function syncCounter(){
   const chkAll=document.getElementById('chk-all');
   chkAll.checked = sel>0 && sel===N;
   chkAll.indeterminate = sel>0 && sel<N;
-  // action bar
+  // action bar: total de montos seleccionados (agrupado por moneda) + info
+  const selList=CANDIDATES.filter(a=>a.selected);
+  const totals=totalsByCurrency(selList);
+  const totalStr=[...totals.entries()]
+    .map(([c,v])=>`<span class="t-cur">${esc(c)}</span><span class="t-amt">${fmtSaldoDisplay(v)}</span>`)
+    .join('<span class="t-sep">·</span>');
+  document.getElementById('ab-total').innerHTML=
+    `<span class="t-lbl">Total seleccionado</span>`+(selList.length?totalStr:`<span class="t-amt">—</span>`);
   document.getElementById('ab-info').innerHTML=
     `Se generarán <b>${sel}</b> línea${sel===1?'':'s'} de transferencia`;
   document.getElementById('btn-gen').disabled = sel===0;
@@ -516,6 +557,13 @@ document.getElementById('setdate').addEventListener('change',e=>{
   if(CANDIDATES.length) syncCounter();
 });
 document.getElementById('search').addEventListener('input',()=>{ if(CANDIDATES.length) renderTable(); });
+document.getElementById('th-acct').addEventListener('click',()=>{
+  SORT_DIR = SORT_DIR===1 ? -1 : 1;   // 1er clic ascendente, luego alterna
+  const th=document.getElementById('th-acct');
+  th.classList.add('sorted');
+  document.getElementById('acct-arrow').textContent = SORT_DIR===1 ? '▲' : '▼';
+  if(CANDIDATES.length) renderTable();
+});
 document.getElementById('chk-all').addEventListener('change',e=>{
   const on=e.target.checked;
   CANDIDATES.forEach(a=>a.selected=on);
