@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conversor CSV → ICT (Transferencias de Efectivo) · Portfolio Investment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:   #0d1b2e;
+  --navy2:  #122540;
+  --navy3:  #172d4d;
+  --panel:  #1a3358;
+  --card:   #1e3a62;
+  --border: #2a4a7a;
+  --border2:#3a5a8a;
+  --blue:   #3a6fd8;
+  --blue2:  #5b8def;
+  --blue3:  #7aa3f0;
+  --blue4:  #a8c4f8;
+  --white:  #f0f4ff;
+  --white2: #d0ddf5;
+  --gray:   #7a99c4;
+  --gray2:  #4a6a9a;
+  --green:  #22d68a;
+  --green2: #16a86a;
+  --red:    #ff4d6a;
+  --amber:  #f0b429;
+  --amber2: #f7c948;
+  --cyan:   #22d4f0;
+  --font:   'Inter', sans-serif;
+  --mono:   'JetBrains Mono', 'Courier New', monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--navy);color:var(--white);font-family:var(--font);font-size:13px;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--navy2)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--border2)}
+.outer{max-width:1180px;margin:0 auto;padding:18px 18px 60px}
+
+/* ---------- Header ---------- */
+.hdr{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.hdr .h-left{display:flex;align-items:center;gap:13px}
+.hdr svg{width:34px;height:34px;flex-shrink:0}
+.hdr .h-name{font-size:16px;font-weight:800;letter-spacing:-.01em;line-height:1.15}
+.hdr .h-name b{color:var(--amber);font-weight:800}
+.hdr .h-sub{font-size:9.5px;color:var(--blue3);text-transform:uppercase;letter-spacing:.12em;margin-top:2px}
+.hdr .h-badge{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--amber);border:1px solid var(--border);background:var(--navy2);border-radius:5px;padding:5px 10px;letter-spacing:.05em}
+
+/* ---------- Botones ---------- */
+.btn{display:inline-flex;align-items:center;gap:8px;cursor:pointer;border:none;border-radius:8px;
+  font-family:var(--font);font-weight:600;font-size:13px;padding:10px 18px;transition:.15s;white-space:nowrap}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:not(:disabled):hover{background:var(--blue2)}
+.btn-amber{background:var(--amber);color:var(--navy)}
+.btn-amber:not(:disabled):hover{background:var(--amber2)}
+.btn-ghost{background:var(--navy2);color:var(--white2);border:1px solid var(--border)}
+.btn-ghost:not(:disabled):hover{background:var(--navy3);border-color:var(--border2)}
+
+/* ---------- Loader ---------- */
+.loader{background:linear-gradient(135deg,var(--navy2),var(--panel));border:1px dashed var(--border2);
+  border-radius:14px;padding:48px 26px;text-align:center;margin-bottom:16px;transition:.2s}
+.loader.drag{border-color:var(--amber);background:var(--navy3)}
+.loader h2{font-size:17px;font-weight:700;margin-bottom:7px;color:var(--white)}
+.loader p{color:var(--gray);font-size:12.5px;margin-bottom:20px;line-height:1.6}
+.loader p b{color:var(--blue3)}
+
+/* ---------- File bar ---------- */
+.filebar{display:none;align-items:center;justify-content:space-between;gap:14px;
+  background:var(--navy2);border:1px solid var(--border);border-radius:10px;padding:11px 18px;margin-bottom:14px}
+.filebar .fb-left{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--white2)}
+.filebar .fb-left b{color:var(--amber);font-family:var(--mono);font-weight:600}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green2)}
+
+/* ---------- Error ---------- */
+.errbox{display:none;background:var(--red-bg,#2a0a12);border:1px solid var(--red);color:#ffb3c0;
+  border-radius:10px;padding:14px 18px;margin-bottom:16px;font-size:12.5px;line-height:1.6}
+.errbox b{color:var(--red)}
+
+/* ---------- Panel controles ---------- */
+.panel{display:none;background:var(--navy2);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.panel-top{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--border)}
+.ctl{display:flex;flex-direction:column;gap:5px}
+.ctl label{font-size:9px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.09em}
+.ctl input[type=date],.ctl input[type=text]{font-family:var(--font);font-size:13px;padding:8px 11px;
+  border:1px solid var(--border);border-radius:7px;background:var(--navy);color:var(--white);outline:none;transition:.15s}
+.ctl input[type=date]{font-family:var(--mono);color-scheme:dark}
+.ctl input:focus{border-color:var(--blue2);box-shadow:0 0 0 3px rgba(58,111,216,.18)}
+.ctl .setdate-out{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.06em;margin-top:2px}
+.ctl.search{flex:1;min-width:220px}
+.ctl.search input{width:100%}
+.ctl .fname{min-width:260px}
+
+/* Counter band */
+.counter{display:flex;flex-wrap:wrap;gap:10px 26px;align-items:center;padding:11px 18px;background:var(--navy3);
+  font-family:var(--mono);font-size:11.5px;color:var(--white2);letter-spacing:.03em}
+.counter .c-sel{color:var(--amber);font-weight:700}
+.counter .c-zero{color:var(--gray)}
+.counter .c-date{color:var(--blue3)}
+.counter .sep{color:var(--border2)}
+
+/* ---------- Tabla selector ---------- */
+.tablewrap{overflow-x:auto;max-height:56vh;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{position:sticky;top:0;z-index:2;background:var(--navy3);color:var(--blue3);font-size:9px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.07em;padding:9px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border)}
+thead th.num{text-align:right}
+thead th.chk{width:44px;text-align:center}
+tbody td{padding:8px 12px;border-top:1px solid var(--border);white-space:nowrap;color:var(--white2)}
+tbody td.chk{text-align:center}
+tbody tr:hover{background:var(--navy3)}
+tbody tr.off{opacity:.42}
+tbody tr.hidden{display:none}
+td.num{font-family:var(--mono);text-align:right;font-weight:600;color:var(--white)}
+td.mono{font-family:var(--mono);font-weight:500}
+td.acct{font-family:var(--mono);font-weight:600;color:var(--amber)}
+td.ref{font-family:var(--mono);color:var(--blue3)}
+.cur-badge{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;
+  background:var(--navy);border:1px solid var(--border2);color:var(--blue4);letter-spacing:.04em}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--amber);cursor:pointer}
+.empty-row td{text-align:center;color:var(--gray);padding:22px;font-size:12.5px}
+.tbl-foot{padding:9px 18px;border-top:1px solid var(--border);font-size:10.5px;color:var(--gray);background:var(--navy2)}
+
+/* ---------- Action bar ---------- */
+.actionbar{display:none;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:14px 18px}
+.actionbar .ab-info{font-size:12px;color:var(--gray)}
+.actionbar .ab-info b{color:var(--amber);font-family:var(--mono)}
+
+/* ---------- Preview ---------- */
+.preview{display:none;margin-top:16px;background:var(--navy2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.preview-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border)}
+.preview-head .pv-title{font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.09em}
+.preview-head .pv-meta{font-family:var(--mono);font-size:10px;color:var(--blue3)}
+.preview pre{margin:0;padding:14px 16px;font-family:var(--mono);font-size:11.5px;line-height:1.7;color:var(--white2);
+  overflow-x:auto;white-space:pre;max-height:240px;overflow-y:auto}
+.preview pre .hl-hdr{color:var(--amber)}
+.preview pre .more{color:var(--gray);font-style:italic}
+</style>
+</head>
+<body>
+<div class="outer">
+
+  <!-- ===== Header ===== -->
+  <div class="hdr">
+    <div class="h-left">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="19" fill="#1a2d5a"/><path d="M20 20 L20 2 A18 18 0 0 1 38 20 Z" fill="#5b8def"/><circle cx="20" cy="20" r="6" fill="#3a6fd8"/></svg>
+      <div>
+        <div class="h-name">Conversor CSV → <b>ICT</b></div>
+        <div class="h-sub">Transferencias de Efectivo · CVSA</div>
+      </div>
+    </div>
+    <div class="h-badge">CAJA DE VALORES · RENTA</div>
+  </div>
+
+  <!-- ===== Loader ===== -->
+  <div class="loader" id="loader">
+    <h2>Cargá el CSV de saldos de Caja de Valores</h2>
+    <p>Arrastrá el archivo <b>.csv</b> exportado, o seleccionalo manualmente.<br>
+       Se lee en <b>Latin-1</b> y se procesa 100% en tu navegador — no se sube a ningún servidor.</p>
+    <button class="btn btn-primary" id="btn-pick">📁 Seleccionar CSV</button>
+    <input type="file" id="file-input" accept=".csv,text/csv" style="display:none">
+  </div>
+
+  <!-- ===== File bar ===== -->
+  <div class="filebar" id="filebar">
+    <div class="fb-left"><span class="dot"></span><span>Archivo: <b id="fb-name">—</b></span></div>
+    <button class="btn btn-ghost" id="btn-change">Cambiar archivo</button>
+  </div>
+
+  <!-- ===== Error ===== -->
+  <div class="errbox" id="errbox"></div>
+
+  <!-- ===== Panel principal ===== -->
+  <div class="panel" id="panel">
+    <div class="panel-top">
+      <div class="ctl">
+        <label>Fecha de liquidación</label>
+        <input type="date" id="setdate">
+        <span class="setdate-out" id="setdate-out">—</span>
+      </div>
+      <div class="ctl search">
+        <label>Buscar cuenta o titular</label>
+        <input type="text" id="search" placeholder="Filtrar por número de cuenta o nombre…" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="counter" id="counter"></div>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th class="chk"><input type="checkbox" id="chk-all" title="Seleccionar / deseleccionar todo"></th>
+          <th>N° de cuenta</th>
+          <th>Titular</th>
+          <th>Moneda</th>
+          <th>Sistema de pago</th>
+          <th class="num">Saldo disponible</th>
+          <th>Referencia</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="tbl-foot" id="tbl-foot"></div>
+  </div>
+
+  <!-- ===== Action bar ===== -->
+  <div class="actionbar" id="actionbar">
+    <div class="ab-info" id="ab-info"></div>
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+      <div class="ctl fname">
+        <label>Nombre del archivo</label>
+        <input type="text" id="out-name" value="Transferencias_de_efectivo.ict" spellcheck="false">
+      </div>
+      <button class="btn btn-amber" id="btn-gen">⬇️ Generar .ict</button>
+    </div>
+  </div>
+
+  <!-- ===== Preview ===== -->
+  <div class="preview" id="preview">
+    <div class="preview-head">
+      <span class="pv-title">Vista previa del .ict</span>
+      <span class="pv-meta" id="pv-meta">—</span>
+    </div>
+    <pre id="pv-body"></pre>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ===================== Config de salida ===================== */
+const OUT_HEADER = "SourceCashAccount;ReceivingCashAccount;TransactionReference;PaymentSystem;Currency;Amount;SettlementDate;Description;CorporateActionReference;TransactionOnHoldCSD;TransactionOnHoldParticipant";
+const RECEIVING_FIXED = "8/1";
+
+/* Headers del CSV que buscamos (por nombre normalizado) */
+const H = {
+  cuenta:  "numerodecuenta",
+  titular: "nombredeltitular",
+  moneda:  "moneda",
+  sistema: "sistemadepago",
+  saldo:   "saldodisponible",
+};
+
+/* ===================== Helpers puros (testeables) ===================== */
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// normaliza nombre de header: trim + minúsculas + saca acentos y todo lo no alfanumérico
+const normKey = s => String(s==null?'':s).trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/g,'');
+
+// Parser CSV mínimo (delimitador ';', soporta comillas dobles y CRLF/LF)
+function parseCSV(text){
+  // saca BOM si viniera
+  if(text.charCodeAt(0)===0xFEFF) text = text.slice(1);
+  const rows=[]; let field='', row=[], inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(inQ){
+      if(c==='"'){ if(text[i+1]==='"'){ field+='"'; i++; } else inQ=false; }
+      else field+=c;
+    }else{
+      if(c==='"') inQ=true;
+      else if(c===';'){ row.push(field); field=''; }
+      else if(c==='\r'){ /* ignora, el \n cierra la fila */ }
+      else if(c==='\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+      else field+=c;
+    }
+  }
+  // último campo/fila si el archivo no termina en salto de línea
+  if(field!=='' || row.length){ row.push(field); rows.push(row); }
+  return rows;
+}
+
+// Parsea número en formato AR ("1.371,4" -> 1371.4 ; "11,85" -> 11.85 ; "5" -> 5)
+function parseAR(v){
+  if(v==null) return null;
+  let s=String(v).trim();
+  if(!s) return null;
+  s=s.replace(/\s/g,'').replace(/\./g,'').replace(',','.'); // saca miles, coma->punto
+  const n=parseFloat(s);
+  return isNaN(n)?null:n;
+}
+
+// Formatea el Amount: sin ceros de relleno, entero sin decimales, redondeado a 2
+function fmtAmount(n){
+  const r=Math.round((n+Number.EPSILON)*100)/100;
+  // String() ya elimina ceros de relleno a la derecha y el ".0" de los enteros
+  return String(r);
+}
+
+// Deriva "Renta NNNNN" desde el número de cuenta ("8/50225" -> "Renta 50225")
+function rentaRef(sourceAccount){
+  const s=String(sourceAccount==null?'':sourceAccount).trim();
+  const idx=s.indexOf('/');
+  const tail = idx>=0 ? s.slice(idx+1).trim() : s;
+  return "Renta "+tail;
+}
+
+// Fecha YYYY-MM-DD (input date) -> "AAAAMMDD"
+function toIct8(isoDate){
+  const m=String(isoDate||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? m[1]+m[2]+m[3] : '';
+}
+// "AAAAMMDD" -> "DD/MM/AAAA" para mostrar
+function ict8ToDisplay(d){
+  const m=String(d||'').match(/^(\d{4})(\d{2})(\d{2})$/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : '—';
+}
+
+// Arma una línea de salida a partir de una cuenta + fecha (AAAAMMDD)
+function buildLine(acc, setDate8){
+  const fields=[
+    String(acc.source).trim(),         // SourceCashAccount
+    RECEIVING_FIXED,                    // ReceivingCashAccount
+    rentaRef(acc.source),               // TransactionReference
+    String(acc.paymentSystem).trim(),   // PaymentSystem
+    String(acc.currency).trim(),        // Currency
+    fmtAmount(acc.amount),              // Amount
+    setDate8,                           // SettlementDate
+    "",                                 // Description
+    "",                                 // CorporateActionReference
+    "0",                                // TransactionOnHoldCSD
+    "0",                                // TransactionOnHoldParticipant
+  ];
+  return fields.join(';');
+}
+
+// Arma el .ict completo (CRLF, sin salto final)
+function buildIct(accounts, setDate8){
+  const lines=[OUT_HEADER];
+  for(const a of accounts) lines.push(buildLine(a, setDate8));
+  return lines.join('\r\n');
+}
+
+/* ===================== Estado ===================== */
+let CANDIDATES=[];   // cuentas con saldo válido (candidatas a transferir)
+let ZERO_COUNT=0;    // filas con saldo 0/vacío omitidas
+let FILE_NAME='';
+
+/* ===================== Parseo del CSV ===================== */
+function processCSV(text, fileName){
+  const rows=parseCSV(text).filter(r=>r.length && r.some(c=>String(c).trim()!==''));
+  if(rows.length<2) throw new Error('El CSV no tiene filas de datos.');
+
+  const headers=rows[0].map(normKey);
+  const colOf=key=>headers.indexOf(key);
+  const idx={
+    cuenta:  colOf(H.cuenta),
+    titular: colOf(H.titular),
+    moneda:  colOf(H.moneda),
+    sistema: colOf(H.sistema),
+    saldo:   colOf(H.saldo),
+  };
+
+  // validación de headers imprescindibles
+  const req=[['Número de cuenta','cuenta'],['Saldo disponible','saldo'],['Moneda','moneda'],['Sistema de pago','sistema']];
+  const faltan=req.filter(([,k])=>idx[k]<0).map(([n])=>n);
+  if(faltan.length) throw new Error('El CSV no tiene los headers esperados. Faltan: <b>'+faltan.join(', ')+'</b>.<br>¿Es el export de saldos de Caja de Valores?');
+
+  const cands=[]; let zeros=0;
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i];
+    const source=(r[idx.cuenta]||'').trim();
+    if(!source) continue; // fila sin cuenta -> se ignora (no cuenta como omitida)
+    const amount=parseAR(r[idx.saldo]);
+    if(amount==null || amount===0){ zeros++; continue; } // saldo 0/vacío -> omitida
+    cands.push({
+      source,
+      titular:       (idx.titular>=0 ? (r[idx.titular]||'') : '').trim(),
+      currency:      (r[idx.moneda]||'').trim(),
+      paymentSystem: (r[idx.sistema]||'').trim(),
+      amount,
+      selected:true,
+    });
+  }
+  if(!cands.length) throw new Error('No hay cuentas con saldo disponible &gt; 0 para transferir ('+zeros+' con saldo en cero).');
+
+  CANDIDATES=cands; ZERO_COUNT=zeros; FILE_NAME=fileName;
+  showUI();
+}
+
+/* ===================== Render ===================== */
+function fmtSaldoDisplay(n){
+  return n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function renderTable(){
+  const q=normKey(document.getElementById('search').value);
+  const tb=document.getElementById('tbody');
+  tb.innerHTML=CANDIDATES.map((a,i)=>{
+    const match = !q || normKey(a.source).includes(q) || normKey(a.titular).includes(q);
+    return `<tr class="${a.selected?'':'off'} ${match?'':'hidden'}" data-i="${i}">
+      <td class="chk"><input type="checkbox" class="row-chk" data-i="${i}" ${a.selected?'checked':''}></td>
+      <td class="acct">${esc(a.source)}</td>
+      <td>${esc(a.titular)||'<span style="color:var(--gray2)">—</span>'}</td>
+      <td><span class="cur-badge">${esc(a.currency)||'—'}</span></td>
+      <td class="mono">${esc(a.paymentSystem)||'—'}</td>
+      <td class="num">${fmtSaldoDisplay(a.amount)}</td>
+      <td class="ref">${esc(rentaRef(a.source))}</td>
+    </tr>`;
+  }).join('');
+  tb.querySelectorAll('.row-chk').forEach(cb=>cb.addEventListener('change',e=>{
+    const i=+e.target.dataset.i;
+    CANDIDATES[i].selected=e.target.checked;
+    e.target.closest('tr').classList.toggle('off',!e.target.checked);
+    syncCounter();
+  }));
+  const visible=[...tb.querySelectorAll('tr:not(.hidden)')].length;
+  document.getElementById('tbl-foot').textContent =
+    `Mostrando ${visible} de ${CANDIDATES.length} cuentas candidatas` + (q?` (filtro activo)`:'') +
+    ` · el filtro es solo visual, no cambia la selección.`;
+  syncCounter();
+}
+
+function syncCounter(){
+  const sel=CANDIDATES.filter(a=>a.selected).length;
+  const N=CANDIDATES.length;
+  const d8=toIct8(document.getElementById('setdate').value);
+  document.getElementById('counter').innerHTML=
+    `<span><span class="c-sel">${sel}</span> de ${N} cuentas seleccionadas</span>`+
+    `<span class="sep">·</span><span class="c-zero">${ZERO_COUNT} saldos en cero omitidos</span>`+
+    `<span class="sep">·</span><span class="c-date">fecha liquidación ${ict8ToDisplay(d8)} → ${d8||'—'}</span>`;
+  // master checkbox tri-state
+  const chkAll=document.getElementById('chk-all');
+  chkAll.checked = sel>0 && sel===N;
+  chkAll.indeterminate = sel>0 && sel<N;
+  // action bar
+  document.getElementById('ab-info').innerHTML=
+    `Se generarán <b>${sel}</b> línea${sel===1?'':'s'} de transferencia`;
+  document.getElementById('btn-gen').disabled = sel===0;
+  buildPreview();
+}
+
+function selectedAccounts(){ return CANDIDATES.filter(a=>a.selected); }
+
+function buildPreview(){
+  const sel=selectedAccounts();
+  const pv=document.getElementById('preview');
+  if(!sel.length){ pv.style.display='none'; return; }
+  pv.style.display='block';
+  const d8=toIct8(document.getElementById('setdate').value);
+  const shown=sel.slice(0,6);
+  let body='<span class="hl-hdr">'+esc(OUT_HEADER)+'</span>\n';
+  body+=shown.map(a=>esc(buildLine(a,d8))).join('\n');
+  if(sel.length>shown.length) body+=`\n<span class="more">… +${sel.length-shown.length} línea(s) más</span>`;
+  document.getElementById('pv-body').innerHTML=body;
+  document.getElementById('pv-meta').textContent=`${sel.length} línea(s) · CRLF · sin salto final`;
+}
+
+/* ===================== UI show/hide ===================== */
+function showUI(){
+  document.getElementById('loader').style.display='none';
+  document.getElementById('filebar').style.display='flex';
+  document.getElementById('fb-name').textContent=FILE_NAME;
+  document.getElementById('panel').style.display='block';
+  document.getElementById('actionbar').style.display='flex';
+  renderTable();
+}
+function showError(msg){
+  const e=document.getElementById('errbox');
+  e.innerHTML='<b>No se pudo procesar el archivo.</b><br>'+msg; e.style.display='block';
+  document.getElementById('panel').style.display='none';
+  document.getElementById('actionbar').style.display='none';
+  document.getElementById('preview').style.display='none';
+}
+function hideError(){ document.getElementById('errbox').style.display='none'; }
+
+/* ===================== Lectura de archivo (Latin-1) ===================== */
+function readFile(file){
+  if(!file) return;
+  hideError();
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{ processCSV(e.target.result, file.name); }
+    catch(err){ showError(err.message||'Error inesperado.'); console.error(err); }
+  };
+  reader.onerror=()=>showError('No se pudo leer el archivo.');
+  reader.readAsText(file,'ISO-8859-1');
+}
+
+/* ===================== Descarga ===================== */
+function download(){
+  const sel=selectedAccounts();
+  if(!sel.length) return;
+  const d8=toIct8(document.getElementById('setdate').value);
+  if(!d8){ showError('La fecha de liquidación no es válida.'); return; }
+  const content=buildIct(sel,d8);
+  const blob=new Blob([content],{type:'text/plain;charset=us-ascii'});
+  let name=(document.getElementById('out-name').value||'Transferencias_de_efectivo.ict').trim();
+  if(!/\.ict$/i.test(name)) name+='.ict';
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },0);
+}
+
+/* ===================== Wiring ===================== */
+(function initDate(){
+  const inp=document.getElementById('setdate');
+  const now=new Date();
+  const iso=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  inp.value=iso;
+  document.getElementById('setdate-out').textContent=toIct8(iso);
+})();
+document.getElementById('setdate').addEventListener('change',e=>{
+  document.getElementById('setdate-out').textContent=toIct8(e.target.value)||'fecha inválida';
+  if(CANDIDATES.length) syncCounter();
+});
+document.getElementById('search').addEventListener('input',()=>{ if(CANDIDATES.length) renderTable(); });
+document.getElementById('chk-all').addEventListener('change',e=>{
+  const on=e.target.checked;
+  CANDIDATES.forEach(a=>a.selected=on);
+  renderTable();
+});
+
+const fileInput=document.getElementById('file-input');
+document.getElementById('btn-pick').addEventListener('click',()=>fileInput.click());
+document.getElementById('btn-change').addEventListener('click',()=>fileInput.click());
+fileInput.addEventListener('change',e=>{ if(e.target.files[0]) readFile(e.target.files[0]); e.target.value=''; });
+
+const loader=document.getElementById('loader');
+['dragenter','dragover'].forEach(ev=>loader.addEventListener(ev,e=>{e.preventDefault();loader.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>loader.addEventListener(ev,e=>{e.preventDefault();loader.classList.remove('drag');}));
+loader.addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(f) readFile(f); });
+window.addEventListener('dragover',e=>e.preventDefault());
+window.addEventListener('drop',e=>{ e.preventDefault(); });
+
+document.getElementById('btn-gen').addEventListener('click',download);
+
+// expuesto para verificación automatizada (golden test)
+window.__ICT__={parseCSV,parseAR,fmtAmount,rentaRef,toIct8,buildLine,buildIct,processCSV,get CANDIDATES(){return CANDIDATES;}};
+</script>
+</body>
+</html>

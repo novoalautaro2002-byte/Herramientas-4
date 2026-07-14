@@ -193,6 +193,9 @@ html,body{height:100%;overflow:hidden}
   <!-- ÓRDENES – tab directo -->
   <button class="nav-tab" id="nav-ordenes" onclick="showPage('ordenes')"><span class="tab-icon">📋</span> Órdenes</button>
 
+  <!-- TRANSFERENCIAS ICT – tab directo -->
+  <button class="nav-tab" id="nav-ict" onclick="showPage('ict')"><span class="tab-icon">🏦</span> Transferencias</button>
+
   <!-- NOTICIAS – tab directo, fuera del dropdown -->
   <button class="nav-tab tab-news" id="nav-noticias" onclick="showPage('noticias')">
     <span class="tab-icon">📰</span> Noticias
@@ -219,6 +222,8 @@ html,body{height:100%;overflow:hidden}
   <iframe class="page-frame"        id="frame-mav"         src="monitor-diario-mav.html" title="Monitor Diario MAV"></iframe>
   <!-- NUEVA PÁGINA: Resumen de Órdenes -->
   <iframe class="page-frame"        id="frame-ordenes"     src="ordenes.html"      title="Resumen de Órdenes"></iframe>
+  <!-- NUEVA PÁGINA: Conversor CSV → ICT (Transferencias de Efectivo) -->
+  <iframe class="page-frame"        id="frame-ict"         src="transferencias-ict.html" title="Conversor CSV → ICT"></iframe>
   <!-- OCULTA: Dist. Utilidades (solo accesible con código) -->
   <iframe class="page-frame"        id="frame-dist"        src="dist_utilidades.html" title="Dist. Utilidades"></iframe>
 </div>
@@ -237,7 +242,7 @@ html,body{height:100%;overflow:hidden}
 </div>
 
 <script>
-const PAGE_IDS = ["resumen", "tc", "cauc", "dcto", "opneta", "lecap", "bonos", "cer", "dolarlinked", "arb", "noticias", "mav", "ordenes", "dist"];
+const PAGE_IDS = ["resumen", "tc", "cauc", "dcto", "opneta", "lecap", "bonos", "cer", "dolarlinked", "arb", "noticias", "mav", "ordenes", "ict", "dist"];
 const CALC_GROUP  = ['tc','cauc','dcto','opneta'];
 const BONOS_GROUP = ['lecap','bonos','cer','dolarlinked'];
 const ESTRAT_GROUP= ['arb'];
