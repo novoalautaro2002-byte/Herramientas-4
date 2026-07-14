@@ -237,6 +237,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--amber);cursor:poi
 /* ===================== Config de salida ===================== */
 const OUT_HEADER = "SourceCashAccount;ReceivingCashAccount;TransactionReference;PaymentSystem;Currency;Amount;SettlementDate;Description;CorporateActionReference;TransactionOnHoldCSD;TransactionOnHoldParticipant";
 const RECEIVING_FIXED = "8/1";
+const ONLY_PAYSYS = "USD-EXTERNO";  // solo se listan/transfieren cuentas con este sistema de pago
 
 /* Headers del CSV que buscamos (por nombre normalizado) */
 const H = {
@@ -337,8 +338,9 @@ function buildIct(accounts, setDate8){
 }
 
 /* ===================== Estado ===================== */
-let CANDIDATES=[];   // cuentas con saldo válido (candidatas a transferir)
+let CANDIDATES=[];   // cuentas USD-EXTERNO con saldo válido (candidatas a transferir)
 let ZERO_COUNT=0;    // filas con saldo 0/vacío omitidas
+let OTHER_PS_COUNT=0;// filas con otro sistema de pago (≠ USD-EXTERNO) omitidas
 let FILE_NAME='';
 
 /* ===================== Parseo del CSV ===================== */
@@ -361,25 +363,27 @@ function processCSV(text, fileName){
   const faltan=req.filter(([,k])=>idx[k]<0).map(([n])=>n);
   if(faltan.length) throw new Error('El CSV no tiene los headers esperados. Faltan: <b>'+faltan.join(', ')+'</b>.<br>¿Es el export de saldos de Caja de Valores?');
 
-  const cands=[]; let zeros=0;
+  const cands=[]; let zeros=0, others=0;
   for(let i=1;i<rows.length;i++){
     const r=rows[i];
     const source=(r[idx.cuenta]||'').trim();
     if(!source) continue; // fila sin cuenta -> se ignora (no cuenta como omitida)
+    const paymentSystem=(r[idx.sistema]||'').trim();
+    if(paymentSystem.toUpperCase()!==ONLY_PAYSYS){ others++; continue; } // solo USD-EXTERNO
     const amount=parseAR(r[idx.saldo]);
     if(amount==null || amount===0){ zeros++; continue; } // saldo 0/vacío -> omitida
     cands.push({
       source,
       titular:       (idx.titular>=0 ? (r[idx.titular]||'') : '').trim(),
       currency:      (r[idx.moneda]||'').trim(),
-      paymentSystem: (r[idx.sistema]||'').trim(),
+      paymentSystem,
       amount,
       selected:true,
     });
   }
-  if(!cands.length) throw new Error('No hay cuentas con saldo disponible &gt; 0 para transferir ('+zeros+' con saldo en cero).');
+  if(!cands.length) throw new Error('No hay cuentas <b>'+ONLY_PAYSYS+'</b> con saldo disponible &gt; 0 para transferir ('+others+' con otro sistema de pago, '+zeros+' con saldo en cero).');
 
-  CANDIDATES=cands; ZERO_COUNT=zeros; FILE_NAME=fileName;
+  CANDIDATES=cands; ZERO_COUNT=zeros; OTHER_PS_COUNT=others; FILE_NAME=fileName;
   showUI();
 }
 
@@ -412,7 +416,7 @@ function renderTable(){
   const visible=[...tb.querySelectorAll('tr:not(.hidden)')].length;
   document.getElementById('tbl-foot').textContent =
     `Mostrando ${visible} de ${CANDIDATES.length} cuentas candidatas` + (q?` (filtro activo)`:'') +
-    ` · el filtro es solo visual, no cambia la selección.`;
+    ` · solo se listan cuentas con sistema de pago USD-EXTERNO · el filtro es solo visual, no cambia la selección.`;
   syncCounter();
 }
 
@@ -421,8 +425,9 @@ function syncCounter(){
   const N=CANDIDATES.length;
   const d8=toIct8(document.getElementById('setdate').value);
   document.getElementById('counter').innerHTML=
-    `<span><span class="c-sel">${sel}</span> de ${N} cuentas seleccionadas</span>`+
+    `<span><span class="c-sel">${sel}</span> de ${N} cuentas USD-EXTERNO seleccionadas</span>`+
     `<span class="sep">·</span><span class="c-zero">${ZERO_COUNT} saldos en cero omitidos</span>`+
+    `<span class="sep">·</span><span class="c-zero">${OTHER_PS_COUNT} con otro sistema de pago</span>`+
     `<span class="sep">·</span><span class="c-date">fecha liquidación ${ict8ToDisplay(d8)} → ${d8||'—'}</span>`;
   // master checkbox tri-state
   const chkAll=document.getElementById('chk-all');
