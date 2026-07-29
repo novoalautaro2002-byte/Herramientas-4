@@ -545,7 +545,7 @@ tbody tr.clk{cursor:pointer}
     <div style="display:flex;flex-direction:column;gap:13px;min-width:0">
       <div class="card">
         <div class="verdict n0" id="verdict">
-          <div class="vlab">Recomendación del sistema</div>
+          <div class="vlab">Lectura técnica del sistema</div>
           <div class="vreco" id="v-reco">SIN DATOS</div>
           <div class="vscore" id="v-score">score —</div>
           <div class="gauge">
@@ -554,6 +554,11 @@ tbody tr.clk{cursor:pointer}
           </div>
           <div class="gauge-scale"><span>−100 VENTA</span><span>0</span><span>COMPRA +100</span></div>
         </div>
+        <div class="card-h">
+          <div class="card-t"><span>✓</span> Señales validadas</div>
+          <span class="pill" id="val-pill">3 de 19</span>
+        </div>
+        <div id="val-box" class="card-b" style="padding:0"></div>
         <div class="card-h"><div class="card-t"><span>✦</span> Por qué</div></div>
         <ul class="why" id="why"><li class="why-empty">—</li></ul>
       </div>
@@ -884,7 +889,7 @@ tbody tr.clk{cursor:pointer}
  */
 // Versión visible arriba a la derecha. SUMAR 1 EN CADA CAMBIO PUBLICADO,
 // así se puede verificar de un vistazo que el sitio sirve la última build.
-const APP_VERSION = 6;
+const APP_VERSION = 7;
 
 const UNIVERSOS = {
   usd: {
@@ -2109,6 +2114,28 @@ function rotuloCorto(txt){
   return txt.replace('TENDENCIA ', '');
 }
 
+/**
+ * Señales que sobrevivieron a la validación fuera de muestra.
+ *
+ * Se partió la historia en dos (entrenamiento hasta julio 2024, validación después)
+ * y se midió cada señal en ambas mitades por separado. De 13 señales que resultaban
+ * significativas en entrenamiento, 8 cambiaron de signo en validación: eran ruido.
+ * Sólo estas tres mantuvieron signo y significancia en las dos mitades, y son las
+ * únicas sobre las que se puede decir algo con algún fundamento.
+ *
+ * `favorable` indica qué implicó históricamente que la señal marcara ALCISTA:
+ * +1 = rindió mejor que el promedio; −1 = rindió peor, o sea que la lectura
+ * intuitiva de esa señal estuvo invertida.
+ */
+const VALIDADAS = [
+  { k: 'div',   label: 'Divergencia RSI',    favorable:  1, tr: 1.96, te: 3.65, ttr: 2.9, tte: 4.6,
+    nota: 'la única con ventaja positiva confirmada en ambas mitades' },
+  { k: 'mm',    label: 'Medias móviles',     favorable: -1, tr: -2.82, te: -1.06, ttr: -8.3, tte: -3.0,
+    nota: 'cuando marcó orden alcista, el papel rindió por debajo del promedio' },
+  { k: 'adx',   label: 'Fuerza de tendencia', favorable: -1, tr: -2.01, te: -1.10, ttr: -7.0, tte: -4.0,
+    nota: 'la tendencia definida no anticipó mejores retornos, sino peores' }
+];
+
 function calibracionDe(score){
   return CALIBRACION.find(c => score >= c.lo && score < c.hi) || null;
 }
@@ -3111,6 +3138,7 @@ async function runAnalisis(){
     else if(TV.modo === 'lwc') lwcRender();
     renderQuote(sym, bars, I, ccy, m);
     renderVerdict(v, score, signals);
+    renderValidadas(signals);
     renderSignals(signals);
     renderPlan(plan, ccy, v);
     renderLevels(S, I, ccy);
@@ -3182,6 +3210,58 @@ function renderVerdict(v, score, signals){
       '<span class="wi">' + (s.state > 0 ? '▲' : s.state < 0 ? '▼' : '•') + '</span>' +
       '<span class="wtxt"><b>' + esc(s.label) + '</b> · ' + esc(s.read) + '</span>' +
     '</li>').join('') : '<li class="why-empty">Sin señales destacadas.</li>';
+}
+
+/**
+ * Muestra sólo las señales con respaldo fuera de muestra y qué dicen HOY para este
+ * papel, junto con la ventaja que midieron en cada mitad. Es lo más cerca de una
+ * recomendación que los datos permiten sostener.
+ */
+function renderValidadas(signals){
+  const box = $('#val-box');
+  // Se listan las tres siempre. Algunas, como la divergencia, sólo existen cuando se
+  // detectan: omitirlas en silencio dejaría el balance calculado sobre menos señales
+  // sin que se note, así que se muestran como "no aplica".
+  const filas = VALIDADAS.map(v => {
+    const sg = signals.find(x => x.k === v.k) || null;
+    const aFavor = (!sg || sg.state === 0) ? 0 : (sg.state === v.favorable ? 1 : -1);
+    return { v, sg, aFavor };
+  });
+
+  const puntos = filas.reduce((a, f) => a + f.aFavor, 0);
+  const activas = filas.filter(f => f.aFavor !== 0).length;
+  const resumen = !activas ? { t: 'SIN SEÑAL', c: 'nu' }
+                : puntos >= 2 ? { t: 'A FAVOR', c: 'up' }
+                : puntos <= -2 ? { t: 'EN CONTRA', c: 'dn' }
+                : { t: 'MIXTO', c: 'nu' };
+
+  box.innerHTML =
+    '<div style="padding:10px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px">' +
+      '<span style="font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--text4);font-weight:700">Balance</span>' +
+      '<span class="chip ' + resumen.c + '">' + resumen.t + '</span>' +
+      '<span style="font-size:10px;color:var(--text4);margin-left:auto">ventaja medida entren. / valid.</span>' +
+    '</div>' +
+    filas.map(f => {
+      const dice = !f.sg ? 'no aplica hoy'
+                 : f.sg.state > 0 ? 'marca alcista' : f.sg.state < 0 ? 'marca bajista' : 'neutral';
+      const ic = f.aFavor > 0 ? '▲' : f.aFavor < 0 ? '▼' : '•';
+      const cl = f.aFavor > 0 ? 'up' : f.aFavor < 0 ? 'dn' : 'nu';
+      return '<div style="padding:9px 13px;border-bottom:1px solid rgba(42,74,122,.3);display:flex;gap:9px;align-items:flex-start">' +
+        '<span class="' + cl + '" style="width:14px;flex-shrink:0;text-align:center">' + ic + '</span>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:11.5px"><b style="font-family:var(--mono)">' + esc(f.v.label) + '</b> ' +
+            '<span style="color:var(--text3)">' + dice + '</span></div>' +
+          '<div style="font-size:10px;color:var(--text4);line-height:1.45;margin-top:2px">' + esc(f.v.nota) + '</div>' +
+        '</div>' +
+        '<span style="font-family:var(--mono);font-size:10px;color:var(--text3);white-space:nowrap">' +
+          pf(f.v.tr,1) + ' / ' + pf(f.v.te,1) + '</span>' +
+      '</div>';
+    }).join('') +
+    '<div style="padding:9px 13px;font-size:10px;color:var(--text4);line-height:1.5">' +
+      'De 19 señales, 13 resultaban significativas al entrenar y <b>8 cambiaron de signo</b> al validarlas en el período ' +
+      'siguiente. Sólo estas tres aguantaron. Las demás siguen visibles abajo como descripción del gráfico, no como evidencia.' +
+    '</div>';
+  $('#val-pill').textContent = activas + ' activas de 3';
 }
 
 function renderSignals(signals){
