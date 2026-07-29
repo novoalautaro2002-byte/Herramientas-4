@@ -595,15 +595,15 @@ tbody tr.clk{cursor:pointer}
  * cotiza afuera. Nunca sobre el CEDEAR: una serie en pesos está contaminada por la
  * devaluación (máximos "nuevos" que sólo reflejan la moneda, RSI sesgado hacia
  * arriba, SMA200 comparando contra pesos de hace diez meses y directrices que dejan
- * de ser rectas). El CEDEAR entra sólo como filtro —que el papel se pueda operar
- * localmente— y como dato de ejecución: código en BYMA y ratio de conversión.
+ * de ser rectas).
  *
- * Códigos y ratios tomados del listado oficial de CEDEARs de BYMA del 12/06/2026.
- * Los ratios cambian con splits y ajustes societarios: conviene revisarlos contra
- * la tabla de BYMA antes de operar. No intervienen en ningún cálculo del análisis.
+ * Criterio de selección: se incluyen únicamente papeles que se pueden operar desde
+ * acá —los del universo principal tienen CEDEAR listado en BYMA y los del universo
+ * argentino cotizan como acción ordinaria—. El código y el ratio de la especie
+ * local no se guardan a propósito: cambian con splits y ajustes societarios, y no
+ * intervienen en ningún cálculo.
  *
- * Formato: [ ticker afuera, empresa, sector, código BYMA, ratio ]
- * cedear en null = no figura en el listado oficial, verificar antes de operar.
+ * Formato: [ ticker donde cotiza afuera, empresa, sector ]
  */
 const UNIVERSOS = {
   usd: {
@@ -612,39 +612,39 @@ const UNIVERSOS = {
     benchLabel: 'S&P 500',
     ccy: 'u$s',
     tickers: [
-      ['AAPL','Apple','Tecnología','AAPL','20:1'],
-      ['MSFT','Microsoft','Tecnología','MSFT','30:1'],
-      ['GOOGL','Alphabet','Tecnología','GOOGL','58:1'],
-      ['META','Meta Platforms','Tecnología','META','24:1'],
-      ['ORCL','Oracle','Tecnología','ORCL','3:1'],
-      ['PLTR','Palantir','Tecnología','PLTR','3:1'],
-      ['GLOB','Globant','Tecnología','GLOB','18:1'],
-      ['NVDA','NVIDIA','Semiconductores','NVDA','24:1'],
-      ['AVGO','Broadcom','Semiconductores','AVGO','39:1'],
-      ['AMD','AMD','Semiconductores','AMD','10:1'],
-      ['TSM','Taiwan Semiconductor','Semiconductores','TSM','9:1'],
-      ['AMZN','Amazon','Consumo Disc.','AMZN','144:1'],
-      ['TSLA','Tesla','Consumo Disc.','TSLA','15:1'],
-      ['MCD','McDonald\u2019s','Consumo Disc.','MCD','24:1'],
-      ['MELI','MercadoLibre','Consumo Disc.','MELI','120:1'],
-      ['NKE','Nike','Consumo Disc.',null,null],
-      ['KO','Coca-Cola','Consumo Def.','KO','5:1'],
-      ['WMT','Walmart','Consumo Def.','WMT','18:1'],
-      ['JPM','JP Morgan','Bancos','JPM','15:1'],
-      ['BAC','Bank of America','Bancos','BA.C','4:1'],
-      ['GS','Goldman Sachs','Bancos','GS','13:1'],
-      ['NU','Nu Holdings','Bancos','UN','2:1'],
-      ['V','Visa','Financiero','V','18:1'],
-      ['COIN','Coinbase','Financiero','COIN','27:1'],
-      ['LLY','Eli Lilly','Salud','LLY','56:1'],
-      ['JNJ','Johnson & Johnson','Salud','JNJ','15:1'],
-      ['XOM','Exxon Mobil','Energía','XOM','10:1'],
-      ['CVX','Chevron','Energía','CVX','16:1'],
-      ['VIST','Vista Energy','Energía','VIST','3:1'],
-      ['CAT','Caterpillar','Industria','CAT','20:1'],
-      ['B','Barrick Mining','Materiales','B','2:1'],
-      ['VALE','Vale','Materiales','VALE','2:1'],
-      ['NFLX','Netflix','Comunicación',null,null]
+      ['AAPL','Apple','Tecnología'],
+      ['MSFT','Microsoft','Tecnología'],
+      ['GOOGL','Alphabet','Tecnología'],
+      ['META','Meta Platforms','Tecnología'],
+      ['ORCL','Oracle','Tecnología'],
+      ['PLTR','Palantir','Tecnología'],
+      ['GLOB','Globant','Tecnología'],
+      ['NVDA','NVIDIA','Semiconductores'],
+      ['AVGO','Broadcom','Semiconductores'],
+      ['AMD','AMD','Semiconductores'],
+      ['TSM','Taiwan Semiconductor','Semiconductores'],
+      ['AMZN','Amazon','Consumo Disc.'],
+      ['TSLA','Tesla','Consumo Disc.'],
+      ['MCD','McDonald\u2019s','Consumo Disc.'],
+      ['MELI','MercadoLibre','Consumo Disc.'],
+      ['NKE','Nike','Consumo Disc.'],
+      ['KO','Coca-Cola','Consumo Def.'],
+      ['WMT','Walmart','Consumo Def.'],
+      ['JPM','JP Morgan','Bancos'],
+      ['BAC','Bank of America','Bancos'],
+      ['GS','Goldman Sachs','Bancos'],
+      ['NU','Nu Holdings','Bancos'],
+      ['V','Visa','Financiero'],
+      ['COIN','Coinbase','Financiero'],
+      ['LLY','Eli Lilly','Salud'],
+      ['JNJ','Johnson & Johnson','Salud'],
+      ['XOM','Exxon Mobil','Energía'],
+      ['CVX','Chevron','Energía'],
+      ['VIST','Vista Energy','Energía'],
+      ['CAT','Caterpillar','Industria'],
+      ['B','Barrick Mining','Materiales'],
+      ['VALE','Vale','Materiales'],
+      ['NFLX','Netflix','Comunicación']
     ]
   },
   argy: {
@@ -655,36 +655,27 @@ const UNIVERSOS = {
     // Estas no tienen CEDEAR porque no lo necesitan: acá cotizan como acción
     // ordinaria. Se analiza el ADR en dólares y se opera la especie local.
     tickers: [
-      ['GGAL','Grupo Galicia','Bancos','GGAL.BA','10:1'],
-      ['BMA','Banco Macro','Bancos','BMA.BA','10:1'],
-      ['BBAR','BBVA Argentina','Bancos','BBAR.BA','3:1'],
-      ['SUPV','Grupo Supervielle','Bancos','SUPV.BA','5:1'],
-      ['YPF','YPF','Energía','YPFD.BA','1:1'],
-      ['PAM','Pampa Energía','Energía','PAMP.BA','25:1'],
-      ['CEPU','Central Puerto','Energía','CEPU.BA','10:1'],
-      ['EDN','Edenor','Energía','EDN.BA','20:1'],
-      ['TGS','Transp. Gas del Sur','Energía','TGSU2.BA','5:1'],
-      ['VIST','Vista Energy','Energía','VIST.BA','3:1'],
-      ['LOMA','Loma Negra','Materiales','LOMA.BA','5:1'],
-      ['TX','Ternium','Materiales','TXR','4:1'],
-      ['CRESY','Cresud','Real Estate','CRES.BA','10:1'],
-      ['IRS','IRSA','Real Estate','IRSA.BA','10:1'],
-      ['TEO','Telecom Argentina','Telecom','TECO2.BA','5:1'],
-      ['MELI','MercadoLibre','Consumo Disc.','MELI','120:1'],
-      ['GLOB','Globant','Tecnología','GLOB','18:1'],
-      ['BIOX','Bioceres','Materiales','BIOX','1:1']
+      ['GGAL','Grupo Galicia','Bancos'],
+      ['BMA','Banco Macro','Bancos'],
+      ['BBAR','BBVA Argentina','Bancos'],
+      ['SUPV','Grupo Supervielle','Bancos'],
+      ['YPF','YPF','Energía'],
+      ['PAM','Pampa Energía','Energía'],
+      ['CEPU','Central Puerto','Energía'],
+      ['EDN','Edenor','Energía'],
+      ['TGS','Transp. Gas del Sur','Energía'],
+      ['VIST','Vista Energy','Energía'],
+      ['LOMA','Loma Negra','Materiales'],
+      ['TX','Ternium','Materiales'],
+      ['CRESY','Cresud','Real Estate'],
+      ['IRS','IRSA','Real Estate'],
+      ['TEO','Telecom Argentina','Telecom'],
+      ['MELI','MercadoLibre','Consumo Disc.'],
+      ['GLOB','Globant','Tecnología'],
+      ['BIOX','Bioceres','Materiales']
     ]
   }
 };
-
-/** Metadatos del CEDEAR / especie local de un ticker, para ejecutar */
-function cedearDe(sym){
-  for(const k in UNIVERSOS){
-    const t = UNIVERSOS[k].tickers.find(t => t[0].toUpperCase() === String(sym).toUpperCase());
-    if(t && t[3]) return { codigo: t[3], ratio: t[4] };
-  }
-  return null;
-}
 
 const CACHE_TTL = 5 * 60 * 1000;   // 5 minutos
 const CONCURRENCY = 4;
@@ -2170,13 +2161,7 @@ function renderQuote(sym, bars, I, ccy, m){
   const L = I.last;
   $('#q-head').style.display = 'flex';
   $('#q-sym').textContent = bars.meta.symbol || sym;
-  // Bajo el nombre se indica con qué especie se ejecuta localmente. El análisis de
-  // arriba es siempre sobre el papel de afuera; esto es sólo para operar.
-  const ced = cedearDe(sym);
-  const nom = esc(m?.name || bars.meta.name || '');
-  $('#q-name').innerHTML = ced
-    ? nom + ' <span style="color:var(--blue3)">· local ' + esc(ced.codigo) + ' ratio ' + esc(ced.ratio) + '</span>'
-    : nom + ' <span style="color:var(--amber)" title="No figura en el listado oficial de CEDEARs de BYMA">· sin CEDEAR verificado</span>';
+  $('#q-name').textContent = m?.name || bars.meta.name || '';
   $('#q-px').textContent = px(L.close, ccy);
   const ce = $('#q-chg');
   ce.className = 'q-chg ' + (L.chg > 0 ? 'up' : L.chg < 0 ? 'dn' : 'fl');
