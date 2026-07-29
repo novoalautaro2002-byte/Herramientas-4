@@ -120,6 +120,22 @@ body{padding:16px 18px 40px}
 .chart-ohlc b{color:var(--gray2);font-weight:600}
 .chart-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:9px;
   color:var(--gray2);font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-align:center;padding:20px}
+
+/* ─── WIDGET TRADINGVIEW ─── */
+.tv-wrap{display:none;position:absolute;inset:0;z-index:8;background:var(--navy);flex-direction:column}
+.tv-wrap.on{display:flex}
+#tv-host{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
+#tv-host .tradingview-widget-container__widget{flex:1;min-height:0}
+#tv-host iframe{display:block;width:100%!important;height:100%!important;border:none}
+.tv-credit{padding:6px 11px;font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;color:var(--gray2);
+  border-top:1px solid var(--border);background:var(--navy2);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.tv-credit a{color:var(--blue3);text-decoration:none}
+.tv-credit a:hover{text-decoration:underline;color:var(--blue2)}
+.tv-fallback{display:none;position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;
+  background:var(--navy);color:var(--gray2);font-family:var(--mono);font-size:11.5px;text-align:center;padding:26px;line-height:1.75}
+.tv-fallback.on{display:flex}
+.tv-fallback b{color:var(--white2)}
+.mode-sw button[data-c].on{background:var(--blue);color:#08111f}
 .spin{width:26px;height:26px;border:2.5px solid var(--border);border-top-color:var(--blue2);border-radius:50%;animation:sp .7s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 
@@ -331,6 +347,13 @@ tbody tr.clk{cursor:pointer}
       </div>
     </div>
     <div class="fld">
+      <label>Gráfico</label>
+      <div class="mode-sw" id="chart-sw">
+        <button data-c="motor" class="on">Motor</button>
+        <button data-c="tv">TradingView</button>
+      </div>
+    </div>
+    <div class="fld">
       <label>Indicador</label>
       <select id="i-ind">
         <option value="rsi">RSI (14)</option>
@@ -363,6 +386,16 @@ tbody tr.clk{cursor:pointer}
               <div class="chart-empty" id="chart-empty">
             <div style="font-size:26px;opacity:.35">◱</div>
             <div>Ingresá un ticker y presioná Analizar</div>
+          </div>
+          <!-- Widget Advanced Chart de TradingView (gratuito, con su marca visible) -->
+          <div class="tv-wrap" id="tv-wrap">
+            <div class="tradingview-widget-container" id="tv-host"></div>
+            <div class="tv-fallback" id="tv-fallback">
+              <div style="font-size:24px;opacity:.35">⚠</div>
+              <div>No se pudo cargar el widget de <b>TradingView</b>.<br>
+                Puede ser la conexión o un bloqueador de contenido de terceros.<br>
+                Volvé a <b>Motor</b> para seguir con el gráfico propio.</div>
+            </div>
           </div>
         </div>
         <div class="note" id="chart-note" style="display:none"></div>
@@ -1981,6 +2014,95 @@ function sparkline(cv, closes, color){
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
+   WIDGET ADVANCED CHART DE TRADINGVIEW
+   Versión gratuita embebible: trae los datos, los 100+ indicadores y las
+   herramientas de dibujo de TradingView, y exige mantener su marca visible.
+   Es una caja cerrada (iframe de otro dominio): no se le pueden leer los
+   precios ni pintarle encima las directrices del motor. Para eso hace falta
+   la librería Advanced Charts self-hosted, que se pide a TradingView.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const TV = { simbolo: null, timer: null, modo: 'motor' };
+
+/** Traduce el ticker de Yahoo a la nomenclatura de TradingView */
+function tvSymbol(sym){
+  const s = String(sym || '').trim().toUpperCase();
+  if(s === '^MERV') return 'BCBA:IMV';         // índice Merval
+  if(s === '^GSPC') return 'SP:SPX';
+  if(s.endsWith('.BA')) return 'BCBA:' + s.slice(0, -3);   // BYMA: GGAL.BA → BCBA:GGAL
+  return s.replace(/^\^/, '');                 // USA: TradingView resuelve el símbolo pelado
+}
+
+/** Traduce la temporalidad elegida en la app al formato de intervalo de TradingView */
+function tvInterval(){
+  const iv = ($('#i-tf').value || '1d|1y').split('|')[0];
+  return { '1d': 'D', '1wk': 'W', '60m': '60', '15m': '15' }[iv] || 'D';
+}
+
+function tvRender(sym, forzar){
+  const host = $('#tv-host');
+  const tvSym = tvSymbol(sym);
+  const clave = tvSym + '|' + tvInterval();
+  if(!forzar && TV.simbolo === clave && host.querySelector('iframe')) return;
+  TV.simbolo = clave;
+
+  $('#tv-fallback').classList.remove('on');
+  host.innerHTML =
+    '<div class="tradingview-widget-container__widget"></div>' +
+    '<div class="tv-credit">' +
+      '<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">Gráficos por TradingView</a>' +
+      '<a href="https://www.tradingview.com/symbols/' + encodeURIComponent(tvSym.replace(':','-')) + '/" ' +
+        'rel="noopener nofollow" target="_blank">Abrir ' + esc(tvSym) + ' en tradingview.com ↗</a>' +
+    '</div>';
+
+  const cfg = {
+    autosize: true,
+    symbol: tvSym,
+    interval: tvInterval(),
+    timezone: 'America/Argentina/Buenos_Aires',
+    theme: 'dark',
+    style: '1',
+    locale: 'es',
+    backgroundColor: '#0d1b2e',
+    gridColor: 'rgba(42, 74, 122, 0.35)',
+    withdateranges: true,
+    hide_side_toolbar: false,      // deja visible la barra de herramientas de dibujo
+    allow_symbol_change: true,
+    save_image: true,
+    calendar: false,
+    // Se precargan los mismos estudios que muestra el gráfico propio, para poder comparar
+    studies: ['RSI@tv-basicstudies', 'MACD@tv-basicstudies', 'MASimple@tv-basicstudies'],
+    support_host: 'https://www.tradingview.com'
+  };
+  const sc = document.createElement('script');
+  sc.type = 'text/javascript';
+  sc.async = true;
+  sc.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+  sc.textContent = JSON.stringify(cfg);
+  host.querySelector('.tradingview-widget-container__widget').appendChild(sc);
+
+  // Si el script no llegó a montar el iframe, se avisa en vez de dejar un hueco negro
+  clearTimeout(TV.timer);
+  TV.timer = setTimeout(() => {
+    if(!host.querySelector('iframe')) $('#tv-fallback').classList.add('on');
+  }, 7000);
+}
+
+function setChartMode(modo){
+  TV.modo = modo;
+  $$('#chart-sw button').forEach(b => b.classList.toggle('on', b.dataset.c === modo));
+  const tv = modo === 'tv';
+  $('#tv-wrap').classList.toggle('on', tv);
+  $('#ohlc').style.display = tv ? 'none' : '';
+  const hint = $('#chart-hint');
+  if(hint) hint.style.display = tv ? 'none' : '';
+  if(tv){
+    const sym = $('#i-ticker').value.trim().toUpperCase();
+    if(sym) tvRender(sym);
+  } else if(CH.bars) chartDraw();
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
    VISTA 1 · ANÁLISIS
    ═══════════════════════════════════════════════════════════════════════ */
 
@@ -2054,6 +2176,7 @@ async function runAnalisis(){
     const plan = planOperativo(bars, I, S, v.dir, ccy);
 
     chartLoad(bars, I, S, ccy, bars.meta.intraday);
+    if(TV.modo === 'tv') tvRender(sym);
     renderQuote(sym, bars, I, ccy, m);
     renderVerdict(v, score, signals);
     renderSignals(signals);
@@ -2176,8 +2299,10 @@ function renderChartNote(bars, S, I, ccy){
   if(S.tlLow) bits.push('directriz de soporte trazada sobre <b>' + S.tlLow.touches + '</b> toques (' + dstr(bars.t[S.tlLow.i0], false) + ' → hoy), pendiente ' + (S.tlLow.a >= 0 ? 'ascendente' : 'descendente'));
   if(S.tlHigh) bits.push('directriz de resistencia con <b>' + S.tlHigh.touches + '</b> toques desde ' + dstr(bars.t[S.tlHigh.i0], false));
   el.style.display = 'block';
+  // El recordatorio de controles es del gráfico propio: no se muestra con TradingView activo
   el.innerHTML = bits.join(' · ') +
-    '<span style="float:right;color:var(--gray2)">rueda = zoom · arrastrar = pan · doble click = reset</span>';
+    '<span id="chart-hint" style="float:right;color:var(--gray2)' + (TV.modo === 'tv' ? ';display:none' : '') +
+    '">rueda = zoom · arrastrar = pan · doble click = reset</span>';
 }
 
 function setStat(txt, k){
@@ -2615,6 +2740,7 @@ function init(){
     chartDraw();
   }));
   $('#i-ind').addEventListener('change', e => { CH.ind = e.target.value; chartDraw(); });
+  $$('#chart-sw button').forEach(b => b.addEventListener('click', () => setChartMode(b.dataset.c)));
 
   // ── Scanner ──
   $('#b-scan').addEventListener('click', runScan);
