@@ -394,6 +394,7 @@ tbody tr.clk{cursor:pointer}
   <button class="tab" data-v="momentum"><span>⚡</span> Momentum / Reversión</button>
   <button class="tab" data-v="comparar"><span>⇌</span> Comparador</button>
   <button class="tab" data-v="sectores"><span>▦</span> Sectores</button>
+  <button class="tab" data-v="backtest"><span>⏱</span> Backtest</button>
 </div>
 
 <!-- ══════════════ VISTA: ANÁLISIS ══════════════ -->
@@ -762,6 +763,85 @@ tbody tr.clk{cursor:pointer}
   <div class="prog" style="margin-top:11px"><div class="prog-b" id="sec-prog"></div></div>
 </div>
 
+
+<!-- ══════════════ VISTA: BACKTEST ══════════════ -->
+<div class="view" id="v-backtest">
+  <div class="toolbar">
+    <div class="fld"><label>Universo</label><select id="i-univ-b"></select></div>
+    <div class="fld"><label>Historia</label>
+      <select id="i-bt-rango">
+        <option value="2y">2 años</option>
+        <option value="5y" selected>5 años</option>
+        <option value="10y">10 años</option>
+      </select></div>
+    <div class="fld"><label>Horizonte</label>
+      <select id="i-bt-h">
+        <option value="5">5 ruedas</option>
+        <option value="10">10 ruedas</option>
+        <option value="20" selected>20 ruedas</option>
+      </select></div>
+    <button class="btn" id="b-bt">Correr backtest</button>
+    <div class="tb-spacer"></div>
+    <span class="pill" id="bt-pill">—</span>
+  </div>
+
+  <div class="card" id="bt-veredicto" style="display:none;margin-bottom:13px">
+    <div class="verdict n0" id="bt-vbox">
+      <div class="vlab">¿El score tiene filo?</div>
+      <div class="vreco" id="bt-vtxt">—</div>
+      <div class="vscore" id="bt-vsub"></div>
+    </div>
+  </div>
+
+  <div class="grid-main">
+    <div style="display:flex;flex-direction:column;gap:13px;min-width:0">
+      <div class="card">
+        <div class="card-h"><div class="card-t"><span>⊞</span> Por recomendación</div>
+          <span class="pill" id="bt-base">—</span></div>
+        <div class="card-b flush">
+          <table id="t-bt-cat"><thead><tr>
+            <th>Recomendación</th><th class="r">Casos</th><th class="r">Retorno medio</th>
+            <th class="r">Ventaja</th><th class="r">Aciertos</th><th class="r">t</th><th>Lectura</th>
+          </tr></thead><tbody><tr><td colspan="7" class="empty">Sin correr</td></tr></tbody></table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h"><div class="card-t"><span>✦</span> Señal por señal · cuáles aportan de verdad</div></div>
+        <div class="card-b flush">
+          <div class="tbl-scroll">
+            <table id="t-bt-sig"><thead><tr>
+              <th>Señal</th><th class="r">Casos alcistas</th><th class="r">Ret.</th>
+              <th class="r">Casos bajistas</th><th class="r">Ret.</th><th class="r">Ventaja</th><th class="r">t</th>
+            </tr></thead><tbody><tr><td colspan="7" class="empty">Sin correr</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:13px;min-width:0">
+      <div class="card">
+        <div class="card-h"><div class="card-t"><span>⚠</span> Cómo leer esto</div></div>
+        <div class="card-b" style="font-size:11px;line-height:1.65;color:var(--text2)">
+          <p style="margin-bottom:9px"><b>La ventaja es lo único que importa.</b> Un retorno medio de +3% no dice nada si
+          comprar cualquier día al azar en el mismo período también daba +3%. La columna Ventaja es la diferencia
+          contra esa base.</p>
+          <p style="margin-bottom:9px"><b>La t indica si la diferencia es real o ruido.</b> Por debajo de 2 en valor
+          absoluto, la ventaja no se distingue del azar por más grande que parezca.</p>
+          <p style="margin-bottom:9px"><b>Limitaciones que inflan los resultados</b>, y conviene tenerlas presentes:</p>
+          <ul style="margin:0 0 9px 16px;display:flex;flex-direction:column;gap:5px">
+            <li>Las ventanas se superponen, así que los casos no son independientes: la t real es menor que la que se muestra.</li>
+            <li>El universo son los papeles que hoy siguen listados y siguen siendo relevantes; los que fracasaron no están.</li>
+            <li>No hay comisiones, ni deslizamiento, ni impuestos.</li>
+            <li>Es un solo período de mercado. Que haya funcionado no garantiza que siga.</li>
+          </ul>
+          <p><b>Si la ventaja es negativa</b>, la señal está funcionando al revés y hay que revisar el peso, no ignorarla.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="prog" style="margin-top:11px"><div class="prog-b" id="bt-prog"></div></div>
+</div>
+
 <div class="disc">
   ⚠ HERRAMIENTA DE ANÁLISIS TÉCNICO — USO INTERNO. Las señales y "recomendaciones" son la salida mecánica de un modelo de
   indicadores sobre precios históricos; no constituyen asesoramiento de inversión ni recomendación de compra o venta de valores
@@ -796,7 +876,7 @@ tbody tr.clk{cursor:pointer}
  */
 // Versión visible arriba a la derecha. SUMAR 1 EN CADA CAMBIO PUBLICADO,
 // así se puede verificar de un vistazo que el sitio sirve la última build.
-const APP_VERSION = 3;
+const APP_VERSION = 4;
 
 const UNIVERSOS = {
   usd: {
@@ -3786,6 +3866,166 @@ function pintarRegimen(){
    TEMA CLARO / OSCURO
    ═══════════════════════════════════════════════════════════════════════ */
 
+/* ═══════════════════════════════════════════════════════════════════════
+   BACKTEST
+   Recorre la historia recalculando el score en cada rueda CON LOS DATOS
+   DISPONIBLES HASTA ESE DÍA —cortando la serie, no mirando el futuro— y mide
+   qué pasó las N ruedas siguientes. Todo se compara contra la base: el retorno
+   medio de comprar cualquier día del mismo período. Sin esa comparación, un
+   número positivo no significa nada.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const BT = { corriendo: false };
+
+/** Acumulador de media, desvío y aciertos sin guardar cada observación */
+function acum(){ return { n: 0, suma: 0, sumaSq: 0, aciertos: 0 }; }
+function sumar(a, x, acierta){ a.n++; a.suma += x; a.sumaSq += x*x; if(acierta) a.aciertos++; }
+function media(a){ return a.n ? a.suma / a.n : null; }
+function desvio(a){
+  if(a.n < 2) return null;
+  const m = a.suma / a.n;
+  return Math.sqrt(Math.max(0, a.sumaSq / a.n - m*m) * a.n / (a.n - 1));
+}
+/** t de Welch: mide si la diferencia de medias se distingue del ruido */
+function tStat(a, b){
+  const ma = media(a), mb = media(b), sa = desvio(a), sb = desvio(b);
+  if(!isNum(ma) || !isNum(mb) || !isNum(sa) || !isNum(sb) || !a.n || !b.n) return null;
+  const err = Math.sqrt(sa*sa/a.n + sb*sb/b.n);
+  return err > 0 ? (ma - mb) / err : null;
+}
+
+async function runBacktest(){
+  if(BT.corriendo) return;
+  BT.corriendo = true;
+  const uk = $('#i-univ-b').value, u = UNIVERSOS[uk];
+  const rango = $('#i-bt-rango').value, H = parseInt($('#i-bt-h').value, 10);
+  const btn = $('#b-bt'), pb = $('#bt-prog');
+  btn.disabled = true; btn.textContent = 'Corriendo…';
+  $('#t-bt-cat tbody').innerHTML = '<tr><td colspan="7" class="empty"><div class="spin" style="margin:0 auto 10px"></div>Descargando historia…</td></tr>';
+
+  const CATS = ['COMPRA FUERTE','COMPRA','NEUTRAL','VENTA','VENTA FUERTE'];
+  const porCat = {}; CATS.forEach(c => porCat[c] = acum());
+  const porSenal = {};
+  const base = acum();
+  let evaluaciones = 0, papeles = 0;
+
+  try{
+    const syms = u.tickers.map(t => t[0]);
+    const res = await pool(syms, x => getBars(x, '1d', rango), CONCURRENCY,
+      (d, t) => { pb.style.width = (d/t*35) + '%'; });
+    const series = res.filter(r => r.ok).map(r => r.value).filter(b => b.c.length > 240 + H);
+    if(!series.length) throw new Error('sin historia suficiente para backtestear');
+
+    for(let si = 0; si < series.length; si++){
+      const B = series[si], n = B.c.length;
+      papeles++;
+      for(let i = 220; i < n - H; i++){
+        // Corte estricto: la evaluación de la rueda i sólo ve hasta la rueda i
+        const b = { t: B.t.slice(0, i+1), o: B.o.slice(0, i+1), h: B.h.slice(0, i+1),
+                    l: B.l.slice(0, i+1), c: B.c.slice(0, i+1), v: B.v.slice(0, i+1), meta: B.meta };
+        let score, signals;
+        try{
+          const I = computeIndicators(b);
+          const S = computeStructure(b, I, 42);
+          const r2 = buildSignals(b, I, S, { ccy: 'u$s' });
+          score = r2.score; signals = r2.signals;
+        }catch(e){ continue; }
+
+        const fwd = B.c[i] ? (B.c[i+H] / B.c[i] - 1) * 100 : null;
+        if(!isNum(fwd)) continue;
+
+        const cat = veredicto(score).txt;
+        const esCompra = cat.startsWith('COMPRA'), esVenta = cat.startsWith('VENTA');
+        sumar(porCat[cat], fwd, esVenta ? fwd < 0 : fwd > 0);
+        sumar(base, fwd, fwd > 0);
+        signals.forEach(sg => {
+          if(!sg.state) return;
+          const k = porSenal[sg.label] = porSenal[sg.label] || { up: acum(), dn: acum() };
+          sumar(sg.state > 0 ? k.up : k.dn, fwd, sg.state > 0 ? fwd > 0 : fwd < 0);
+        });
+        evaluaciones++;
+        if(evaluaciones % 400 === 0){
+          pb.style.width = (35 + (si / series.length) * 65) + '%';
+          $('#bt-pill').textContent = evaluaciones.toLocaleString('es-AR') + ' CASOS';
+          await sleep(0);   // devuelve el control para que la página no se congele
+        }
+      }
+    }
+    renderBacktest({ porCat, porSenal, base, evaluaciones, papeles, H, rango, CATS });
+  }catch(e){
+    $('#t-bt-cat tbody').innerHTML = '<tr><td colspan="7" class="empty">✕ ' + esc(e.message) + '</td></tr>';
+  }finally{
+    BT.corriendo = false; btn.disabled = false; btn.textContent = 'Correr backtest'; pb.style.width = '0%';
+  }
+}
+
+function renderBacktest(R){
+  const mBase = media(R.base);
+  $('#bt-pill').textContent = R.evaluaciones.toLocaleString('es-AR') + ' CASOS · ' + R.papeles + ' PAPELES';
+  $('#bt-pill').className = 'pill live';
+  $('#bt-base').textContent = 'BASE ' + pf(mBase, 2) + ' A ' + R.H + ' RUEDAS';
+
+  $('#t-bt-cat tbody').innerHTML = R.CATS.map(c => {
+    const a = R.porCat[c];
+    if(!a.n) return '<tr><td class="m">' + c + '</td><td colspan="6" class="empty" style="padding:7px 9px">sin casos</td></tr>';
+    const m = media(a), ventaja = m - mBase, t = tStat(a, R.base);
+    const esCompra = c.startsWith('COMPRA'), esVenta = c.startsWith('VENTA');
+    // En las bajistas, "aportar" es quedar por DEBAJO de la base
+    const buena = esCompra ? ventaja > 0 : esVenta ? ventaja < 0 : null;
+    const fuerte = isNum(t) && Math.abs(t) >= 2;
+    const lectura = buena === null ? '<span class="chip nu">referencia</span>'
+      : !fuerte ? '<span class="chip nu">ruido</span>'
+      : buena ? '<span class="chip up">aporta</span>' : '<span class="chip dn">al revés</span>';
+    return '<tr>' +
+      '<td class="m"><b>' + c + '</b></td>' +
+      '<td class="r">' + a.n.toLocaleString('es-AR') + '</td>' +
+      '<td class="r ' + cls(m) + '">' + pf(m,2) + '</td>' +
+      '<td class="r ' + (buena === null ? '' : buena ? 'up' : 'dn') + '"><b>' + pf(ventaja,2) + '</b></td>' +
+      '<td class="r">' + nf(a.aciertos / a.n * 100, 0) + '%</td>' +
+      '<td class="r ' + (fuerte ? '' : 'nu') + '">' + (isNum(t) ? nf(t,1) : '—') + '</td>' +
+      '<td>' + lectura + '</td></tr>';
+  }).join('');
+
+  const filas = Object.keys(R.porSenal).map(k => {
+    const s = R.porSenal[k];
+    const mu = media(s.up), md = media(s.dn);
+    // Ventaja: cuánto mejor rinde el papel cuando la señal marca alcista que cuando marca bajista
+    const ventaja = (isNum(mu) && isNum(md)) ? mu - md : null;
+    return { k, up: s.up, dn: s.dn, mu, md, ventaja, t: tStat(s.up, s.dn) };
+  }).filter(f => f.up.n >= 30 && f.dn.n >= 30)
+    .sort((a, b) => (b.ventaja ?? -99) - (a.ventaja ?? -99));
+
+  $('#t-bt-sig tbody').innerHTML = filas.length ? filas.map(f => {
+    const fuerte = isNum(f.t) && Math.abs(f.t) >= 2;
+    return '<tr>' +
+      '<td class="m">' + esc(f.k) + '</td>' +
+      '<td class="r">' + f.up.n.toLocaleString('es-AR') + '</td>' +
+      '<td class="r ' + cls(f.mu) + '">' + pf(f.mu,2) + '</td>' +
+      '<td class="r">' + f.dn.n.toLocaleString('es-AR') + '</td>' +
+      '<td class="r ' + cls(f.md) + '">' + pf(f.md,2) + '</td>' +
+      '<td class="r ' + (isNum(f.ventaja) ? (f.ventaja > 0 ? 'up' : 'dn') : '') + '"><b>' + pf(f.ventaja,2) + '</b></td>' +
+      '<td class="r ' + (fuerte ? '' : 'nu') + '">' + (isNum(f.t) ? nf(f.t,1) : '—') + '</td></tr>';
+  }).join('') : '<tr><td colspan="7" class="empty">Pocos casos por señal para concluir algo</td></tr>';
+
+  const compras = acum();
+  ['COMPRA FUERTE','COMPRA'].forEach(c => {
+    const a = R.porCat[c];
+    compras.n += a.n; compras.suma += a.suma; compras.sumaSq += a.sumaSq; compras.aciertos += a.aciertos;
+  });
+  const mC = media(compras), vent = isNum(mC) ? mC - mBase : null, t = tStat(compras, R.base);
+  $('#bt-veredicto').style.display = 'block';
+  let txt, k;
+  if(!isNum(t) || compras.n < 50){ txt = 'DATOS INSUFICIENTES'; k = 'n0'; }
+  else if(Math.abs(t) < 2){ txt = 'NO SE DISTINGUE DEL AZAR'; k = 'n0'; }
+  else if(vent > 0){ txt = 'TIENE FILO'; k = 'b1'; }
+  else { txt = 'FUNCIONA AL REVÉS'; k = 's1'; }
+  $('#bt-vbox').className = 'verdict ' + k;
+  $('#bt-vtxt').textContent = txt;
+  $('#bt-vsub').innerHTML = 'Comprar con señal alcista rindió <b>' + pf(mC,2) + '</b> a ' + R.H +
+    ' ruedas, contra <b>' + pf(mBase,2) + '</b> de comprar cualquier día · ventaja <b>' + pf(vent,2) +
+    '</b> · t = ' + (isNum(t) ? nf(t,1) : '—') + ' sobre ' + compras.n.toLocaleString('es-AR') + ' casos';
+}
+
 const TEMA_KEY = 'at-tema';
 
 function temaActual(){
@@ -3926,7 +4166,7 @@ function showView(v){
 
 function fillUniverses(){
   const opts = Object.keys(UNIVERSOS).map(k => '<option value="' + k + '">' + esc(UNIVERSOS[k].label) + '</option>').join('');
-  ['#i-univ-a','#i-univ-s','#i-univ-m','#i-univ-c','#i-univ-x'].forEach(s => { $(s).innerHTML = opts; $(s).value = 'usd'; });
+  ['#i-univ-a','#i-univ-s','#i-univ-m','#i-univ-c','#i-univ-x','#i-univ-b'].forEach(s => { $(s).innerHTML = opts; $(s).value = 'usd'; });
 }
 
 function init(){
@@ -4007,6 +4247,9 @@ function init(){
   $('#b-cmp').addEventListener('click', runComparar);
   $('#i-univ-c').addEventListener('change', () => { CMP.elegidos = []; cmpPintarPicker(); });
   $('#i-cmp-per').addEventListener('change', () => { if(CMP.series.length) runComparar(); });
+
+  // ── Backtest ──
+  $('#b-bt').addEventListener('click', runBacktest);
 
   // ── Sectores ──
   $('#b-sec').addEventListener('click', runSectores);
