@@ -608,6 +608,7 @@ tbody tr.clk{cursor:pointer}
         <option value="rs3m">Fuerza relativa 3M</option>
         <option value="atrp">Volatilidad (ATR%)</option>
         <option value="d52h">Cercanía al máx. 52s</option>
+        <option value="recom">Recomendación</option>
       </select>
     </div>
     <button class="btn" id="b-scan">Escanear</button>
@@ -634,6 +635,9 @@ tbody tr.clk{cursor:pointer}
     <button class="fchip" data-f="t0">■ Sin tendencia <span class="cnt" data-c="t0"></span></button>
     <button class="fchip" data-f="tm1">▼ Bajista <span class="cnt" data-c="tm1"></span></button>
     <button class="fchip" data-f="tm2">▼▼ Muy débil <span class="cnt" data-c="tm2"></span></button>
+    <span class="flab" style="margin-left:6px">Recomendación</span>
+    <button class="fchip" data-f="rCompra">✚ Comprar / acumular <span class="cnt" data-c="rCompra"></span></button>
+    <button class="fchip" data-f="rVender">✖ Reducir / vender <span class="cnt" data-c="rVender"></span></button>
   </div>
 
   <div class="card">
@@ -656,9 +660,10 @@ tbody tr.clk{cursor:pointer}
             <th class="r sort-h" data-s="rs3m">RS 3M</th>
             <th class="r sort-h act" data-s="score">Score <span class="ar">▼</span></th>
             <th>Tendencia</th>
+            <th>Recomendación</th>
             <th>Setup</th>
           </tr></thead>
-          <tbody><tr><td colspan="15" class="empty">Elegí un universo y presioná <b>Escanear</b>.<br>Se descarga 1 año de precios por ticker (puede tardar ~20-40 s la primera vez).</td></tr></tbody>
+          <tbody><tr><td colspan="16" class="empty">Elegí un universo y presioná <b>Escanear</b>.<br>Se descarga 1 año de precios por ticker (puede tardar ~20-40 s la primera vez).</td></tr></tbody>
         </table>
       </div>
       <div class="prog"><div class="prog-b" id="scan-prog"></div></div>
@@ -889,7 +894,7 @@ tbody tr.clk{cursor:pointer}
  */
 // Versión visible arriba a la derecha. SUMAR 1 EN CADA CAMBIO PUBLICADO,
 // así se puede verificar de un vistazo que el sitio sirve la última build.
-const APP_VERSION = 7;
+const APP_VERSION = 8;
 
 const UNIVERSOS = {
   usd: {
@@ -2136,6 +2141,33 @@ const VALIDADAS = [
     nota: 'la tendencia definida no anticipó mejores retornos, sino peores' }
 ];
 
+/**
+ * Recomendación de cartera a partir de las señales validadas fuera de muestra.
+ *
+ * Deliberadamente NO usa el score: el score describe la tendencia y no mostró poder
+ * predictivo en ninguna de las dos mitades. Usa las tres señales que sí aguantaron.
+ *
+ * Los rótulos son de peso en cartera y no de apuesta direccional, porque lo que se
+ * midió es ventaja RELATIVA: "medias alcistas" rindió +1,8% contra un promedio de
+ * +2,4%, o sea menos que el resto, no negativo. Decir VENDER ahí sería falso;
+ * REDUCIR —menos peso que el promedio— es lo que los datos respaldan.
+ */
+function recomendacion(signals){
+  let ev = 0, activas = 0;
+  VALIDADAS.forEach(v => {
+    const sg = signals.find(x => x.k === v.k);
+    if(!sg || !sg.state) return;
+    ev += (sg.state === v.favorable) ? 1 : -1;
+    activas++;
+  });
+  if(!activas) return { txt: 'MANTENER', k: 'nu', ev: 0, activas: 0 };
+  if(ev >= 2)  return { txt: 'COMPRAR',  k: 'up', ev, activas };
+  if(ev === 1) return { txt: 'ACUMULAR', k: 'up', ev, activas };
+  if(ev === 0) return { txt: 'MANTENER', k: 'nu', ev, activas };
+  if(ev === -1) return { txt: 'REDUCIR', k: 'am', ev, activas };
+  return { txt: 'VENDER', k: 'dn', ev, activas };
+}
+
 function calibracionDe(score){
   return CALIBRACION.find(c => score >= c.lo && score < c.hi) || null;
 }
@@ -3348,7 +3380,14 @@ async function loadUniverse(uk, onProg){
   const u = UNIVERSOS[uk];
   const syms = u.tickers.map(t => t[0]);
   const benchP = getBench(uk, '1d', '1y');
-  const res = await pool(syms, s => getBars(s, '1d', '1y'), CONCURRENCY, onProg);
+  // Se baja diario y semanal: sin el semanal el scanner calcularía un score distinto
+  // al de Análisis, que sí lo usa. Tienen que medir exactamente lo mismo.
+  const res = await pool(syms, async s => {
+    const d = await getBars(s, '1d', '1y');
+    let w = null;
+    try{ w = await getBars(s, '1wk', '5y'); }catch(e){}
+    return { d, w };
+  }, CONCURRENCY, onProg);
   const bench = await benchP;
   const bI = bench ? computeIndicators(bench) : null;
 
@@ -3357,9 +3396,9 @@ async function loadUniverse(uk, onProg){
     if(!r.ok) return;
     const [sym, name, sector] = u.tickers[i];
     try{
-      const bars = r.value;
+      const bars = r.value.d;
       const I = computeIndicators(bars);
-      items.push({ sym, name, sector, bars, I });
+      items.push({ sym, name, sector, bars, I, barsW: r.value.w });
     }catch(e){ /* histórico insuficiente */ }
   });
 
@@ -3387,21 +3426,38 @@ async function loadUniverse(uk, onProg){
   return { u, items, bench, bI, secAvg, failed: res.filter(r => !r.ok).length };
 }
 
+/** Corre exactamente el mismo análisis que la vista Análisis, señal por señal */
 function evalItem(it, u, lookback){
   const { bars, I } = it;
   const S = computeStructure(bars, I, Math.min(lookback, bars.c.length - 5));
   const ccy = bars.meta.ccy === 'ARS' ? '$' : bars.meta.ccy === 'USD' ? 'u$s' : '';
-  const ctx = { ccy, sector: it.sector, rsSector: it.rsSec,
+
+  let semanal = null;
+  if(it.barsW){
+    const ms = marcoSemanal(it.barsW);
+    if(ms){
+      const dirDiaria = I.last.mmScore >= 1 ? 1 : I.last.mmScore <= -1 ? -1 : 0;
+      ms.conflicto = ms.state !== 0 && dirDiaria !== 0 && ms.state !== dirDiaria;
+      if(ms.conflicto) ms.read += ' — NO coincide con el diario: la señal pierde fuerza';
+      semanal = ms;
+    }
+  }
+  const figura = detectarFigura(bars, I, S);
+  // rsSector queda deliberadamente fuera: Análisis baja un solo papel y no tiene con
+  // qué promediar el sector, así que incluirlo acá daría un score distinto para el
+  // mismo activo según desde qué pantalla se mire. La fuerza sectorial sigue
+  // disponible como dato propio en la vista Sectores.
+  const ctx = { ccy, sector: it.sector, rsSector: null, semanal, figura,
                 rs: isNum(it.rs21) ? { rs21: it.rs21, rs63: it.rs63, benchLabel: u.benchLabel } : null };
   const { signals, score } = buildSignals(bars, I, S, ctx);
-  return { S, signals, score, ccy };
+  return { S, signals, score, ccy, recom: recomendacion(signals) };
 }
 
 async function runScan(){
   const uk = $('#i-univ-s').value;
   const btn = $('#b-scan'), pb = $('#scan-prog');
   btn.disabled = true; btn.textContent = 'Escaneando…';
-  $('#t-scan tbody').innerHTML = '<tr><td colspan="15" class="empty"><div class="spin" style="margin:0 auto 10px"></div>Descargando ' +
+  $('#t-scan tbody').innerHTML = '<tr><td colspan="16" class="empty"><div class="spin" style="margin:0 auto 10px"></div>Descargando ' +
     UNIVERSOS[uk].tickers.length + ' tickers + índice…</td></tr>';
   pb.style.width = '0%';
 
@@ -3433,6 +3489,9 @@ async function runScan(){
       r.f.sqz   = isNum(L.bbWmin) && L.bbWmin <= 12;
       r.vered   = veredicto(ev.score);
       r.cal     = calibracionDe(ev.score);
+      r.recom   = ev.recom;
+      r.f.rCompra = r.recom.ev >= 1;
+      r.f.rVender = r.recom.ev <= -1;
       r.f.t2  = ev.score >= 45;
       r.f.t1  = ev.score >= 18 && ev.score < 45;
       r.f.t0  = ev.score > -18 && ev.score < 18;
@@ -3447,7 +3506,7 @@ async function runScan(){
     setStat('Scanner: ' + SCAN.rows.length + ' activos · ' + new Date().toLocaleTimeString('es-AR'), 'live');
   }catch(e){
     console.error(e);
-    $('#t-scan tbody').innerHTML = '<tr><td colspan="15" class="empty">✕ ' + esc(e.message) + '</td></tr>';
+    $('#t-scan tbody').innerHTML = '<tr><td colspan="16" class="empty">✕ ' + esc(e.message) + '</td></tr>';
     $('#scan-pill').textContent = 'ERROR'; $('#scan-pill').className = 'pill err';
   }finally{
     btn.disabled = false; btn.textContent = 'Escanear';
@@ -3494,6 +3553,8 @@ function renderScan(){
 
   const key = SCAN.sort;
   rows.sort((a,b) => {
+    // La recomendación no es un número de la fila: se ordena por su balance
+    if(key === 'recom') return ((a.recom?.ev ?? 0) - (b.recom?.ev ?? 0)) * SCAN.dir || b.score - a.score;
     const va = a[key], vb = b[key];
     const na = isNum(va), nb = isNum(vb);
     if(!na && !nb) return 0;
@@ -3503,7 +3564,7 @@ function renderScan(){
   });
 
   if(!rows.length){
-    tb.innerHTML = '<tr><td colspan="15" class="empty">' +
+    tb.innerHTML = '<tr><td colspan="16" class="empty">' +
       (SCAN.rows.length ? 'Ningún activo pasa los filtros seleccionados.' : 'Elegí un universo y presioná <b>Escanear</b>.') + '</td></tr>';
     updateScanMeta(0);
     return;
@@ -3528,6 +3589,8 @@ function renderScan(){
       '<td><span class="chip ' + (r.vered.dir > 0 ? 'up' : r.vered.dir < 0 ? 'dn' : 'nu') + '" title="' +
         (r.cal ? 'Este tramo de score rindió ' + pf(r.cal.ventaja,2) + ' respecto de comprar cualquier día (' + r.cal.n + ' casos)' : '') +
         '">' + esc(rotuloCorto(r.vered.txt)) + '</span></td>' +
+      '<td><span class="chip ' + r.recom.k + '" title="Según las 3 señales validadas fuera de muestra · balance ' +
+        (r.recom.ev > 0 ? '+' : '') + r.recom.ev + ' sobre ' + r.recom.activas + ' activas">' + esc(r.recom.txt) + '</span></td>' +
       '<td><span class="chip ' + r.setup.k + '">' + esc(r.setup.t) + '</span></td>' +
     '</tr>';
   }).join('');
