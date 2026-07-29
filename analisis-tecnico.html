@@ -2597,13 +2597,15 @@ async function lwcRender(){
   if(CH.overlays.st){
     // Dos series, una por dirección, para que cada tramo lleve su color
     [1, -1].forEach(d => {
+      // Los puntos sin valor van como "whitespace" ({time} solo): filtrarlos haría que
+      // la serie una un tramo con el siguiente con una diagonal que no existe.
       const datos = [];
-      for(let i = 0; i < n; i++) datos.push({ time: b.t[i],
-        value: (isNum(I.st.linea[i]) && I.st.dir[i] === d) ? I.st.linea[i] : undefined });
+      for(let i = 0; i < n; i++) datos.push(
+        (isNum(I.st.linea[i]) && I.st.dir[i] === d) ? { time: b.t[i], value: I.st.linea[i] } : { time: b.t[i] });
       const s2 = chart.addSeries(L.LineSeries, { color: d > 0 ? COL.up : COL.dn, lineWidth: 2,
         priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
         title: d > 0 ? 'SuperTrend' : '' }, 0);
-      s2.setData(datos.filter(x => x.value !== undefined));
+      s2.setData(datos);
     });
   }
 
@@ -2642,26 +2644,47 @@ async function lwcRender(){
   /* ── directrices detectadas por el motor, ancladas a sus pivotes ── */
   const marcas = [];
   if(CH.overlays.trend){
+    const atrPctL = S.atrV / (b.c[n-1] || 1);
     const trazar = (t, color, etiqueta, posicion) => {
       if(!t) return;
-      const s = chart.addSeries(L.LineSeries, {
+      // ¿La recta sigue rigiendo? Si el cierre actual quedó del otro lado por más de
+      // ~0,8 ATR locales, está ROTA: se busca dónde empezó la corrida que la quebró y
+      // desde ahí se dibuja punteada. Dejarla sólida bajo el precio era mentirle al ojo.
+      const fuera = i => { const v = t.a*i + t.b;
+        return posicion === 'aboveBar' ? b.c[i] > v * (1 + atrPctL * 0.8) : b.c[i] < v * (1 - atrPctL * 0.8); };
+      let rotaIdx = null;
+      if(fuera(n-1)){ rotaIdx = n-1; while(rotaIdx > t.i1 && fuera(rotaIdx-1)) rotaIdx--; }
+      const plazo = mesesTxt(t.win).replace(' meses','m').replace(' mes','m').replace(' ruedas','r');
+      const finSolido = rotaIdx ?? (n-1);
+      const sSol = chart.addSeries(L.LineSeries, {
         color, lineWidth: 2, priceLineVisible: false, lastValueVisible: false,
         crosshairMarkerVisible: false,
-        title: etiqueta + ' ' + mesesTxt(t.win) + ' ·' + t.touches,
-        // La directriz se proyecta más allá del precio: si entra en el autoescalado,
-        // comprime las velas para dejarle lugar a una recta.
+        title: etiqueta + ' ' + plazo + ' ·' + t.touches + (rotaIdx ? ' ROTA' : ''),
         autoscaleInfoProvider: () => null
       }, 0);
-      s.setData([
+      sSol.setData([
         { time: b.t[t.i0], value: t.a * t.i0 + t.b },
-        { time: b.t[n-1],  value: t.a * (n-1) + t.b }
+        { time: b.t[finSolido], value: t.a * finSolido + t.b }
       ]);
+      if(rotaIdx != null && rotaIdx < n-1){
+        const sRota = chart.addSeries(L.LineSeries, {
+          color, lineWidth: 1, lineStyle: L.LineStyle.Dashed, priceLineVisible: false,
+          lastValueVisible: false, crosshairMarkerVisible: false,
+          autoscaleInfoProvider: () => null
+        }, 0);
+        sRota.setData([
+          { time: b.t[rotaIdx], value: t.a * rotaIdx + t.b },
+          { time: b.t[n-1], value: t.a * (n-1) + t.b }
+        ]);
+      }
       [t.i0, t.i1].forEach(i => marcas.push({
         time: b.t[i], position: posicion, color, shape: 'circle', text: ''
       }));
+      if(rotaIdx != null) marcas.push({ time: b.t[rotaIdx], position: posicion === 'aboveBar' ? 'belowBar' : 'aboveBar',
+        color, shape: posicion === 'aboveBar' ? 'arrowUp' : 'arrowDown', text: 'rotura' });
     };
-    trazar(S.tlLow,  COL.tlLow,  'Soporte',    'belowBar');
-    trazar(S.tlHigh, COL.tlHigh, 'Resistencia','aboveBar');
+    trazar(S.tlLow,  COL.tlLow,  'Sop',    'belowBar');
+    trazar(S.tlHigh, COL.tlHigh, 'Resist', 'aboveBar');
   }
   if(marcas.length){
     marcas.sort((x, y) => x.time - y.time);
