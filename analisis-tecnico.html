@@ -795,7 +795,7 @@ tbody tr.clk{cursor:pointer}
  */
 // Versión visible arriba a la derecha. SUMAR 1 EN CADA CAMBIO PUBLICADO,
 // así se puede verificar de un vistazo que el sitio sirve la última build.
-const APP_VERSION = 1;
+const APP_VERSION = 2;
 
 const UNIVERSOS = {
   usd: {
@@ -1272,8 +1272,9 @@ function trendlineFit(h, l, c, piv, dir, lb, atrV, n){
   const atrPct = atrV / (c[n-1] || 1);
   const tolPct = Math.min(atrPct * 0.55, 0.035);
   // Dos anclas contiguas producen rectas empinadas que no describen ninguna tendencia:
-  // se exige que cubran al menos un cuarto de la ventana analizada.
-  const minSpan = Math.max(6, Math.round(lb * 0.25));
+  // se exige que cubran al menos un cuarto de la ventana, con tope de 15 ruedas para
+  // que una ventana larga no impida detectar una base reciente de un mes (GLOB).
+  const minSpan = Math.max(6, Math.min(Math.round(lb * 0.25), 15));
   const last = c[n-1];
 
   let best = null;
@@ -1284,12 +1285,16 @@ function trendlineFit(h, l, c, piv, dir, lb, atrV, n){
       const m = (src[i1] - src[i0]) / (i1 - i0);
       const q = src[i0] - m * i0;
 
-      // Una directriz que hoy quedó lejos del precio ya no es un nivel contra el que se
-      // pueda operar: se despegó. Con el tope en 5 ATR entraban rectas a 9% del precio,
-      // que además estiraban la escala del gráfico sin aportar nada.
+      // El tope de distancia depende de QUÉ LADO quedó el precio. Del lado malo
+      // (soporte con el precio abajo, techo con el precio arriba) la recta está rota
+      // y lejos no sirve: 2,5 ATR. Del lado bueno el precio simplemente se alejó
+      // respetándola —un rally desde el piso no invalida el piso— y se permite más
+      // (4 ATR: admite la base de GLOB a 3,6 y rechaza el fantasma de MU a 5,4);
+      // el castigo por distancia en el puntaje sigue prefiriendo la cercana.
       const valorHoy = m * (n-1) + q;
       const distNow = Math.abs(last - valorHoy) / (atrV || 1);
-      if(distNow > 2.5) continue;
+      const ladoBueno = dir === 'low' ? last >= valorHoy : last <= valorHoy;
+      if(distNow > (ladoBueno ? 4 : 2.5)) continue;
 
       // Lo que invalida una directriz es la MAGNITUD del quiebre, no cuántas veces la
       // rozaron: las barras vecinas a cada pivote siempre asoman un poco por encima de
@@ -1535,6 +1540,8 @@ function computeStructure(bars, I, lookback){
   const sets = [piv, pivFino];
   const tlLow  = trendline(h, l, c, sets, 'low',  lookback, atrV, n);
   const tlHigh = trendline(h, l, c, sets, 'high', lookback, atrV, n);
+  if(tlLow)  tlLow.edad  = n - 1 - tlLow.i0;    // lo que se rotula es la edad de la recta,
+  if(tlHigh) tlHigh.edad = n - 1 - tlHigh.i0;   // no el tamaño de la ventana de búsqueda
 
   // Dos escalas de niveles. Los MAYORES salen de pivotes anchos (6 barras por lado)
   // y marcan la estructura grande del año; los menores, de los pivotes normales.
@@ -1632,7 +1639,7 @@ function buildSignals(bars, I, S, ctx){
   }
 
   /* 8 · Línea de tendencia (el caso "tocó el piso de la tendencia") */
-  let lbTxt = mesesTxt(S.tlLow ? S.tlLow.win : S.lookback);
+  let lbTxt = mesesTxt(S.tlLow ? S.tlLow.edad : S.lookback);
   if(S.tlLow){
     const val = S.tlLow.a * (n-1) + S.tlLow.b;
     const dPct = (L.close / val - 1) * 100;
@@ -1656,7 +1663,7 @@ function buildSignals(bars, I, S, ctx){
     add('tl-low', 'Directriz de soporte', read, st, 20, dPct < 0 || lowD <= 0.35 || dPct <= 1.5);
   }
   if(S.tlHigh){
-    lbTxt = mesesTxt(S.tlHigh.win);
+    lbTxt = mesesTxt(S.tlHigh.edad);
     const val = S.tlHigh.a * (n-1) + S.tlHigh.b;
     const dPct = (L.close / val - 1) * 100;
     const highD = (val - bars.h[n-1]) / (S.atrV || 1);
@@ -2233,8 +2240,8 @@ function chartDraw(){
   if(CH.overlays.trend){
     // Las etiquetas se separan en sentidos opuestos: cuando las dos directrices convergen
     // sobre el borde derecho, sus rótulos caerían uno encima del otro.
-    drawTL(ctx, CH.S.tlLow, COL.tlLow, 'SOPORTE ' + mesesTxt(CH.S.tlLow ? CH.S.tlLow.win : CH.S.lookback), 14);
-    drawTL(ctx, CH.S.tlHigh, COL.tlHigh, 'RESIST. ' + mesesTxt(CH.S.tlHigh ? CH.S.tlHigh.win : CH.S.lookback), -7);
+    drawTL(ctx, CH.S.tlLow, COL.tlLow, 'SOPORTE ' + mesesTxt(CH.S.tlLow ? CH.S.tlLow.edad : CH.S.lookback), 14);
+    drawTL(ctx, CH.S.tlHigh, COL.tlHigh, 'RESIST. ' + mesesTxt(CH.S.tlHigh ? CH.S.tlHigh.edad : CH.S.lookback), -7);
   }
   function drawTL(ctx, t, color, label, dy){
     if(!t) return;
@@ -2659,7 +2666,7 @@ async function lwcRender(){
         return posicion === 'aboveBar' ? b.c[i] > v * (1 + atrPctL * 0.8) : b.c[i] < v * (1 - atrPctL * 0.8); };
       let rotaIdx = null;
       if(fuera(n-1)){ rotaIdx = n-1; while(rotaIdx > t.i1 && fuera(rotaIdx-1)) rotaIdx--; }
-      const plazo = mesesTxt(t.win).replace(' meses','m').replace(' mes','m').replace(' ruedas','r');
+      const plazo = mesesTxt(t.edad ?? t.win).replace(' meses','m').replace(' mes','m').replace(' ruedas','r');
       const finSolido = rotaIdx ?? (n-1);
       const sSol = chart.addSeries(L.LineSeries, {
         color, lineWidth: 2, priceLineVisible: false, lastValueVisible: false,
