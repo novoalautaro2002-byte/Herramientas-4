@@ -121,10 +121,11 @@ body{padding:16px 18px 40px}
 .chart-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:9px;
   color:var(--gray2);font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-align:center;padding:20px}
 
-/* ─── WIDGET TRADINGVIEW ─── */
+/* ─── WIDGET TRADINGVIEW / LIGHTWEIGHT CHARTS ─── */
 .tv-wrap{display:none;position:absolute;inset:0;z-index:8;background:var(--navy);flex-direction:column}
 .tv-wrap.on{display:flex}
-#tv-host{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
+#tv-host,#lwc-host{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
+#lwc-host{display:block}
 #tv-host .tradingview-widget-container__widget{flex:1;min-height:0}
 #tv-host iframe{display:block;width:100%!important;height:100%!important;border:none}
 .tv-credit{padding:6px 11px;font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;color:var(--gray2);
@@ -350,6 +351,7 @@ tbody tr.clk{cursor:pointer}
       <label>Gráfico</label>
       <div class="mode-sw" id="chart-sw">
         <button data-c="motor" class="on">Motor</button>
+        <button data-c="lwc">Lightweight</button>
         <button data-c="tv">TradingView</button>
       </div>
     </div>
@@ -386,6 +388,19 @@ tbody tr.clk{cursor:pointer}
               <div class="chart-empty" id="chart-empty">
             <div style="font-size:26px;opacity:.35">◱</div>
             <div>Ingresá un ticker y presioná Analizar</div>
+          </div>
+          <!-- Lightweight Charts: velas de TradingView con los hallazgos del motor encima -->
+          <div class="tv-wrap" id="lwc-wrap">
+            <div id="lwc-host"></div>
+            <div class="tv-credit">
+              <span>Velas por <a href="https://github.com/tradingview/lightweight-charts" rel="noopener nofollow" target="_blank">TradingView Lightweight Charts™</a> (Apache 2.0) · directrices, soportes y resistencias calculados por el motor</span>
+            </div>
+            <div class="tv-fallback" id="lwc-fallback">
+              <div style="font-size:24px;opacity:.35">⚠</div>
+              <div>No se pudo cargar <b>Lightweight Charts</b>.<br>
+                Puede ser la conexión o un bloqueador de contenido.<br>
+                Volvé a <b>Motor</b> para seguir con el gráfico propio.</div>
+            </div>
           </div>
           <!-- Widget Advanced Chart de TradingView (gratuito, con su marca visible) -->
           <div class="tv-wrap" id="tv-wrap">
@@ -1974,6 +1989,183 @@ function sparkline(cv, closes, color){
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
+   LIGHTWEIGHT CHARTS
+   Librería open source de TradingView (Apache 2.0). A diferencia del widget,
+   acá los datos los pone la app, así que el motor puede dibujar sus hallazgos
+   ENCIMA de las velas: las directrices con sus puntos de apoyo, los soportes y
+   resistencias con la cantidad de toques, y el volumen anormal resaltado.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const LWC_CDN = 'https://unpkg.com/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js';
+const LWC = { promesa: null, chart: null };
+
+/** Inyecta la librería una sola vez. Devuelve false si no se pudo cargar. */
+function lwcCargar(){
+  if(window.LightweightCharts) return Promise.resolve(true);
+  if(LWC.promesa) return LWC.promesa;
+  LWC.promesa = new Promise(res => {
+    const sc = document.createElement('script');
+    sc.src = LWC_CDN; sc.async = true;
+    sc.onload  = () => res(!!window.LightweightCharts);
+    sc.onerror = () => { LWC.promesa = null; res(false); };
+    document.head.appendChild(sc);
+  });
+  return LWC.promesa;
+}
+
+function lwcDestruir(){
+  if(LWC.chart){ try{ LWC.chart.remove(); }catch(e){} LWC.chart = null; }
+}
+
+async function lwcRender(){
+  if(!CH.bars) return;
+  const host = $('#lwc-host');
+  const ok = await lwcCargar();
+  if(!ok){ $('#lwc-fallback').classList.add('on'); return; }
+  $('#lwc-fallback').classList.remove('on');
+
+  lwcDestruir();
+  host.innerHTML = '';
+
+  const L = window.LightweightCharts;
+  const b = CH.bars, I = CH.I, S = CH.S, n = b.c.length;
+  const ref = Math.abs(b.c[n-1]);
+  const dec = ref >= 1000 ? 0 : ref >= 10 ? 2 : 4;
+
+  const chart = L.createChart(host, {
+    autoSize: true,
+    layout: {
+      background: { type: 'solid', color: '#0d1b2e' },
+      textColor: '#7a99c4',
+      fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+      fontSize: 10,
+      panes: { separatorColor: '#2a4a7a', separatorHoverColor: 'rgba(58,111,216,.35)' }
+    },
+    grid: { vertLines: { color: 'rgba(42,74,122,.35)' }, horzLines: { color: 'rgba(42,74,122,.35)' } },
+    rightPriceScale: { borderColor: '#2a4a7a' },
+    timeScale: { borderColor: '#2a4a7a', timeVisible: !!CH.intraday, secondsVisible: false },
+    crosshair: {
+      mode: L.CrosshairMode.Normal,
+      vertLine: { color: 'rgba(168,196,248,.55)', width: 1, style: 2, labelBackgroundColor: '#1a3358' },
+      horzLine: { color: 'rgba(168,196,248,.55)', width: 1, style: 2, labelBackgroundColor: '#1a3358' }
+    },
+    localization: { locale: 'es-AR' }
+  });
+  LWC.chart = chart;
+
+  /* ── velas ── */
+  const velas = chart.addSeries(L.CandlestickSeries, {
+    upColor: COL.up, downColor: COL.dn,
+    borderUpColor: COL.up, borderDownColor: COL.dn,
+    wickUpColor: COL.up, wickDownColor: COL.dn,
+    priceFormat: { type: 'price', precision: dec, minMove: Math.pow(10, -dec) }
+  }, 0);
+  velas.setData(b.t.map((t, i) => ({ time: t, open: b.o[i], high: b.h[i], low: b.l[i], close: b.c[i] })));
+
+  const serieLinea = (arr, color, ancho, panel, titulo) => {
+    const datos = [];
+    for(let i = 0; i < n; i++) if(isNum(arr[i])) datos.push({ time: b.t[i], value: arr[i] });
+    if(datos.length < 2) return null;
+    const s = chart.addSeries(L.LineSeries, {
+      color, lineWidth: ancho || 1, priceLineVisible: false, lastValueVisible: false,
+      crosshairMarkerVisible: false, title: titulo || ''
+    }, panel || 0);
+    s.setData(datos);
+    return s;
+  };
+
+  /* ── medias y bandas ── */
+  if(CH.overlays.sma20)  serieLinea(I.sma20,  COL.sma20, 1, 0, 'SMA20');
+  if(CH.overlays.sma50)  serieLinea(I.sma50,  COL.sma50, 1, 0, 'SMA50');
+  if(CH.overlays.sma200) serieLinea(I.sma200, COL.sma200, 2, 0, 'SMA200');
+  if(CH.overlays.ema9)   serieLinea(I.ema9,   COL.ema9,  1, 0, 'EMA9');
+  if(CH.overlays.bb){
+    serieLinea(I.bb.up, COL.bb, 1, 0);
+    serieLinea(I.bb.lo, COL.bb, 1, 0);
+  }
+
+  /* ── soportes y resistencias, con la cantidad de toques ── */
+  if(CH.overlays.sr){
+    S.levels.slice(0, 7).forEach(l => {
+      velas.createPriceLine({
+        price: l.price,
+        color: l.kind === 'sop' ? COL.sop : COL.res,
+        lineWidth: 1, lineStyle: L.LineStyle.Dashed, axisLabelVisible: true,
+        title: (l.kind === 'sop' ? 'S' : 'R') + ' ·' + l.touches
+      });
+    });
+  }
+
+  /* ── directrices detectadas por el motor, ancladas a sus pivotes ── */
+  const marcas = [];
+  if(CH.overlays.trend){
+    const trazar = (t, color, etiqueta, posicion) => {
+      if(!t) return;
+      const s = chart.addSeries(L.LineSeries, {
+        color, lineWidth: 2, priceLineVisible: false, lastValueVisible: false,
+        crosshairMarkerVisible: false, title: etiqueta + ' ' + mesesTxt(t.win) + ' · ' + t.touches + ' toques'
+      }, 0);
+      s.setData([
+        { time: b.t[t.i0], value: t.a * t.i0 + t.b },
+        { time: b.t[n-1],  value: t.a * (n-1) + t.b }
+      ]);
+      [t.i0, t.i1].forEach(i => marcas.push({
+        time: b.t[i], position: posicion, color, shape: 'circle', text: ''
+      }));
+    };
+    trazar(S.tlLow,  COL.tlLow,  'Soporte',    'belowBar');
+    trazar(S.tlHigh, COL.tlHigh, 'Resistencia','aboveBar');
+  }
+  if(marcas.length){
+    marcas.sort((x, y) => x.time - y.time);
+    L.createSeriesMarkers(velas, marcas);
+  }
+
+  /* ── volumen, con las ruedas de volumen anormal resaltadas ── */
+  let panel = 1;
+  if(CH.overlays.vol){
+    const vol = chart.addSeries(L.HistogramSeries, {
+      priceFormat: { type: 'volume' }, priceLineVisible: false, lastValueVisible: false
+    }, panel);
+    vol.setData(b.t.map((t, i) => {
+      const sube = b.c[i] >= b.o[i], anormal = isNum(I.rvolArr[i]) && I.rvolArr[i] >= 1.8;
+      return { time: t, value: b.v[i],
+               color: anormal ? (sube ? COL.up : COL.dn)
+                              : (sube ? 'rgba(34,214,138,.42)' : 'rgba(255,77,106,.42)') };
+    }));
+    serieLinea(I.volMA, 'rgba(240,180,41,.85)', 1, panel, 'Vol. media 20');
+    try{ chart.panes()[panel].setHeight(74); }catch(e){}
+    panel++;
+  }
+
+  /* ── panel del indicador elegido ── */
+  if(CH.ind !== 'none'){
+    if(CH.ind === 'rsi'){
+      serieLinea(I.rsi, '#5b8def', 2, panel, 'RSI 14');
+    } else if(CH.ind === 'macd'){
+      const h = chart.addSeries(L.HistogramSeries, { priceLineVisible: false, lastValueVisible: false }, panel);
+      h.setData(I.macd.hist.map((v, i) => isNum(v)
+        ? { time: b.t[i], value: v, color: v >= 0 ? 'rgba(34,214,138,.7)' : 'rgba(255,77,106,.7)' } : null).filter(Boolean));
+      serieLinea(I.macd.line,   '#5b8def', 1, panel, 'MACD');
+      serieLinea(I.macd.signal, COL.sma50, 1, panel, 'Señal');
+    } else if(CH.ind === 'stoch'){
+      serieLinea(I.stoch.k, COL.ema9,  1, panel, '%K');
+      serieLinea(I.stoch.d, COL.sma50, 1, panel, '%D');
+    } else if(CH.ind === 'adx'){
+      serieLinea(I.adx.pdi, COL.up,   1, panel, '+DI');
+      serieLinea(I.adx.ndi, COL.dn,   1, panel, '−DI');
+      serieLinea(I.adx.adx, '#a8c4f8', 2, panel, 'ADX');
+    }
+    try{ chart.panes()[panel].setHeight(100); }catch(e){}
+  }
+
+  /* ── ventana visible: las mismas barras que muestra el gráfico propio ── */
+  const desde = Math.max(0, n - (CH.count || 130));
+  try{ chart.timeScale().setVisibleRange({ from: b.t[desde], to: b.t[n-1] }); }
+  catch(e){ chart.timeScale().fitContent(); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
    WIDGET ADVANCED CHART DE TRADINGVIEW
    Versión gratuita embebible: trae los datos, los 100+ indicadores y las
    herramientas de dibujo de TradingView, y exige mantener su marca visible.
@@ -2051,15 +2243,27 @@ function tvRender(sym, forzar){
 function setChartMode(modo){
   TV.modo = modo;
   $$('#chart-sw button').forEach(b => b.classList.toggle('on', b.dataset.c === modo));
-  const tv = modo === 'tv';
+  const tv = modo === 'tv', lw = modo === 'lwc';
   $('#tv-wrap').classList.toggle('on', tv);
-  $('#ohlc').style.display = tv ? 'none' : '';
+  $('#lwc-wrap').classList.toggle('on', lw);
+  // La lectura OHLC y el recordatorio de controles son del gráfico propio
+  $('#ohlc').style.display = (tv || lw) ? 'none' : '';
   const hint = $('#chart-hint');
-  if(hint) hint.style.display = tv ? 'none' : '';
+  if(hint) hint.style.display = (tv || lw) ? 'none' : '';
+  if(!lw) lwcDestruir();
+
   if(tv){
     const sym = $('#i-ticker').value.trim().toUpperCase();
     if(sym) tvRender(sym);
+  } else if(lw){
+    lwcRender();
   } else if(CH.bars) chartDraw();
+}
+
+/** Redibuja el gráfico activo tras cambiar overlays o indicador */
+function redibujarActivo(){
+  if(TV.modo === 'lwc') lwcRender();
+  else if(TV.modo !== 'tv') chartDraw();
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -2137,6 +2341,7 @@ async function runAnalisis(){
 
     chartLoad(bars, I, S, ccy, bars.meta.intraday);
     if(TV.modo === 'tv') tvRender(sym);
+    else if(TV.modo === 'lwc') lwcRender();
     renderQuote(sym, bars, I, ccy, m);
     renderVerdict(v, score, signals);
     renderSignals(signals);
@@ -2702,9 +2907,9 @@ function init(){
     const k = b.dataset.k;
     CH.overlays[k] = CH.overlays[k] ? 0 : 1;
     b.classList.toggle('on', !!CH.overlays[k]);
-    chartDraw();
+    redibujarActivo();
   }));
-  $('#i-ind').addEventListener('change', e => { CH.ind = e.target.value; chartDraw(); });
+  $('#i-ind').addEventListener('change', e => { CH.ind = e.target.value; redibujarActivo(); });
   $$('#chart-sw button').forEach(b => b.addEventListener('click', () => setChartMode(b.dataset.c)));
 
   // ── Scanner ──
