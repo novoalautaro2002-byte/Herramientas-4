@@ -1010,10 +1010,12 @@ function trendlineFit(h, l, c, piv, dir, lb, atrV, n){
       const m = (src[i1] - src[i0]) / (i1 - i0);
       const q = src[i0] - m * i0;
 
-      // Una directriz que hoy queda lejísimos del precio no es operable: se descarta.
+      // Una directriz que hoy quedó lejos del precio ya no es un nivel contra el que se
+      // pueda operar: se despegó. Con el tope en 5 ATR entraban rectas a 9% del precio,
+      // que además estiraban la escala del gráfico sin aportar nada.
       const valorHoy = m * (n-1) + q;
       const distNow = Math.abs(last - valorHoy) / (atrV || 1);
-      if(distNow > 5) continue;
+      if(distNow > 2.5) continue;
 
       // Lo que invalida una directriz es la MAGNITUD del quiebre, no cuántas veces la
       // rozaron: las barras vecinas a cada pivote siempre asoman un poco por encima de
@@ -2019,6 +2021,7 @@ function sparkline(cv, closes, color){
 
 const LWC_CDN = 'https://unpkg.com/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js';
 const LWC = { promesa: null, chart: null };
+const MESES_CORTOS = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 
 /** Inyecta la librería una sola vez. Devuelve false si no se pudo cargar. */
 function lwcCargar(){
@@ -2063,8 +2066,21 @@ async function lwcRender(){
       panes: { separatorColor: '#2a4a7a', separatorHoverColor: 'rgba(58,111,216,.35)' }
     },
     grid: { vertLines: { color: 'rgba(42,74,122,.35)' }, horzLines: { color: 'rgba(42,74,122,.35)' } },
-    rightPriceScale: { borderColor: '#2a4a7a' },
-    timeScale: { borderColor: '#2a4a7a', timeVisible: !!CH.intraday, secondsVisible: false },
+    // Márgenes ajustados: con los que trae de fábrica (20% arriba) las velas quedaban
+    // apretadas en poco más de la mitad del panel
+    rightPriceScale: { borderColor: '#2a4a7a', scaleMargins: { top: 0.06, bottom: 0.08 } },
+    timeScale: {
+      borderColor: '#2a4a7a', timeVisible: !!CH.intraday, secondsVisible: false,
+      // Por defecto mezcla nombres de mes con números de día sueltos ("nov 2 2026 feb 3"),
+      // que se lee como si fueran datos. En diario se muestran sólo meses y años.
+      tickMarkFormatter: (t, tipo) => {
+        const d = new Date(t * 1000);
+        if(tipo === 0) return String(d.getFullYear());
+        if(tipo === 1) return MESES_CORTOS[d.getMonth()];
+        if(tipo === 2) return CH.intraday ? String(d.getDate()) : '';   // en diario no se rotulan días sueltos
+        return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+      }
+    },
     crosshair: {
       mode: L.CrosshairMode.Normal,
       vertLine: { color: 'rgba(168,196,248,.55)', width: 1, style: 2, labelBackgroundColor: '#1a3358' },
@@ -2105,16 +2121,23 @@ async function lwcRender(){
     serieLinea(I.bb.lo, COL.bb, 1, 0);
   }
 
-  /* ── soportes y resistencias, con la cantidad de toques ── */
+  /* ── soportes y resistencias ──
+     Sólo los cuatro más cercanos al precio: son los accionables. Dibujar los ocho
+     tapaba la escala de precios con sus etiquetas y llenaba el gráfico de rayas. */
   if(CH.overlays.sr){
-    S.levels.slice(0, 7).forEach(l => {
-      velas.createPriceLine({
-        price: l.price,
-        color: l.kind === 'sop' ? COL.sop : COL.res,
-        lineWidth: 1, lineStyle: L.LineStyle.Dashed, axisLabelVisible: true,
-        title: (l.kind === 'sop' ? 'S' : 'R') + ' ·' + l.touches
+    const ultimo = b.c[n-1];
+    S.levels.slice()
+      .sort((x, y) => Math.abs(x.price - ultimo) - Math.abs(y.price - ultimo))
+      .slice(0, 4)
+      .forEach(l => {
+        velas.createPriceLine({
+          price: l.price,
+          color: l.kind === 'sop' ? COL.sop : COL.res,
+          lineWidth: 1, lineStyle: L.LineStyle.Dashed,
+          axisLabelVisible: true,
+          title: (l.kind === 'sop' ? 'S' : 'R') + ' ·' + l.touches
+        });
       });
-    });
   }
 
   /* ── directrices detectadas por el motor, ancladas a sus pivotes ── */
@@ -2124,7 +2147,11 @@ async function lwcRender(){
       if(!t) return;
       const s = chart.addSeries(L.LineSeries, {
         color, lineWidth: 2, priceLineVisible: false, lastValueVisible: false,
-        crosshairMarkerVisible: false, title: etiqueta + ' ' + mesesTxt(t.win) + ' · ' + t.touches + ' toques'
+        crosshairMarkerVisible: false,
+        title: etiqueta + ' ' + mesesTxt(t.win) + ' ·' + t.touches,
+        // La directriz se proyecta más allá del precio: si entra en el autoescalado,
+        // comprime las velas para dejarle lugar a una recta.
+        autoscaleInfoProvider: () => null
       }, 0);
       s.setData([
         { time: b.t[t.i0], value: t.a * t.i0 + t.b },
@@ -2155,7 +2182,7 @@ async function lwcRender(){
                               : (sube ? 'rgba(34,214,138,.42)' : 'rgba(255,77,106,.42)') };
     }));
     serieLinea(I.volMA, 'rgba(240,180,41,.85)', 1, panel, 'Vol. media 20');
-    try{ chart.panes()[panel].setHeight(74); }catch(e){}
+    try{ chart.panes()[panel].setHeight(88); }catch(e){}
     panel++;
   }
 
