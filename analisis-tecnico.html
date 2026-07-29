@@ -843,9 +843,10 @@ tbody tr.clk{cursor:pointer}
 </div>
 
 <div class="disc">
-  ⚠ HERRAMIENTA DE ANÁLISIS TÉCNICO — USO INTERNO. Las señales y "recomendaciones" son la salida mecánica de un modelo de
-  indicadores sobre precios históricos; no constituyen asesoramiento de inversión ni recomendación de compra o venta de valores
-  negociables. Los datos provienen de fuentes públicas (Yahoo Finance) con demora y pueden contener errores. El desempeño pasado
+  ⚠ HERRAMIENTA DE ANÁLISIS TÉCNICO — USO INTERNO. El score describe la condición técnica del papel; <b>no predice el precio</b>.
+  En el backtest propio (34 activos, 5 años, 34.417 casos) los tramos altos del score rindieron levemente por debajo de comprar
+  cualquier día, en los cuatro horizontes probados. Las señales son la salida mecánica de un modelo de indicadores sobre precios
+  históricos; no constituyen asesoramiento de inversión ni recomendación de compra o venta de valores negociables. Los datos provienen de fuentes públicas (Yahoo Finance) con demora y pueden contener errores. El desempeño pasado
   no garantiza resultados futuros. Verificá siempre contra la punta real del mercado antes de operar.
 </div>
 
@@ -876,7 +877,7 @@ tbody tr.clk{cursor:pointer}
  */
 // Versión visible arriba a la derecha. SUMAR 1 EN CADA CAMBIO PUBLICADO,
 // así se puede verificar de un vistazo que el sitio sirve la última build.
-const APP_VERSION = 4;
+const APP_VERSION = 5;
 
 const UNIVERSOS = {
   usd: {
@@ -1742,7 +1743,10 @@ function buildSignals(bars, I, S, ctx){
     else if(L.stK < 20){ st = 1; read = '%K ' + nf(L.stK,1) + ' en sobreventa'; }
     else if(L.stK > 80){ st = -1; read = '%K ' + nf(L.stK,1) + ' en sobrecompra'; }
     else read = '%K ' + nf(L.stK,1) + ' / %D ' + nf(L.stD,1) + ' — sin extremo';
-    add('stoch', 'Estocástico', read, st, 8);
+    // Williams %R es aritméticamente lo mismo que %K desplazado, así que va como
+    // lectura acompañante y no como señal aparte: contarlo dos veces era duplicar peso.
+    if(isNum(L.wr)) read += ' · Williams %R ' + nf(L.wr,0);
+    add('stoch', 'Estocástico / Williams', read, st, 10, L.stK < 10 || L.stK > 90);
   }
 
   /* 7 · ADX / DI */
@@ -1899,15 +1903,6 @@ function buildSignals(bars, I, S, ctx){
       (giro ? 'GIRO a ' : '') + (L.stDir > 0 ? 'alcista' : 'bajista') + ', línea en ' + px(L.stLinea, ccy) +
       ' (' + nf(Math.abs(L.close / L.stLinea - 1) * 100, 1) + '% del precio)',
       L.stDir, 14, giro);
-  }
-
-  /* 18 · Williams %R */
-  if(isNum(L.wr)){
-    let st = 0, read;
-    if(L.wr <= -80){ st = 1; read = '%R ' + nf(L.wr,0) + ' — pegado al piso del rango, zona de sobreventa'; }
-    else if(L.wr >= -20){ st = -1; read = '%R ' + nf(L.wr,0) + ' — pegado al techo del rango, sobrecompra'; }
-    else read = '%R ' + nf(L.wr,0) + ' — en la zona media del rango de 14 ruedas';
-    add('wr', 'Williams %R', read, st, 8, L.wr <= -90 || L.wr >= -10);
   }
 
   /* 19 · Koncorde: manos fuertes contra manos débiles */
@@ -2069,13 +2064,40 @@ function marcoSemanal(barsW){
           (isNum(L.sma200) ? ', precio ' + pf((L.close/L.sma200-1)*100,1) + ' vs SMA200' : '') + ')' };
 }
 
-/** Traduce el score a recomendación */
+/**
+ * El score DESCRIBE la condición técnica; no predice.
+ *
+ * El backtest sobre 34 papeles, 5 años y ~34.000 casos mostró que los tramos altos
+ * del score rindieron levemente PEOR que comprar cualquier día, y que eso se repite
+ * en los cuatro horizontes probados (5, 20, 60 y 120 ruedas). Llamarlo "COMPRA
+ * FUERTE" sería afirmar algo que los datos no sostienen, así que el rótulo dice lo
+ * que el score realmente mide: cuán marcada está la tendencia alcista o bajista.
+ * La ventaja medida se muestra al lado, para que la lectura no dependa de la fe.
+ */
 function veredicto(score){
-  if(score >= 45) return { txt: 'COMPRA FUERTE', k: 'b2', dir: 1 };
-  if(score >= 18) return { txt: 'COMPRA', k: 'b1', dir: 1 };
-  if(score > -18) return { txt: 'NEUTRAL', k: 'n0', dir: 0 };
-  if(score > -45) return { txt: 'VENTA', k: 's1', dir: -1 };
-  return { txt: 'VENTA FUERTE', k: 's2', dir: -1 };
+  if(score >= 45) return { txt: 'TENDENCIA MUY FUERTE', k: 'b2', dir: 1 };
+  if(score >= 18) return { txt: 'TENDENCIA ALCISTA', k: 'b1', dir: 1 };
+  if(score > -18) return { txt: 'SIN TENDENCIA CLARA', k: 'n0', dir: 0 };
+  if(score > -45) return { txt: 'TENDENCIA BAJISTA', k: 's1', dir: -1 };
+  return { txt: 'TENDENCIA MUY DÉBIL', k: 's2', dir: -1 };
+}
+
+/**
+ * Ventaja medida por tramo de score: retorno medio a 20 ruedas menos el de comprar
+ * cualquier día del mismo período. Universo de 33 activos, 5 años, 34.417 casos.
+ * Números del backtest propio: sirven para dimensionar, no son una promesa.
+ */
+const CALIBRACION = [
+  { lo: -100, hi: -40, ventaja:  1.42, n:  1640 },
+  { lo:  -40, hi: -20, ventaja:  0.62, n:  4651 },
+  { lo:  -20, hi:   0, ventaja:  0.01, n:  6037 },
+  { lo:    0, hi:  20, ventaja: -0.21, n:  6776 },
+  { lo:   20, hi:  40, ventaja: -0.31, n:  7783 },
+  { lo:   40, hi:  60, ventaja: -0.23, n:  6547 },
+  { lo:   60, hi: 101, ventaja:  0.13, n:   982 }
+];
+function calibracionDe(score){
+  return CALIBRACION.find(c => score >= c.lo && score < c.hi) || null;
 }
 
 /** Plan operativo: entrada, stop y objetivos según dirección */
@@ -3121,14 +3143,18 @@ function renderVerdict(v, score, signals){
   const el = $('#verdict');
   el.className = 'verdict ' + v.k;
   $('#v-reco').textContent = v.txt;
-  let extra = '';
+  const cal = calibracionDe(score);
+  let notas = '';
+  if(cal){
+    const buena = cal.ventaja > 0.1, mala = cal.ventaja < -0.1;
+    notas += '<div style="margin-top:8px;font-size:10.5px;font-family:var(--font);line-height:1.5;color:var(--text2)">' +
+      'Históricamente este tramo de score rindió <b class="' + (buena ? 'up' : mala ? 'dn' : 'nu') + '">' +
+      pf(cal.ventaja,2) + '</b> respecto de comprar cualquier día, a 20 ruedas (' +
+      cal.n.toLocaleString('es-AR') + ' casos). <b>El score describe la tendencia, no predice el precio.</b></div>';
+  }
   if(REG.estado && REG.estado.nivel === 'mal' && v.dir > 0)
-    extra = ' · ⚠ mercado en RIESGO (' + REG.estado.detalle + '): las señales alcistas valen menos';
-  else if(REG.estado && REG.estado.nivel === 'ok' && v.dir < 0)
-    extra = ' · mercado favorable: la señal bajista va contra la corriente';
-  $('#v-score').textContent = 'score ' + (score > 0 ? '+' : '') + score + ' / 100 · ' + signals.length + ' señales evaluadas';
-  $('#v-score').innerHTML = $('#v-score').textContent +
-    (extra ? '<div style="margin-top:6px;font-size:10.5px;color:var(--warn);font-family:var(--font);line-height:1.5">' + esc(extra.replace(' · ','')) + '</div>' : '');
+    notas += '<div style="margin-top:6px;font-size:10.5px;color:var(--warn);font-family:var(--font);line-height:1.5">⚠ Mercado en RIESGO (' + esc(REG.estado.detalle) + ')</div>';
+  $('#v-score').innerHTML = 'score ' + (score > 0 ? '+' : '') + score + ' / 100 · ' + signals.length + ' señales' + notas;
   const g = $('#v-gauge');
   const half = Math.abs(score) / 2;
   if(score >= 0){ g.style.left = '50%'; g.style.right = 'auto'; g.style.width = half + '%'; g.style.background = 'linear-gradient(90deg,rgba(34,214,138,.5),var(--up))'; }
@@ -3162,7 +3188,7 @@ function renderSignals(signals){
 }
 
 function renderPlan(p, ccy, v){
-  $('#plan-dir').textContent = p.dir > 0 ? 'LARGO' : 'CORTO / SALIDA';
+  $('#plan-dir').textContent = p.dir > 0 ? 'A FAVOR DE LA TENDENCIA' : 'CONTRA LA TENDENCIA';
   $('#plan-dir').style.color = p.dir > 0 ? 'var(--up)' : 'var(--dn)';
   const rr = isNum(p.rr1) ? nf(p.rr1,1) + ':1' : '—';
   $('#plan').innerHTML =
@@ -3448,7 +3474,9 @@ const MODE_DESC = {
   mom: '<b style="color:var(--up)">MOMENTUM</b> — busca los activos que <b>ya se están moviendo</b> y tienen chance de seguir: ' +
        'medias alineadas al alza, retorno superior al índice y al sector, precio cerca de máximos y volumen acompañando. ' +
        'Se opera <i>a favor</i> de la tendencia; el riesgo es entrar tarde, así que el stop suele ir bajo el último mínimo relevante o la SMA20.',
-  rev: '<b style="color:var(--warn)">REVERSIÓN</b> — busca <b>sobreextensión</b>: activos que se alejaron demasiado de su media, con RSI/estocástico en extremo, ' +
+  rev: '<b style="color:var(--warn)">REVERSIÓN</b> <span style="color:var(--up)">— el modo con respaldo en el backtest: ' +
+       'las señales de sobreextensión (divergencia de RSI, Bollinger, estocástico) fueron las únicas con ventaja ' +
+       'estadística sobre 34.000 casos, mientras que las de tendencia rindieron por debajo del promedio.</span><br>Busca <b>sobreextensión</b>: activos que se alejaron demasiado de su media, con RSI/estocástico en extremo, ' +
        'fuera de las bandas de Bollinger o apoyados en un soporte relevante. Se opera <i>contra</i> el movimiento reciente buscando el rebote. ' +
        'Prioriza los casos donde la tendencia de fondo sigue siendo alcista (pullback) sobre los de caída libre.'
 };
