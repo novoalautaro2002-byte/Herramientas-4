@@ -378,6 +378,7 @@ tbody tr.clk{cursor:pointer}
     <div class="sub">GRÁFICO · INDICADORES · SCANNER · MOMENTUM / REVERSIÓN</div>
   </div>
   <div class="head-right">
+    <span class="pill" id="ver-pill" title="Versión de la app">v1</span>
     <span class="pill" id="src-pill">YAHOO FINANCE</span>
     <span class="pill" id="stat-pill">—</span>
     <button class="tema-btn" id="tema-btn" title="Cambiar entre tema oscuro y claro">
@@ -792,6 +793,10 @@ tbody tr.clk{cursor:pointer}
  *
  * Formato: [ ticker donde cotiza afuera, empresa, sector ]
  */
+// Versión visible arriba a la derecha. SUMAR 1 EN CADA CAMBIO PUBLICADO,
+// así se puede verificar de un vistazo que el sitio sirve la última build.
+const APP_VERSION = 1;
+
 const UNIVERSOS = {
   usd: {
     label: 'USA + ADRs con CEDEAR (en USD)',
@@ -2953,6 +2958,9 @@ async function runAnalisis(){
     renderChartNote(bars, S, I, ccy);
 
     setStat('Actualizado ' + new Date().toLocaleTimeString('es-AR'), 'live');
+    // Se recuerda qué se estaba mirando para que recargar no te saque de la acción
+    try{ localStorage.setItem('at-estado', JSON.stringify({
+      sym, univ: $('#i-univ-a').value, tf: $('#i-tf').value, lb: $('#i-lb').value })); }catch(e){}
   }catch(e){
     console.error(e);
     $('#a-err').innerHTML = '<div class="err-box">✕ ' + esc(e.message || 'no se pudo cargar el ticker') +
@@ -3921,8 +3929,27 @@ function init(){
   CMP.elegidos = (UNIVERSOS.usd.tickers.slice(0,3)).map(t => t[0]);
   cmpPintarPicker();
 
+  $('#ver-pill').textContent = 'v' + APP_VERSION;
+
+  // Estado guardado: recargar vuelve al mismo activo y configuración.
+  // Un hash en la URL (#MSFT) manda por encima de lo guardado.
+  let est = null;
+  try{ est = JSON.parse(localStorage.getItem('at-estado') || 'null'); }catch(e){}
+  const setSel = (sel, v) => { const el = $(sel);
+    if(v && [...el.options].some(o => o.value === v)) el.value = v; };
+  if(est){
+    setSel('#i-univ-a', est.univ);
+    setSel('#i-tf', est.tf);
+    setSel('#i-lb', est.lb);
+    if(est.sym) $('#i-ticker').value = est.sym;
+  }
   const h = decodeURIComponent(location.hash.replace('#',''));
   if(h) $('#i-ticker').value = h.toUpperCase();
+  // y si el hash cambia con la página abierta, se salta a ese activo
+  window.addEventListener('hashchange', () => {
+    const h2 = decodeURIComponent(location.hash.replace('#',''));
+    if(h2){ $('#i-ticker').value = h2.toUpperCase(); showView('analisis'); runAnalisis(); }
+  });
   runAnalisis();
 }
 
