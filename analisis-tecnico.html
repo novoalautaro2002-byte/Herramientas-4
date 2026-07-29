@@ -379,6 +379,7 @@ tbody tr.clk{cursor:pointer}
   </div>
   <div class="head-right">
     <span class="pill" id="ver-pill" title="Versión de la app">v1</span>
+    <span class="pill" id="reg-pill" style="display:none"></span>
     <span class="pill" id="src-pill">YAHOO FINANCE</span>
     <span class="pill" id="stat-pill">—</span>
     <button class="tema-btn" id="tema-btn" title="Cambiar entre tema oscuro y claro">
@@ -795,7 +796,7 @@ tbody tr.clk{cursor:pointer}
  */
 // Versión visible arriba a la derecha. SUMAR 1 EN CADA CAMBIO PUBLICADO,
 // así se puede verificar de un vistazo que el sitio sirve la última build.
-const APP_VERSION = 2;
+const APP_VERSION = 3;
 
 const UNIVERSOS = {
   usd: {
@@ -837,6 +838,42 @@ const UNIVERSOS = {
       ['B','Barrick Mining','Materiales'],
       ['VALE','Vale','Materiales'],
       ['NFLX','Netflix','Comunicación']
+    ]
+  },
+  indices: {
+    label: 'Índices y ETF (en USD)',
+    bench: 'SPY',
+    benchLabel: 'S&P 500',
+    ccy: 'u$s',
+    // Los apalancados e inversos se reinician a diario: replican el movimiento de UN
+    // día multiplicado, no del período. En tendencias laterales pierden valor contra
+    // el índice aunque el índice termine igual. Sirven para días o pocas semanas.
+    tickers: [
+      ['SPY','S&P 500','Índice'],
+      ['QQQ','Nasdaq 100','Índice'],
+      ['DIA','Dow Jones','Índice'],
+      ['IWM','Russell 2000','Índice'],
+      ['EEM','Mercados Emergentes','Índice'],
+      ['XLK','Tecnología','Sectorial SPY'],
+      ['XLV','Salud','Sectorial SPY'],
+      ['XLF','Financiero','Sectorial SPY'],
+      ['XLY','Consumo Discrecional','Sectorial SPY'],
+      ['XLI','Industrial','Sectorial SPY'],
+      ['XLC','Comunicación','Sectorial SPY'],
+      ['XLP','Consumo Defensivo','Sectorial SPY'],
+      ['XLE','Energía','Sectorial SPY'],
+      ['XLU','Utilities','Sectorial SPY'],
+      ['XLRE','Real Estate','Sectorial SPY'],
+      ['XLB','Materiales','Sectorial SPY'],
+      ['SSO','S&P 500 ×2','Apalancado alcista'],
+      ['QLD','Nasdaq 100 ×2','Apalancado alcista'],
+      ['TQQQ','Nasdaq 100 ×3','Apalancado alcista'],
+      ['SH','S&P 500 inverso','Inverso · apuesta bajista'],
+      ['SDS','S&P 500 inverso ×2','Inverso · apuesta bajista'],
+      ['SPXU','S&P 500 inverso ×3','Inverso · apuesta bajista'],
+      ['PSQ','Nasdaq 100 inverso','Inverso · apuesta bajista'],
+      ['QID','Nasdaq 100 inverso ×2','Inverso · apuesta bajista'],
+      ['SQQQ','Nasdaq 100 inverso ×3','Inverso · apuesta bajista']
     ]
   },
   argy: {
@@ -3004,7 +3041,14 @@ function renderVerdict(v, score, signals){
   const el = $('#verdict');
   el.className = 'verdict ' + v.k;
   $('#v-reco').textContent = v.txt;
+  let extra = '';
+  if(REG.estado && REG.estado.nivel === 'mal' && v.dir > 0)
+    extra = ' · ⚠ mercado en RIESGO (' + REG.estado.detalle + '): las señales alcistas valen menos';
+  else if(REG.estado && REG.estado.nivel === 'ok' && v.dir < 0)
+    extra = ' · mercado favorable: la señal bajista va contra la corriente';
   $('#v-score').textContent = 'score ' + (score > 0 ? '+' : '') + score + ' / 100 · ' + signals.length + ' señales evaluadas';
+  $('#v-score').innerHTML = $('#v-score').textContent +
+    (extra ? '<div style="margin-top:6px;font-size:10.5px;color:var(--warn);font-family:var(--font);line-height:1.5">' + esc(extra.replace(' · ','')) + '</div>' : '');
   const g = $('#v-gauge');
   const half = Math.abs(score) / 2;
   if(score >= 0){ g.style.left = '50%'; g.style.right = 'auto'; g.style.width = half + '%'; g.style.background = 'linear-gradient(90deg,rgba(34,214,138,.5),var(--up))'; }
@@ -3700,6 +3744,45 @@ function renderSectores(){
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
+   RÉGIMEN DE MERCADO
+   El mismo score no vale lo mismo con el VIX en 12 que en 35. Se mira el nivel
+   de volatilidad implícita y si el S&P está por encima de su media de 200, y se
+   resume en un semáforo. No cambia el score: cambia cómo hay que leerlo.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const REG = { estado: null };
+
+async function calcularRegimen(){
+  try{
+    const [vixB, spxB] = await Promise.all([getBars('^VIX','1d','1y'), getBars('^GSPC','1d','1y')]);
+    const vix = vixB.c[vixB.c.length-1];
+    const Isp = computeIndicators(spxB);
+    const sobre200 = isNum(Isp.last.sma200) && Isp.last.close > Isp.last.sma200;
+    const dist200 = isNum(Isp.last.sma200) ? (Isp.last.close / Isp.last.sma200 - 1) * 100 : null;
+
+    let nivel, txt;
+    if(vix < 18 && sobre200){ nivel = 'ok';   txt = 'FAVORABLE'; }
+    else if(vix > 28 || !sobre200){ nivel = 'mal';  txt = 'RIESGO'; }
+    else { nivel = 'medio'; txt = 'NEUTRAL'; }
+
+    REG.estado = { nivel, txt, vix, sobre200, dist200,
+      detalle: 'VIX ' + nf(vix,1) + ' · S&P ' + (sobre200 ? 'sobre' : 'bajo') + ' su SMA200' +
+               (isNum(dist200) ? ' (' + pf(dist200,1) + ')' : '') };
+    pintarRegimen();
+  }catch(e){ /* sin régimen la app funciona igual */ }
+}
+
+function pintarRegimen(){
+  const el = $('#reg-pill');
+  if(!el || !REG.estado) return;
+  const r = REG.estado;
+  el.style.display = '';
+  el.textContent = 'MERCADO ' + r.txt;
+  el.title = r.detalle;
+  el.className = 'pill ' + (r.nivel === 'ok' ? 'live' : r.nivel === 'mal' ? 'err' : 'stale');
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
    TEMA CLARO / OSCURO
    ═══════════════════════════════════════════════════════════════════════ */
 
@@ -3937,6 +4020,7 @@ function init(){
   cmpPintarPicker();
 
   $('#ver-pill').textContent = 'v' + APP_VERSION;
+  calcularRegimen();
 
   // Estado guardado: recargar vuelve al mismo activo y configuración.
   // Un hash en la URL (#MSFT) manda por encima de lo guardado.
