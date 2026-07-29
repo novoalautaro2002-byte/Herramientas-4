@@ -623,6 +623,12 @@ tbody tr.clk{cursor:pointer}
     <button class="fchip" data-f="rsPos">✦ RS+ vs índice <span class="cnt" data-c="rsPos"></span></button>
     <button class="fchip" data-f="rsSec">◈ RS+ vs sector <span class="cnt" data-c="rsSec"></span></button>
     <button class="fchip" data-f="sqz">◇ Compresión (squeeze) <span class="cnt" data-c="sqz"></span></button>
+    <span class="flab" style="margin-left:6px">Tendencia</span>
+    <button class="fchip" data-f="t2">▲▲ Muy fuerte <span class="cnt" data-c="t2"></span></button>
+    <button class="fchip" data-f="t1">▲ Alcista <span class="cnt" data-c="t1"></span></button>
+    <button class="fchip" data-f="t0">■ Sin tendencia <span class="cnt" data-c="t0"></span></button>
+    <button class="fchip" data-f="tm1">▼ Bajista <span class="cnt" data-c="tm1"></span></button>
+    <button class="fchip" data-f="tm2">▼▼ Muy débil <span class="cnt" data-c="tm2"></span></button>
   </div>
 
   <div class="card">
@@ -644,9 +650,10 @@ tbody tr.clk{cursor:pointer}
             <th class="r sort-h" data-s="rs1m">RS 1M</th>
             <th class="r sort-h" data-s="rs3m">RS 3M</th>
             <th class="r sort-h act" data-s="score">Score <span class="ar">▼</span></th>
+            <th>Tendencia</th>
             <th>Setup</th>
           </tr></thead>
-          <tbody><tr><td colspan="14" class="empty">Elegí un universo y presioná <b>Escanear</b>.<br>Se descarga 1 año de precios por ticker (puede tardar ~20-40 s la primera vez).</td></tr></tbody>
+          <tbody><tr><td colspan="15" class="empty">Elegí un universo y presioná <b>Escanear</b>.<br>Se descarga 1 año de precios por ticker (puede tardar ~20-40 s la primera vez).</td></tr></tbody>
         </table>
       </div>
       <div class="prog"><div class="prog-b" id="scan-prog"></div></div>
@@ -877,7 +884,7 @@ tbody tr.clk{cursor:pointer}
  */
 // Versión visible arriba a la derecha. SUMAR 1 EN CADA CAMBIO PUBLICADO,
 // así se puede verificar de un vistazo que el sitio sirve la última build.
-const APP_VERSION = 5;
+const APP_VERSION = 6;
 
 const UNIVERSOS = {
   usd: {
@@ -2096,6 +2103,12 @@ const CALIBRACION = [
   { lo:   40, hi:  60, ventaja: -0.23, n:  6547 },
   { lo:   60, hi: 101, ventaja:  0.13, n:   982 }
 ];
+/** Rótulo abreviado para tablas y chips, sin romper "SIN TENDENCIA CLARA" al recortar */
+function rotuloCorto(txt){
+  if(txt === 'SIN TENDENCIA CLARA') return 'SIN TENDENCIA';
+  return txt.replace('TENDENCIA ', '');
+}
+
 function calibracionDe(score){
   return CALIBRACION.find(c => score >= c.lo && score < c.hi) || null;
 }
@@ -3308,7 +3321,7 @@ async function runScan(){
   const uk = $('#i-univ-s').value;
   const btn = $('#b-scan'), pb = $('#scan-prog');
   btn.disabled = true; btn.textContent = 'Escaneando…';
-  $('#t-scan tbody').innerHTML = '<tr><td colspan="14" class="empty"><div class="spin" style="margin:0 auto 10px"></div>Descargando ' +
+  $('#t-scan tbody').innerHTML = '<tr><td colspan="15" class="empty"><div class="spin" style="margin:0 auto 10px"></div>Descargando ' +
     UNIVERSOS[uk].tickers.length + ' tickers + índice…</td></tr>';
   pb.style.width = '0%';
 
@@ -3338,6 +3351,13 @@ async function runScan(){
       r.f.rsPos = isNum(it.rs21) && it.rs21 > 0;
       r.f.rsSec = isNum(it.rsSec) && it.rsSec > 0;
       r.f.sqz   = isNum(L.bbWmin) && L.bbWmin <= 12;
+      r.vered   = veredicto(ev.score);
+      r.cal     = calibracionDe(ev.score);
+      r.f.t2  = ev.score >= 45;
+      r.f.t1  = ev.score >= 18 && ev.score < 45;
+      r.f.t0  = ev.score > -18 && ev.score < 18;
+      r.f.tm1 = ev.score <= -18 && ev.score > -45;
+      r.f.tm2 = ev.score <= -45;
       r.setup = setupLabel(r, ev.signals);
       return r;
     });
@@ -3347,7 +3367,7 @@ async function runScan(){
     setStat('Scanner: ' + SCAN.rows.length + ' activos · ' + new Date().toLocaleTimeString('es-AR'), 'live');
   }catch(e){
     console.error(e);
-    $('#t-scan tbody').innerHTML = '<tr><td colspan="14" class="empty">✕ ' + esc(e.message) + '</td></tr>';
+    $('#t-scan tbody').innerHTML = '<tr><td colspan="15" class="empty">✕ ' + esc(e.message) + '</td></tr>';
     $('#scan-pill').textContent = 'ERROR'; $('#scan-pill').className = 'pill err';
   }finally{
     btn.disabled = false; btn.textContent = 'Escanear';
@@ -3383,8 +3403,14 @@ function renderScan(){
     if(el) el.textContent = SCAN.rows.length ? '(' + c + ')' : '';
   });
 
+  // Los filtros de tendencia se combinan entre sí con O —pedir "muy fuerte Y alcista"
+  // no devolvería nada—; el resto siguen sumando condiciones con Y.
+  const TEND = ['t2','t1','t0','tm1','tm2'];
   let rows = SCAN.rows.slice();
-  if(SCAN.filters.size) rows = rows.filter(r => Array.from(SCAN.filters).every(f => r.f[f]));
+  const fTend = Array.from(SCAN.filters).filter(f => TEND.includes(f));
+  const fOtros = Array.from(SCAN.filters).filter(f => !TEND.includes(f));
+  if(fOtros.length) rows = rows.filter(r => fOtros.every(f => r.f[f]));
+  if(fTend.length)  rows = rows.filter(r => fTend.some(f => r.f[f]));
 
   const key = SCAN.sort;
   rows.sort((a,b) => {
@@ -3397,7 +3423,7 @@ function renderScan(){
   });
 
   if(!rows.length){
-    tb.innerHTML = '<tr><td colspan="14" class="empty">' +
+    tb.innerHTML = '<tr><td colspan="15" class="empty">' +
       (SCAN.rows.length ? 'Ningún activo pasa los filtros seleccionados.' : 'Elegí un universo y presioná <b>Escanear</b>.') + '</td></tr>';
     updateScanMeta(0);
     return;
@@ -3419,6 +3445,9 @@ function renderScan(){
       '<td class="r ' + cls(r.rs1m) + '">' + pf(r.rs1m,1) + '</td>' +
       '<td class="r ' + cls(r.rs3m) + '">' + pf(r.rs3m,1) + '</td>' +
       '<td class="r"><b class="' + cls(r.score) + '">' + (r.score > 0 ? '+' : '') + r.score + '</b></td>' +
+      '<td><span class="chip ' + (r.vered.dir > 0 ? 'up' : r.vered.dir < 0 ? 'dn' : 'nu') + '" title="' +
+        (r.cal ? 'Este tramo de score rindió ' + pf(r.cal.ventaja,2) + ' respecto de comprar cualquier día (' + r.cal.n + ' casos)' : '') +
+        '">' + esc(rotuloCorto(r.vered.txt)) + '</span></td>' +
       '<td><span class="chip ' + r.setup.k + '">' + esc(r.setup.t) + '</span></td>' +
     '</tr>';
   }).join('');
@@ -3453,7 +3482,11 @@ function updateScanMeta(shown){
     ' · en alza <b class="up">' + alcistas + '</b> / en baja <b class="dn">' + (SCAN.rows.length - alcistas) + '</b>' +
     ' · score promedio <b class="' + cls(avgScore) + '">' + (avgScore > 0 ? '+' : '') + nf(avgScore,0) + '</b>' +
     ' · con volumen anormal <b>' + conVol + '</b>' +
-    ' · índice de referencia <b>' + esc(u.benchLabel) + '</b>';
+    ' · índice de referencia <b>' + esc(u.benchLabel) + '</b>' +
+    ' · tendencia: <b class="up">' + SCAN.rows.filter(r => r.f.t2).length + '</b> muy fuerte / <b class="up">' +
+      SCAN.rows.filter(r => r.f.t1).length + '</b> alcista / <b>' +
+      SCAN.rows.filter(r => r.f.t0).length + '</b> sin definir / <b class="dn">' +
+      (SCAN.rows.filter(r => r.f.tm1).length + SCAN.rows.filter(r => r.f.tm2).length) + '</b> bajista';
 }
 
 function abrirEnAnalisis(sym){
@@ -3864,6 +3897,10 @@ async function calcularRegimen(){
   try{
     const [vixB, spxB] = await Promise.all([getBars('^VIX','1d','1y'), getBars('^GSPC','1d','1y')]);
     const vix = vixB.c[vixB.c.length-1];
+    // Control de sensatez: el VIX histórico nunca pasó de ~90. Un valor fuera de rango
+    // significa dato corrupto o símbolo equivocado, y es preferible no mostrar régimen
+    // antes que informar un "VIX 399" que nadie puede interpretar.
+    if(!isNum(vix) || vix <= 0 || vix > 150){ REG.estado = null; return; }
     const Isp = computeIndicators(spxB);
     const sobre200 = isNum(Isp.last.sma200) && Isp.last.close > Isp.last.sma200;
     const dist200 = isNum(Isp.last.sma200) ? (Isp.last.close / Isp.last.sma200 - 1) * 100 : null;
