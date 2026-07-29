@@ -1530,7 +1530,18 @@ function computeStructure(bars, I, lookback){
   const sets = [piv, pivFino];
   const tlLow  = trendline(h, l, c, sets, 'low',  lookback, atrV, n);
   const tlHigh = trendline(h, l, c, sets, 'high', lookback, atrV, n);
-  return { piv, pivFino, levels, tlLow, tlHigh, atrV, lookback };
+
+  // Dos escalas de niveles. Los MAYORES salen de pivotes anchos (6 barras por lado)
+  // y marcan la estructura grande del año; los menores, de los pivotes normales.
+  // Cuáles se dibujan lo decide el zoom en cada momento (nivelesEnVista).
+  const pivMayor = pivots(h, l, 6);
+  const levelsMayor = srLevels(h, l, c, pivMayor, Math.min(atrPct * 1.1, 0.06));
+  const nivelesTodos = levelsMayor.map(l => Object.assign({ escala: 'M' }, l));
+  levels.forEach(l => {
+    if(!nivelesTodos.some(o => Math.abs(o.price - l.price) <= l.price * 0.015))
+      nivelesTodos.push(Object.assign({ escala: 'm' }, l));
+  });
+  return { piv, pivFino, levels, nivelesTodos, tlLow, tlHigh, atrV, lookback };
 }
 
 /**
@@ -1810,6 +1821,24 @@ function mesesTxt(lb){
   if(lb < 12) return Math.round(lb) + ' ruedas';
   const m = Math.round(lb / 21);
   return m <= 1 ? '1 mes' : m + ' meses';
+}
+
+/**
+ * Decide qué niveles dibujar según lo que se está mirando: sólo los que caen dentro
+ * del rango de precios visible, y con detalle creciente al acercarse. Alejado (más
+ * de ~190 ruedas a la vista) se muestran sólo los mayores; a media distancia entran
+ * los menores con 3+ toques; bien cerca, todos. Tope de 8 para no empapelar.
+ */
+function nivelesEnVista(S, pLo, pHi, barrasVisibles){
+  const todos = S.nivelesTodos || S.levels;
+  const enRango = todos.filter(l => l.price >= pLo && l.price <= pHi);
+  let sel = enRango.filter(l => l.escala === 'M');
+  if(barrasVisibles < 190) sel = sel.concat(enRango.filter(l => l.escala !== 'M' && l.touches >= 3));
+  if(barrasVisibles < 80)  sel = sel.concat(enRango.filter(l => l.escala !== 'M' && l.touches < 3));
+  sel.sort((x, y) => y.touches - x.touches);
+  const out = [];
+  sel.forEach(l => { if(!out.some(o => Math.abs(o.price - l.price) <= l.price * 0.012)) out.push(l); });
+  return out.slice(0, 8).sort((x, y) => y.price - x.price);
 }
 
 function nearestLevels(levels, price){
@@ -2097,7 +2126,6 @@ function chartDraw(){
   if(CH.overlays.sma200) consider(CH.I.sma200);
   if(CH.overlays.ema9) consider(CH.I.ema9);
   if(CH.overlays.bb){ consider(CH.I.bb.up); consider(CH.I.bb.lo); }
-  if(CH.overlays.sr) CH.S.levels.slice(0, 7).forEach(l => { if(l.price > hi) hi = l.price; if(l.price < lo) lo = l.price; });
   if(CH.overlays.trend){
     [CH.S.tlLow, CH.S.tlHigh].forEach(t => {
       if(!t) return;
@@ -2181,7 +2209,7 @@ function chartDraw(){
     ctx.setLineDash([5,4]); ctx.lineWidth = 1;
     // Se recorren de arriba hacia abajo para poder saltear las etiquetas que se pisarían
     let ultimaEtiqY = -Infinity;
-    CH.S.levels.slice(0, 7).sort((a,b) => b.price - a.price).forEach(l => {
+    nivelesEnVista(CH.S, lo, hi, CH.count).forEach(l => {
       const y = yP(l.price);
       if(y < L.priceY0 || y > L.priceY1) return;
       ctx.strokeStyle = l.kind === 'sop' ? COL.sop : COL.res;
@@ -2579,24 +2607,37 @@ async function lwcRender(){
     });
   }
 
-  /* ── soportes y resistencias ──
-     Sólo los cuatro más cercanos al precio: son los accionables. Dibujar los ocho
-     tapaba la escala de precios con sus etiquetas y llenaba el gráfico de rayas. */
-  if(CH.overlays.sr){
-    const ultimo = b.c[n-1];
-    S.levels.slice()
-      .sort((x, y) => Math.abs(x.price - ultimo) - Math.abs(y.price - ultimo))
-      .slice(0, 4)
-      .forEach(l => {
-        velas.createPriceLine({
-          price: l.price,
-          color: l.kind === 'sop' ? COL.sop : COL.res,
-          lineWidth: 1, lineStyle: L.LineStyle.Dashed,
-          axisLabelVisible: true,
-          title: (l.kind === 'sop' ? 'S' : 'R') + ' ·' + l.touches
-        });
-      });
-  }
+  /* ── soportes y resistencias adaptados al zoom ──
+     En cada cambio de rango visible se re-elige qué niveles mostrar: alejado, la
+     estructura mayor del año; acercándose, aparece el detalle fino de esa zona. */
+  LWC.lineas = [];
+  const pintarNiveles = () => {
+    LWC.lineas.forEach(pl => { try{ velas.removePriceLine(pl); }catch(e){} });
+    LWC.lineas = [];
+    if(!CH.overlays.sr) return;
+    const vr = chart.timeScale().getVisibleRange();
+    if(!vr) return;
+    let iA = 0, iB = n - 1;
+    while(iA < n - 1 && b.t[iA] < vr.from) iA++;
+    while(iB > 0 && b.t[iB] > vr.to) iB--;
+    if(iB <= iA) return;
+    let pLo = Infinity, pHi = -Infinity;
+    for(let i = iA; i <= iB; i++){ if(b.l[i] < pLo) pLo = b.l[i]; if(b.h[i] > pHi) pHi = b.h[i]; }
+    nivelesEnVista(S, pLo * 0.99, pHi * 1.01, iB - iA + 1).forEach(l => {
+      const esRes = l.price > b.c[n-1];
+      LWC.lineas.push(velas.createPriceLine({
+        price: l.price,
+        color: esRes ? COL.res : COL.sop,
+        lineWidth: l.escala === 'M' ? 2 : 1,
+        lineStyle: L.LineStyle.Dashed, axisLabelVisible: true,
+        title: (esRes ? 'R' : 'S') + ' ·' + l.touches
+      }));
+    });
+  };
+  chart.timeScale().subscribeVisibleTimeRangeChange(() => {
+    clearTimeout(LWC.tNiveles);
+    LWC.tNiveles = setTimeout(pintarNiveles, 130);
+  });
 
   /* ── directrices detectadas por el motor, ancladas a sus pivotes ── */
   const marcas = [];
@@ -2685,6 +2726,7 @@ async function lwcRender(){
   const desde = Math.max(0, n - (CH.count || 130));
   try{ chart.timeScale().setVisibleRange({ from: b.t[desde], to: b.t[n-1] }); }
   catch(e){ chart.timeScale().fitContent(); }
+  pintarNiveles();
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
