@@ -145,6 +145,7 @@ body{padding:18px 22px 44px}
 .tog[data-k="sr"].on{background:var(--text2);border-color:var(--text2)}
 .tog[data-k="trend"].on{background:var(--up);border-color:var(--up)}
 .tog[data-k="vol"].on{background:var(--accent2);border-color:var(--accent2)}
+.tog[data-k="st"].on{background:var(--cyan);border-color:var(--cyan)}
 
 /* ─── GRID PRINCIPAL ─── */
 .grid-main{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:13px;align-items:start}
@@ -341,6 +342,22 @@ tbody tr.clk{cursor:pointer}
 .mbar{height:4px;background:var(--bg);border-radius:2px;overflow:hidden}
 .mbar i{display:block;height:100%}
 
+/* ─── MAPA DE SECTORES ─── */
+.sec-card{border-radius:var(--r);overflow:hidden;border:1px solid var(--border);box-shadow:var(--sombra-sm);
+  background:var(--surface);transition:all .15s}
+.sec-card:hover{transform:translateY(-2px);box-shadow:var(--sombra)}
+.sec-top{padding:13px 14px;display:flex;flex-direction:column;gap:3px}
+.sec-top .n{font-size:12.5px;font-weight:700;letter-spacing:.01em}
+.sec-top .r{font-family:var(--mono);font-size:21px;font-weight:800;line-height:1.1}
+.sec-top .c{font-size:10px;opacity:.8}
+.sec-body{padding:9px 14px 12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
+.sec-fila{display:flex;align-items:center;gap:8px;font-size:11px;cursor:pointer;padding:2px 0}
+.sec-fila:hover .tk{color:var(--accent2)}
+.sec-fila .tk{font-family:var(--mono);font-weight:700;min-width:52px;color:var(--text)}
+.sec-fila .bar{flex:1;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;position:relative}
+.sec-fila .bar i{position:absolute;top:0;bottom:0;border-radius:3px}
+.sec-fila .v{font-family:var(--mono);font-weight:700;min-width:54px;text-align:right}
+
 /* ─── SPARKLINE ─── */
 .spark{display:block;width:100%;height:34px}
 
@@ -373,6 +390,8 @@ tbody tr.clk{cursor:pointer}
   <button class="tab active" data-v="analisis"><span>◱</span> Análisis</button>
   <button class="tab" data-v="scanner"><span>◎</span> Scanner</button>
   <button class="tab" data-v="momentum"><span>⚡</span> Momentum / Reversión</button>
+  <button class="tab" data-v="comparar"><span>⇌</span> Comparador</button>
+  <button class="tab" data-v="sectores"><span>▦</span> Sectores</button>
 </div>
 
 <!-- ══════════════ VISTA: ANÁLISIS ══════════════ -->
@@ -423,14 +442,15 @@ tbody tr.clk{cursor:pointer}
         <button class="tog" data-k="bb">BOLLINGER</button>
         <button class="tog on" data-k="sr">SOP/RES</button>
         <button class="tog on" data-k="trend">TENDENCIA</button>
+        <button class="tog" data-k="st">SUPERTREND</button>
         <button class="tog on" data-k="vol">VOLUMEN</button>
       </div>
     </div>
     <div class="fld">
       <label>Gráfico</label>
       <div class="mode-sw" id="chart-sw">
-        <button data-c="motor" class="on">Motor</button>
-        <button data-c="lwc">Lightweight</button>
+        <button data-c="motor">Motor</button>
+        <button data-c="lwc" class="on">Lightweight</button>
         <button data-c="tv">TradingView</button>
       </div>
     </div>
@@ -441,6 +461,8 @@ tbody tr.clk{cursor:pointer}
         <option value="macd">MACD (12,26,9)</option>
         <option value="stoch">Estocástico (14,3)</option>
         <option value="adx">ADX / DI (14)</option>
+        <option value="wr">Williams %R (14)</option>
+        <option value="konc">Koncorde</option>
         <option value="none">Ninguno</option>
       </select>
     </div>
@@ -665,6 +687,77 @@ tbody tr.clk{cursor:pointer}
     <div class="empty" style="grid-column:1/-1">Elegí un universo y presioná <b>Calcular</b>.</div>
   </div>
   <div class="prog" style="margin-top:11px"><div class="prog-b" id="mom-prog"></div></div>
+</div>
+
+
+<!-- ══════════════ VISTA: COMPARADOR ══════════════ -->
+<div class="view" id="v-comparar">
+  <div class="toolbar">
+    <div class="fld">
+      <label>Universo</label>
+      <select id="i-univ-c"></select>
+    </div>
+    <div class="fld" style="flex:1;min-width:300px">
+      <label>Activos a comparar (hasta 5)</label>
+      <div class="tog-row" id="cmp-picker"></div>
+    </div>
+    <div class="fld">
+      <label>Período</label>
+      <select id="i-cmp-per">
+        <option value="21">1 mes</option>
+        <option value="63" selected>3 meses</option>
+        <option value="126">6 meses</option>
+        <option value="252">1 año</option>
+      </select>
+    </div>
+    <button class="btn" id="b-cmp">Comparar</button>
+  </div>
+  <div class="card">
+    <div class="card-h">
+      <div class="card-t"><span>⇌</span> Rendimiento relativo · base 100</div>
+      <span class="pill" id="cmp-pill">—</span>
+    </div>
+    <div class="chart-wrap" style="border-bottom:none">
+      <canvas id="cmp-chart" style="display:block;width:100%;height:420px;background:var(--bg)"></canvas>
+      <div class="chart-empty" id="cmp-empty">
+        <div style="font-size:26px;opacity:.35">⇌</div>
+        <div>Elegí hasta 5 activos y presioná Comparar</div>
+      </div>
+    </div>
+    <div class="card-b flush">
+      <table id="t-cmp">
+        <thead><tr><th>Activo</th><th class="r">Precio</th><th class="r">Rend. período</th>
+          <th class="r">vs índice</th><th class="r">Volatilidad</th><th class="r">Máx. caída</th><th class="r">Score</th></tr></thead>
+        <tbody><tr><td colspan="7" class="empty">Sin datos</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ VISTA: SECTORES ══════════════ -->
+<div class="view" id="v-sectores">
+  <div class="toolbar">
+    <div class="fld">
+      <label>Universo</label>
+      <select id="i-univ-x"></select>
+    </div>
+    <div class="fld">
+      <label>Ordenar por</label>
+      <select id="i-sec-per">
+        <option value="roc5">Rendimiento 1 semana</option>
+        <option value="roc21" selected>Rendimiento 1 mes</option>
+        <option value="roc63">Rendimiento 3 meses</option>
+        <option value="score">Score técnico</option>
+      </select>
+    </div>
+    <button class="btn" id="b-sec">Calcular</button>
+    <div class="tb-spacer"></div>
+    <span class="pill" id="sec-pill">—</span>
+  </div>
+  <div id="sec-mapa" class="cards" style="grid-template-columns:repeat(auto-fill,minmax(250px,1fr))">
+    <div class="empty" style="grid-column:1/-1">Elegí un universo y presioná <b>Calcular</b>.</div>
+  </div>
+  <div class="prog" style="margin-top:11px"><div class="prog-b" id="sec-prog"></div></div>
 </div>
 
 <div class="disc">
@@ -986,6 +1079,102 @@ function lowest(src, p, end){
   return m === Infinity ? null : m;
 }
 
+
+/** Williams %R: dónde cerró dentro del rango de p ruedas. 0 = techo, −100 = piso */
+function williamsR(h, l, c, p = 14){
+  const n = c.length, out = new Array(n).fill(null);
+  for(let i = p-1; i < n; i++){
+    let hh = -Infinity, ll = Infinity;
+    for(let j = i-p+1; j <= i; j++){ if(h[j] > hh) hh = h[j]; if(l[j] < ll) ll = l[j]; }
+    out[i] = hh === ll ? -50 : (hh - c[i]) / (hh - ll) * -100;
+  }
+  return out;
+}
+
+/** Money Flow Index: RSI ponderado por volumen */
+function mfi(h, l, c, v, p = 14){
+  const n = c.length, out = new Array(n).fill(null);
+  const tp = c.map((x, i) => (h[i] + l[i] + c[i]) / 3);
+  for(let i = p; i < n; i++){
+    let pos = 0, neg = 0;
+    for(let j = i-p+1; j <= i; j++){
+      const flujo = tp[j] * v[j];
+      if(tp[j] > tp[j-1]) pos += flujo; else if(tp[j] < tp[j-1]) neg += flujo;
+    }
+    out[i] = neg === 0 ? 100 : 100 - 100 / (1 + pos / neg);
+  }
+  return out;
+}
+
+/** Índices de volumen positivo y negativo (base de Koncorde) */
+function volIndex(c, v, positivo){
+  const n = c.length, out = new Array(n).fill(100);
+  for(let i = 1; i < n; i++){
+    const sube = v[i] > v[i-1];
+    out[i] = ((positivo && sube) || (!positivo && !sube)) && c[i-1]
+      ? out[i-1] + (c[i] - c[i-1]) / c[i-1] * out[i-1]
+      : out[i-1];
+  }
+  return out;
+}
+
+/**
+ * SuperTrend (ATR de p ruedas por un multiplicador). Devuelve la línea y la
+ * dirección: +1 mientras el precio va por encima, −1 cuando la perfora.
+ */
+function superTrend(h, l, c, p = 10, mult = 3){
+  const n = c.length, a = atr(h, l, c, p);
+  const linea = new Array(n).fill(null), dir = new Array(n).fill(null);
+  let sup = null, inf = null, d = 1;
+  for(let i = 0; i < n; i++){
+    if(!isNum(a[i])) continue;
+    const medio = (h[i] + l[i]) / 2;
+    let arriba = medio + mult * a[i], abajo = medio - mult * a[i];
+    if(isNum(sup)) arriba = (arriba < sup || c[i-1] > sup) ? arriba : sup;
+    if(isNum(inf)) abajo  = (abajo  > inf || c[i-1] < inf) ? abajo  : inf;
+    d = (isNum(sup) && d === 1 && c[i] < inf) ? -1
+      : (isNum(sup) && d === -1 && c[i] > arriba) ? 1 : d;
+    sup = arriba; inf = abajo;
+    linea[i] = d === 1 ? abajo : arriba;
+    dir[i] = d;
+  }
+  return { linea, dir };
+}
+
+/**
+ * Koncorde (Blai5): compone RSI, MFI, oscilador de Bollinger y estocástico para
+ * separar el dinero de "manos fuertes" (marrón) del de "manos débiles" (azul).
+ * Verde es la suma con el índice de volumen positivo; la media suaviza el total.
+ * Es una adaptación de la formulación publicada, no la del autor original.
+ */
+function koncorde(bars){
+  const { h, l, c, v } = bars, n = c.length;
+  const tp = c.map((x, i) => (h[i] + l[i] + c[i]) / 3);
+  const osc = (idx) => {
+    const m = ema(idx, 90), out = new Array(n).fill(null);
+    for(let i = 89; i < n; i++){
+      let mx = -Infinity, mn = Infinity;
+      for(let j = Math.max(0, i-89); j <= i; j++){ if(idx[j] > mx) mx = idx[j]; if(idx[j] < mn) mn = idx[j]; }
+      out[i] = (mx === mn || !isNum(m[i])) ? 0 : (idx[i] - m[i]) * 100 / (mx - mn);
+    }
+    return out;
+  };
+  const oscp = osc(volIndex(c, v, true));      // manos fuertes
+  const azul = osc(volIndex(c, v, false));     // manos débiles
+  const xmf  = mfi(h, l, c, v, 14);
+  const xrsi = rsi(tp, 14);
+  const base = sma(tp, 25), dev = stdev(tp, 25);
+  const boll = tp.map((x, i) => (isNum(base[i]) && dev[i]) ? (x - base[i]) / (2 * dev[i]) * 100 : null);
+  const st   = stochastic(h, l, tp, 21, 3).k;
+  const marron = new Array(n).fill(null), verde = new Array(n).fill(null);
+  for(let i = 0; i < n; i++){
+    if(!isNum(xrsi[i]) || !isNum(xmf[i]) || !isNum(boll[i]) || !isNum(st[i])) continue;
+    marron[i] = (xrsi[i] + xmf[i] + boll[i] + st[i] / 3) / 2;
+    if(isNum(oscp[i])) verde[i] = marron[i] + oscp[i];
+  }
+  return { marron, azul, verde, media: sma(verde.map(x => isNum(x) ? x : 0), 15) };
+}
+
 /* ───────── Pivotes, soportes/resistencias y líneas de tendencia ───────── */
 
 /**
@@ -1269,6 +1458,9 @@ function computeIndicators(bars){
   I.adx    = adx(h, l, c, 14);
   I.volMA  = sma(v, 20);
   I.rvolArr = relVolume(v, 20);
+  I.wr      = williamsR(h, l, c, 14);
+  I.st      = superTrend(h, l, c, 10, 3);
+  I.konc    = koncorde(bars);
   I.roc5   = roc(c, 5);
   I.roc21  = roc(c, 21);
   I.roc63  = roc(c, 63);
@@ -1292,6 +1484,8 @@ function computeIndicators(bars){
     volMA: I.volMA[i],
     rvol: I.rvolArr[i],
     roc5: I.roc5[i], roc21: I.roc21[i], roc63: I.roc63[i],
+    wr: I.wr[i], stLinea: I.st.linea[i], stDir: I.st.dir[i], stDirPrev: I.st.dir[i-1],
+    koncMarron: I.konc.marron[i], koncAzul: I.konc.azul[i], koncVerde: I.konc.verde[i],
     hi20: highest(h, 20, i-1), lo20: lowest(l, 20, i-1),
     hi52: highest(h, Math.min(n, 252), i), lo52: lowest(l, Math.min(n, 252), i)
   };
@@ -1545,7 +1739,46 @@ function buildSignals(bars, I, S, ctx){
     add('bb', 'Bollinger (20,2)', read, st, 8, L.bbPB > 1 || L.bbPB < 0 || (isNum(L.bbWmin) && L.bbWmin <= 12));
   }
 
-  /* 17 · Patrones de vela */
+  /* 17 · SuperTrend */
+  if(isNum(L.stLinea) && isNum(L.stDir)){
+    const giro = isNum(L.stDirPrev) && L.stDir !== L.stDirPrev;
+    add('st', 'SuperTrend (10,3)',
+      (giro ? 'GIRO a ' : '') + (L.stDir > 0 ? 'alcista' : 'bajista') + ', línea en ' + px(L.stLinea, ccy) +
+      ' (' + nf(Math.abs(L.close / L.stLinea - 1) * 100, 1) + '% del precio)',
+      L.stDir, 14, giro);
+  }
+
+  /* 18 · Williams %R */
+  if(isNum(L.wr)){
+    let st = 0, read;
+    if(L.wr <= -80){ st = 1; read = '%R ' + nf(L.wr,0) + ' — pegado al piso del rango, zona de sobreventa'; }
+    else if(L.wr >= -20){ st = -1; read = '%R ' + nf(L.wr,0) + ' — pegado al techo del rango, sobrecompra'; }
+    else read = '%R ' + nf(L.wr,0) + ' — en la zona media del rango de 14 ruedas';
+    add('wr', 'Williams %R', read, st, 8, L.wr <= -90 || L.wr >= -10);
+  }
+
+  /* 19 · Koncorde: manos fuertes contra manos débiles */
+  if(isNum(L.koncMarron) && isNum(L.koncAzul)){
+    const dif = L.koncMarron - L.koncAzul;
+    let st = 0, read;
+    if(dif > 10){ st = 1; read = 'Manos fuertes (' + nf(L.koncMarron,0) + ') por encima de las débiles (' + nf(L.koncAzul,0) + '): acumulación'; }
+    else if(dif < -10){ st = -1; read = 'Manos débiles (' + nf(L.koncAzul,0) + ') dominan sobre las fuertes (' + nf(L.koncMarron,0) + '): distribución'; }
+    else read = 'Manos fuertes y débiles parejas (' + nf(L.koncMarron,0) + ' vs ' + nf(L.koncAzul,0) + ')';
+    add('konc', 'Koncorde', read, st, 11, Math.abs(dif) > 25);
+  }
+
+  /* 20 · Marco temporal superior */
+  if(ctx?.semanal){
+    const w = ctx.semanal;
+    add('semanal', 'Marco semanal', w.read, w.state, 16, w.conflicto);
+  }
+
+  /* 21 · Figura de precio */
+  if(ctx?.figura){
+    add('figura', 'Figura de precio', ctx.figura.read, ctx.figura.state, 13, true);
+  }
+
+  /* 22 · Patrones de vela */
   const pats = candlePatterns(bars.o, bars.h, bars.l, bars.c, n-1);
   if(pats.length){
     const dom = pats.reduce((a,b) => Math.abs(b.s) > Math.abs(a.s) ? b : a, pats[0]);
@@ -1597,6 +1830,72 @@ function detectDivergence(bars, I, S){
     }
   }
   return null;
+}
+
+
+/**
+ * Figuras de precio sobre los últimos pivotes: doble techo y doble piso,
+ * hombro-cabeza-hombro (y el invertido) y triángulos por convergencia de las
+ * dos directrices. Se exige que los extremos comparados estén a menos de 1 ATR
+ * entre sí para considerarlos "al mismo nivel".
+ */
+function detectarFigura(bars, I, S){
+  const { h, l } = bars, n = bars.c.length, a = I.last.atr || 1;
+  const cerca = (x, y, k) => Math.abs(x - y) <= a * (k || 1);
+  const hi = S.piv.hi.filter(i => i >= n - 130).slice(-4);
+  const lo = S.piv.lo.filter(i => i >= n - 130).slice(-4);
+
+  // Hombro-cabeza-hombro: tres techos, el del medio más alto, los costados parejos
+  if(hi.length >= 3){
+    const [x, y, z] = hi.slice(-3);
+    if(h[y] > h[x] + a * 0.5 && h[y] > h[z] + a * 0.5 && cerca(h[x], h[z], 1.2))
+      return { state: -1, read: 'Hombro-cabeza-hombro: techos en ' + nf(h[x],2) + ' / ' + nf(h[y],2) + ' / ' + nf(h[z],2) +
+        ' — figura de vuelta bajista, se confirma al perder el cuello' };
+  }
+  if(lo.length >= 3){
+    const [x, y, z] = lo.slice(-3);
+    if(l[y] < l[x] - a * 0.5 && l[y] < l[z] - a * 0.5 && cerca(l[x], l[z], 1.2))
+      return { state: 1, read: 'Hombro-cabeza-hombro invertido: pisos en ' + nf(l[x],2) + ' / ' + nf(l[y],2) + ' / ' + nf(l[z],2) +
+        ' — figura de vuelta alcista' };
+  }
+  // Doble techo / doble piso
+  if(hi.length >= 2){
+    const [x, y] = hi.slice(-2);
+    if(cerca(h[x], h[y], 0.8) && y - x >= 8)
+      return { state: -1, read: 'Doble techo en ' + nf((h[x]+h[y])/2, 2) + ' (' + (y-x) + ' ruedas entre ambos): resistencia validada dos veces' };
+  }
+  if(lo.length >= 2){
+    const [x, y] = lo.slice(-2);
+    if(cerca(l[x], l[y], 0.8) && y - x >= 8)
+      return { state: 1, read: 'Doble piso en ' + nf((l[x]+l[y])/2, 2) + ' (' + (y-x) + ' ruedas entre ambos): soporte validado dos veces' };
+  }
+  // Triángulo: las dos directrices convergen
+  if(S.tlLow && S.tlHigh){
+    const abre = (S.tlHigh.a * S.tlLow.i0 + S.tlHigh.b) - (S.tlLow.a * S.tlLow.i0 + S.tlLow.b);
+    const cierra = (S.tlHigh.a * (n-1) + S.tlHigh.b) - (S.tlLow.a * (n-1) + S.tlLow.b);
+    if(abre > 0 && cierra > 0 && cierra < abre * 0.6){
+      const tipo = S.tlLow.a > 0.0001 && S.tlHigh.a < -0.0001 ? 'simétrico'
+                 : S.tlLow.a > 0.0001 ? 'ascendente' : S.tlHigh.a < -0.0001 ? 'descendente' : 'de convergencia';
+      return { state: tipo === 'ascendente' ? 1 : tipo === 'descendente' ? -1 : 0,
+        read: 'Triángulo ' + tipo + ': el rango se comprimió ' + nf((1 - cierra/abre) * 100, 0) +
+              '% — suele resolverse con un movimiento fuerte al romper' };
+    }
+  }
+  return null;
+}
+
+/** Compara la tendencia del marco semanal con la del diario */
+function marcoSemanal(barsW){
+  if(!barsW || barsW.c.length < 30) return null;
+  const W = computeIndicators(barsW);
+  const L = W.last;
+  const alcista = L.mmScore >= 1 && (!isNum(L.sma200) || L.close > L.sma200);
+  const bajista = L.mmScore <= -1 && (!isNum(L.sma200) || L.close < L.sma200);
+  const st = alcista ? 1 : bajista ? -1 : 0;
+  const txt = alcista ? 'alcista' : bajista ? 'bajista' : 'lateral';
+  return { state: st, W,
+    read: 'En semanal la tendencia es ' + txt + ' (medias ' + L.mmScore + '/3, RSI ' + nf(L.rsi,0) +
+          (isNum(L.sma200) ? ', precio ' + pf((L.close/L.sma200-1)*100,1) + ' vs SMA200' : '') + ')' };
 }
 
 /** Traduce el score a recomendación */
@@ -1654,7 +1953,7 @@ const CH = {
   bars: null, I: null, S: null, ccy: '',
   start: 0, count: 0,          // ventana visible
   cursor: null,
-  overlays: { sma20:1, sma50:1, sma200:1, ema9:0, bb:0, sr:1, trend:1, vol:1 },
+  overlays: { sma20:1, sma50:1, sma200:1, ema9:0, bb:0, sr:1, trend:1, st:0, vol:1 },
   ind: 'rsi',
   drag: null,
   layout: null,
@@ -1854,6 +2153,15 @@ function chartDraw(){
   if(CH.overlays.sma50)  line(ctx, CH.I.sma50,  i0, i1, xI, yP, COL.sma50, 1.4);
   if(CH.overlays.sma200) line(ctx, CH.I.sma200, i0, i1, xI, yP, COL.sma200, 1.6);
   if(CH.overlays.ema9)   line(ctx, CH.I.ema9,   i0, i1, xI, yP, COL.ema9, 1.2);
+  if(CH.overlays.st){
+    // Se corta en cada giro para que no aparezca un salto vertical entre bandas
+    for(let i = i0 + 1; i < i1; i++){
+      const a = CH.I.st.linea[i-1], b2 = CH.I.st.linea[i];
+      if(!isNum(a) || !isNum(b2) || CH.I.st.dir[i] !== CH.I.st.dir[i-1]) continue;
+      ctx.strokeStyle = CH.I.st.dir[i] > 0 ? COL.up : COL.dn; ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.moveTo(xI(i-1), yP(a)); ctx.lineTo(xI(i), yP(b2)); ctx.stroke();
+    }
+  }
 
   /* ── soportes / resistencias ── */
   if(CH.overlays.sr){
@@ -2020,6 +2328,30 @@ function drawIndicatorPane(ctx, L, i0, i1, xI, cw){
     line(ctx, I.adx.ndi, i0, i1, xI, y, COL.dn, 1.1);
     line(ctx, I.adx.adx, i0, i1, xI, y, COL.white, 1.6);
     label('ADX / +DI / −DI');
+  } else if(CH.ind === 'wr'){
+    const y = v => L.indY1 - ((clamp(v,-100,0) + 100)/100) * L.indH;
+    gridLine(y(-20), '−20', COL.dn); gridLine(y(-50), '−50'); gridLine(y(-80), '−80', COL.up);
+    line(ctx, I.wr, i0, i1, xI, y, COL.linea, 1.4);
+    label('WILLIAMS %R 14');
+  } else if(CH.ind === 'konc'){
+    let mx = 1;
+    for(let i = i0; i < i1; i++) ['marron','azul','verde'].forEach(k => {
+      const v = I.konc[k][i]; if(isNum(v)) mx = Math.max(mx, Math.abs(v)); });
+    const y = v => L.indY0 + L.indH/2 - (v/mx) * (L.indH/2 - 3);
+    gridLine(y(0), '0');
+    const area = (arr, color, alpha) => {
+      ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.beginPath();
+      let started = false;
+      for(let i = i0; i < i1; i++){ const v = arr[i]; if(!isNum(v)) continue;
+        const x = xI(i); started ? ctx.lineTo(x, y(v)) : (ctx.moveTo(x, y(0)), ctx.lineTo(x, y(v)), started = true); }
+      if(started){ ctx.lineTo(xI(i1-1), y(0)); ctx.closePath(); ctx.fill(); }
+      ctx.globalAlpha = 1;
+    };
+    area(I.konc.verde, COL.up, .22);
+    area(I.konc.azul, COL.linea, .35);
+    area(I.konc.marron, COL.sma50, .5);
+    line(ctx, I.konc.media, i0, i1, xI, y, COL.white, 1.3);
+    label('KONCORDE · manos fuertes vs débiles');
   }
   ctx.strokeStyle = COL.grid;
   ctx.beginPath(); ctx.moveTo(L.padL, Math.round(L.indY0)+.5); ctx.lineTo(L.padL+L.plotW, Math.round(L.indY0)+.5); ctx.stroke();
@@ -2213,6 +2545,18 @@ async function lwcRender(){
     serieLinea(I.bb.up, COL.bb, 1, 0);
     serieLinea(I.bb.lo, COL.bb, 1, 0);
   }
+  if(CH.overlays.st){
+    // Dos series, una por dirección, para que cada tramo lleve su color
+    [1, -1].forEach(d => {
+      const datos = [];
+      for(let i = 0; i < n; i++) datos.push({ time: b.t[i],
+        value: (isNum(I.st.linea[i]) && I.st.dir[i] === d) ? I.st.linea[i] : undefined });
+      const s2 = chart.addSeries(L.LineSeries, { color: d > 0 ? COL.up : COL.dn, lineWidth: 2,
+        priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
+        title: d > 0 ? 'SuperTrend' : '' }, 0);
+      s2.setData(datos.filter(x => x.value !== undefined));
+    });
+  }
 
   /* ── soportes y resistencias ──
      Sólo los cuatro más cercanos al precio: son los accionables. Dibujar los ocho
@@ -2296,6 +2640,22 @@ async function lwcRender(){
       serieLinea(I.adx.pdi, COL.up,   1, panel, '+DI');
       serieLinea(I.adx.ndi, COL.dn,   1, panel, '−DI');
       serieLinea(I.adx.adx, COL.white, 2, panel, 'ADX');
+    } else if(CH.ind === 'wr'){
+      serieLinea(I.wr, COL.linea, 2, panel, 'Williams %R');
+    } else if(CH.ind === 'konc'){
+      const areaSerie = (arr, color, alpha) => {
+        const datos = [];
+        for(let i = 0; i < n; i++) if(isNum(arr[i])) datos.push({ time: b.t[i], value: arr[i] });
+        if(datos.length < 2) return;
+        const s3 = chart.addSeries(L.AreaSeries, { lineColor: color, topColor: color + Math.round(alpha*255).toString(16).padStart(2,'0'),
+          bottomColor: color + '00', lineWidth: 1, priceLineVisible: false, lastValueVisible: false,
+          crosshairMarkerVisible: false }, panel);
+        s3.setData(datos);
+      };
+      areaSerie(I.konc.verde, COL.up, .25);
+      areaSerie(I.konc.azul, COL.linea, .4);
+      areaSerie(I.konc.marron, COL.sma50, .55);
+      serieLinea(I.konc.media, COL.white, 1, panel, 'Koncorde');
     }
     try{ chart.panes()[panel].setHeight(100); }catch(e){}
   }
@@ -2315,7 +2675,7 @@ async function lwcRender(){
    la librería Advanced Charts self-hosted, que se pide a TradingView.
    ═══════════════════════════════════════════════════════════════════════ */
 
-const TV = { simbolo: null, timer: null, modo: 'motor' };
+const TV = { simbolo: null, timer: null, modo: 'lwc' };
 
 /** Traduce el ticker de Yahoo a la nomenclatura de TradingView */
 function tvSymbol(sym){
@@ -2475,7 +2835,23 @@ async function runAnalisis(){
 
     const m = metaOf(sym);
     const ccy = bars.meta.ccy === 'ARS' ? '$' : bars.meta.ccy === 'USD' ? 'u$s' : '';
-    const ctx = { ccy, rs, sector: m?.sector, rsSector: null };
+
+    // Marco temporal superior: si el diario y el semanal no coinciden, se avisa
+    let semanal = null;
+    if(interval === '1d'){
+      try{
+        const bw = await getBars(sym, '1wk', '5y');
+        const ms = marcoSemanal(bw);
+        if(ms){
+          const dirDiaria = I.last.mmScore >= 1 ? 1 : I.last.mmScore <= -1 ? -1 : 0;
+          ms.conflicto = ms.state !== 0 && dirDiaria !== 0 && ms.state !== dirDiaria;
+          if(ms.conflicto) ms.read += ' — NO coincide con el diario: la señal pierde fuerza';
+          semanal = ms;
+        }
+      }catch(e){ /* sin semanal se sigue igual */ }
+    }
+    const figura = detectarFigura(bars, I, S);
+    const ctx = { ccy, rs, sector: m?.sector, rsSector: null, semanal, figura };
     const { signals, score } = buildSignals(bars, I, S, ctx);
     const v = veredicto(score);
     const plan = planOperativo(bars, I, S, v.dir, ccy);
@@ -3013,6 +3389,215 @@ function renderMomentum(){
   });
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════════
+   VISTA 4 · COMPARADOR
+   Rendimiento relativo con todos los activos llevados a base 100 al inicio
+   del período, que es la única forma de comparar papeles de precios muy
+   distintos: lo que se compara es el porcentaje, no el precio.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const CMP = { elegidos: [], series: [] };
+const CMP_COLORES = ['accent2','up','warn','violet','cyan'];
+
+function cmpPintarPicker(){
+  const u = UNIVERSOS[$('#i-univ-c').value] || UNIVERSOS.usd;
+  $('#cmp-picker').innerHTML = u.tickers.map(t =>
+    '<button class="tog' + (CMP.elegidos.includes(t[0]) ? ' on' : '') + '" data-tk="' + esc(t[0]) + '">' + esc(t[0]) + '</button>'
+  ).join('');
+  $$('#cmp-picker .tog').forEach(b => b.addEventListener('click', () => {
+    const tk = b.dataset.tk, i = CMP.elegidos.indexOf(tk);
+    if(i >= 0) CMP.elegidos.splice(i, 1);
+    else { if(CMP.elegidos.length >= 5) return; CMP.elegidos.push(tk); }
+    b.classList.toggle('on', CMP.elegidos.includes(tk));
+  }));
+}
+
+async function runComparar(){
+  if(CMP.elegidos.length < 1) return;
+  const uk = $('#i-univ-c').value, u = UNIVERSOS[uk];
+  const per = parseInt($('#i-cmp-per').value, 10);
+  const btn = $('#b-cmp'); btn.disabled = true; btn.textContent = 'Cargando…';
+  try{
+    const res = await pool(CMP.elegidos, t => getBars(t, '1d', '1y'), CONCURRENCY);
+    const bench = await getBench(uk, '1d', '1y');
+    const cs = getComputedStyle(document.documentElement);
+    CMP.series = [];
+    res.forEach((r, i) => {
+      if(!r.ok) return;
+      const b = r.value, n = b.c.length, desde = Math.max(0, n - per);
+      const base = b.c[desde];
+      CMP.series.push({
+        tk: CMP.elegidos[i], bars: b, desde,
+        color: cs.getPropertyValue('--' + CMP_COLORES[CMP.series.length % 5]).trim(),
+        norm: b.c.slice(desde).map(x => x / base * 100)
+      });
+    });
+    let benchNorm = null;
+    if(bench){
+      const nb = bench.c.length, d = Math.max(0, nb - per);
+      benchNorm = bench.c.slice(d).map(x => x / bench.c[d] * 100);
+    }
+    cmpDibujar(benchNorm, u.benchLabel);
+    cmpTabla(benchNorm, per);
+    $('#cmp-pill').textContent = CMP.series.length + ' ACTIVOS · ' + per + ' RUEDAS';
+    $('#cmp-pill').className = 'pill live';
+  }catch(e){
+    $('#cmp-empty').style.display = 'flex';
+    $('#cmp-empty').innerHTML = '<div>✕ ' + esc(e.message) + '</div>';
+  }finally{ btn.disabled = false; btn.textContent = 'Comparar'; }
+}
+
+function cmpDibujar(benchNorm, benchLabel){
+  const cv = $('#cmp-chart'), ctx = cv.getContext('2d');
+  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+  cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.fillStyle = COL.bg; ctx.fillRect(0,0,W,H);
+  if(!CMP.series.length) return;
+  $('#cmp-empty').style.display = 'none';
+
+  const padL = 8, padR = 62, padT = 14, padB = 26;
+  const pw = W - padL - padR, ph = H - padT - padB;
+  const todas = CMP.series.map(s => s.norm).concat(benchNorm ? [benchNorm] : []);
+  const largo = Math.max(...todas.map(a => a.length));
+  let lo = Math.min(...todas.flat()), hi = Math.max(...todas.flat());
+  const m = (hi - lo) * .08 || 1; lo -= m; hi += m;
+  const X = i => padL + i / (largo - 1) * pw;
+  const Y = v => padT + ph - (v - lo) / (hi - lo) * ph;
+
+  ctx.font = '10px "JetBrains Mono", monospace'; ctx.textBaseline = 'middle';
+  niceTicks(lo, hi, 6).forEach(t => {
+    const y = Y(t);
+    ctx.strokeStyle = t === 100 ? COL.axis : COL.grid; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, Math.round(y)+.5); ctx.lineTo(padL+pw, Math.round(y)+.5); ctx.stroke();
+    ctx.fillStyle = COL.txt2; ctx.textAlign = 'left';
+    ctx.fillText(nf(t,0), padL+pw+6, y);
+  });
+
+  if(benchNorm){
+    ctx.strokeStyle = COL.txt2; ctx.lineWidth = 1.4; ctx.setLineDash([4,4]); ctx.beginPath();
+    benchNorm.forEach((v,i) => i ? ctx.lineTo(X(i), Y(v)) : ctx.moveTo(X(i), Y(v)));
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  CMP.series.forEach(s => {
+    ctx.strokeStyle = s.color; ctx.lineWidth = 2; ctx.beginPath();
+    s.norm.forEach((v,i) => i ? ctx.lineTo(X(i), Y(v)) : ctx.moveTo(X(i), Y(v)));
+    ctx.stroke();
+    const uv = s.norm[s.norm.length-1];
+    ctx.fillStyle = s.color; ctx.textAlign = 'left'; ctx.font = 'bold 10px "JetBrains Mono", monospace';
+    ctx.fillText(s.tk, padL+pw+6, Y(uv) - 11);
+  });
+  // leyenda del índice
+  if(benchNorm){
+    ctx.fillStyle = COL.txt2; ctx.textAlign = 'left'; ctx.font = '9.5px "JetBrains Mono", monospace';
+    ctx.fillText('- - ' + benchLabel, padL + 4, padT + 8);
+  }
+}
+
+function cmpTabla(benchNorm, per){
+  const benchRend = benchNorm ? benchNorm[benchNorm.length-1] - 100 : null;
+  const filas = CMP.series.map(s => {
+    const b = s.bars, n = b.c.length;
+    const rend = s.norm[s.norm.length-1] - 100;
+    // volatilidad anualizada de los retornos diarios del período
+    const rets = [];
+    for(let i = s.desde+1; i < n; i++) if(b.c[i-1]) rets.push(b.c[i]/b.c[i-1]-1);
+    const med = rets.reduce((a,x)=>a+x,0)/(rets.length||1);
+    const vol = Math.sqrt(rets.reduce((a,x)=>a+(x-med)*(x-med),0)/(rets.length||1)) * Math.sqrt(252) * 100;
+    // máxima caída desde un techo dentro del período
+    let pico = -Infinity, dd = 0;
+    for(let i = s.desde; i < n; i++){ if(b.c[i] > pico) pico = b.c[i]; dd = Math.min(dd, b.c[i]/pico - 1); }
+    const I = computeIndicators(b);
+    const S = computeStructure(b, I, 42);
+    const ccy = b.meta.ccy === 'ARS' ? '$' : 'u$s';
+    const sc = buildSignals(b, I, S, { ccy }).score;
+    return { tk:s.tk, color:s.color, px:b.c[n-1], ccy, rend, vs: isNum(benchRend) ? rend-benchRend : null, vol, dd: dd*100, sc };
+  }).sort((a,b) => b.rend - a.rend);
+
+  $('#t-cmp tbody').innerHTML = filas.map(f =>
+    '<tr class="clk" data-sym="' + esc(f.tk) + '">' +
+      '<td class="m"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:' + f.color + ';margin-right:7px"></span><b>' + esc(f.tk) + '</b></td>' +
+      '<td class="r">' + px(f.px, f.ccy) + '</td>' +
+      '<td class="r ' + cls(f.rend) + '">' + pf(f.rend,1) + '</td>' +
+      '<td class="r ' + cls(f.vs) + '">' + pf(f.vs,1) + '</td>' +
+      '<td class="r">' + nf(f.vol,0) + '%</td>' +
+      '<td class="r dn">' + pf(f.dd,1) + '</td>' +
+      '<td class="r"><b class="' + cls(f.sc) + '">' + (f.sc>0?'+':'') + f.sc + '</b></td>' +
+    '</tr>').join('');
+  $$('#t-cmp tbody tr.clk').forEach(tr => tr.addEventListener('click', () => abrirEnAnalisis(tr.dataset.sym)));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   VISTA 5 · SECTORES
+   Dónde está la plata antes de mirar papel por papel.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const SEC = { datos: [] };
+
+async function runSectores(){
+  const uk = $('#i-univ-x').value;
+  const btn = $('#b-sec'), pb = $('#sec-prog');
+  btn.disabled = true; btn.textContent = 'Calculando…';
+  $('#sec-mapa').innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="spin" style="margin:0 auto 10px"></div>Descargando…</div>';
+  try{
+    const { u, items } = await loadUniverse(uk, (d,t) => { pb.style.width = (d/t*100) + '%'; });
+    const porSector = {};
+    items.forEach(it => {
+      const ev = evalItem(it, u, 42);
+      const L = it.I.last;
+      (porSector[it.sector] = porSector[it.sector] || []).push({
+        tk: it.sym, nombre: it.name, roc5: L.roc5, roc21: L.roc21, roc63: L.roc63,
+        score: ev.score, chg: L.chg
+      });
+    });
+    SEC.datos = Object.keys(porSector).map(nombre => {
+      const ps = porSector[nombre];
+      const prom = k => { const v = ps.map(x => x[k]).filter(isNum); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null; };
+      return { nombre, papeles: ps, n: ps.length,
+               roc5: prom('roc5'), roc21: prom('roc21'), roc63: prom('roc63'), score: prom('score') };
+    });
+    renderSectores();
+    $('#sec-pill').textContent = SEC.datos.length + ' SECTORES · ' + items.length + ' ACTIVOS';
+    $('#sec-pill').className = 'pill live';
+  }catch(e){
+    $('#sec-mapa').innerHTML = '<div class="empty" style="grid-column:1/-1">✕ ' + esc(e.message) + '</div>';
+  }finally{ btn.disabled = false; btn.textContent = 'Calcular'; pb.style.width = '0%'; }
+}
+
+function renderSectores(){
+  const k = $('#i-sec-per').value;
+  const cont = $('#sec-mapa');
+  if(!SEC.datos.length){ cont.innerHTML = '<div class="empty" style="grid-column:1/-1">Sin datos.</div>'; return; }
+  const orden = SEC.datos.slice().sort((a,b) => (b[k] ?? -999) - (a[k] ?? -999));
+  const vals = orden.map(x => x[k]).filter(isNum);
+  const mx = Math.max(...vals.map(Math.abs), 1);
+  const esScore = k === 'score';
+
+  cont.innerHTML = orden.map(s => {
+    const v = s[k];
+    const int = isNum(v) ? clamp(Math.abs(v) / mx, 0, 1) : 0;
+    const positivo = isNum(v) && v >= 0;
+    const tinte = positivo ? 'var(--up)' : 'var(--dn)';
+    const papeles = s.papeles.slice().sort((a,b) => (b[k] ?? -999) - (a[k] ?? -999));
+    return '<div class="sec-card">' +
+      '<div class="sec-top" style="background:color-mix(in srgb, ' + tinte + ' ' + Math.round(int*22) + '%, transparent)">' +
+        '<div class="n">' + esc(s.nombre) + '</div>' +
+        '<div class="r ' + cls(v) + '">' + (esScore ? (v>0?'+':'') + nf(v,0) : pf(v,1)) + '</div>' +
+        '<div class="c" style="color:var(--text3)">' + s.n + ' activo' + (s.n>1?'s':'') + '</div>' +
+      '</div>' +
+      '<div class="sec-body">' + papeles.map(pp => {
+        const pv = pp[k], w = isNum(pv) ? clamp(Math.abs(pv)/mx*100, 3, 100) : 3;
+        const pos = isNum(pv) && pv >= 0;
+        return '<div class="sec-fila" data-sym="' + esc(pp.tk) + '">' +
+          '<span class="tk">' + esc(pp.tk) + '</span>' +
+          '<span class="bar"><i style="' + (pos ? 'left:50%' : 'right:50%') + ';width:' + (w/2) + '%;background:' + (pos ? 'var(--up)' : 'var(--dn)') + '"></i></span>' +
+          '<span class="v ' + cls(pv) + '">' + (esScore ? (pv>0?'+':'') + nf(pv,0) : pf(pv,1)) + '</span></div>';
+      }).join('') + '</div></div>';
+  }).join('');
+  cont.querySelectorAll('.sec-fila').forEach(el => el.addEventListener('click', () => abrirEnAnalisis(el.dataset.sym)));
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    TEMA CLARO / OSCURO
    ═══════════════════════════════════════════════════════════════════════ */
@@ -3157,7 +3742,7 @@ function showView(v){
 
 function fillUniverses(){
   const opts = Object.keys(UNIVERSOS).map(k => '<option value="' + k + '">' + esc(UNIVERSOS[k].label) + '</option>').join('');
-  ['#i-univ-a','#i-univ-s','#i-univ-m'].forEach(s => { $(s).innerHTML = opts; $(s).value = 'usd'; });
+  ['#i-univ-a','#i-univ-s','#i-univ-m','#i-univ-c','#i-univ-x'].forEach(s => { $(s).innerHTML = opts; $(s).value = 'usd'; });
 }
 
 function init(){
@@ -3187,6 +3772,7 @@ function init(){
   }));
   $('#i-ind').addEventListener('change', e => { CH.ind = e.target.value; redibujarActivo(); });
   $$('#chart-sw button').forEach(b => b.addEventListener('click', () => setChartMode(b.dataset.c)));
+  setChartMode(TV.modo);   // deja el panel del modo por defecto visible desde el arranque
 
   // ── Scanner ──
   $('#b-scan').addEventListener('click', runScan);
@@ -3232,9 +3818,23 @@ function init(){
     $('#mom-pill').textContent = '—'; $('#mom-pill').className = 'pill';
   });
 
+  // ── Comparador ──
+  cmpPintarPicker();
+  $('#b-cmp').addEventListener('click', runComparar);
+  $('#i-univ-c').addEventListener('change', () => { CMP.elegidos = []; cmpPintarPicker(); });
+  $('#i-cmp-per').addEventListener('change', () => { if(CMP.series.length) runComparar(); });
+
+  // ── Sectores ──
+  $('#b-sec').addEventListener('click', runSectores);
+  $('#i-sec-per').addEventListener('change', renderSectores);
+  $('#i-univ-x').addEventListener('change', () => { SEC.datos = []; renderSectores(); });
+
   $('#mode-desc').innerHTML = MODE_DESC.mom;
 
   // ticker inicial por hash: analisis-tecnico.html#AAPL
+  CMP.elegidos = (UNIVERSOS.usd.tickers.slice(0,3)).map(t => t[0]);
+  cmpPintarPicker();
+
   const h = decodeURIComponent(location.hash.replace('#',''));
   if(h) $('#i-ticker').value = h.toUpperCase();
   runAnalisis();
