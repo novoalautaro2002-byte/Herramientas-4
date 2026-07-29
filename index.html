@@ -187,6 +187,9 @@ html,body{height:100%;overflow:hidden}
     </div>
   </div>
 
+  <!-- ANÁLISIS TÉCNICO – tab directo -->
+  <button class="nav-tab" id="nav-tecnico" onclick="showPage('tecnico')"><span class="tab-icon">◱</span> Técnico</button>
+
   <!-- MONITOR MAV – tab directo -->
   <button class="nav-tab" id="nav-mav" onclick="showPage('mav')"><span class="tab-icon">🧾</span> Monitor MAV</button>
 
@@ -218,6 +221,8 @@ html,body{height:100%;overflow:hidden}
   <iframe class="page-frame"        id="frame-opneta"      src="opneta.html"       title="Operación Neta"></iframe>
   <!-- NUEVA PÁGINA: Noticias BYMA -->
   <iframe class="page-frame"        id="frame-noticias"    src="noticias.html"     title="Market Data News"></iframe>
+  <!-- NUEVA PÁGINA: Análisis Técnico (gráfico + scanner + momentum/reversión) -->
+  <iframe class="page-frame"        id="frame-tecnico"     src="analisis-tecnico.html" title="Análisis Técnico"></iframe>
   <!-- NUEVA PÁGINA: Monitor Diario MAV -->
   <iframe class="page-frame"        id="frame-mav"         src="monitor-diario-mav.html" title="Monitor Diario MAV"></iframe>
   <!-- NUEVA PÁGINA: Resumen de Órdenes -->
@@ -242,7 +247,7 @@ html,body{height:100%;overflow:hidden}
 </div>
 
 <script>
-const PAGE_IDS = ["resumen", "tc", "cauc", "dcto", "opneta", "lecap", "bonos", "cer", "dolarlinked", "arb", "noticias", "mav", "ordenes", "ict", "dist"];
+const PAGE_IDS = ["resumen", "tc", "cauc", "dcto", "opneta", "lecap", "bonos", "cer", "dolarlinked", "arb", "tecnico", "noticias", "mav", "ordenes", "ict", "dist"];
 const CALC_GROUP  = ['tc','cauc','dcto','opneta'];
 const BONOS_GROUP = ['lecap','bonos','cer','dolarlinked'];
 const ESTRAT_GROUP= ['arb'];
