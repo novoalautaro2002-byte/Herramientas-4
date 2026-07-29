@@ -1079,16 +1079,37 @@ function candlePatterns(o, h, l, c, i){
 
 const memCache = new Map();
 
+const FETCH_TIMEOUT = 9000;
+
+/** fetch con corte por tiempo: sin esto un intento que no responde cuelga la pantalla */
+function fetchConCorte(url, ms){
+  if(typeof AbortController === 'undefined') return fetch(url);
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), ms);
+  return Promise.resolve(fetch(url, { signal: ac.signal })).finally(() => clearTimeout(t));
+}
+
+/**
+ * Pide un JSON probando la fuente directa y, si el navegador la bloquea por CORS,
+ * dos proxies públicos. Cada intento tiene su propio corte por tiempo, así una
+ * conexión que no responde no deja la app esperando para siempre.
+ */
 async function pfetch(url){
-  try{ const r = await fetch(url); if(r.ok) return await r.json(); }catch(e){}
-  try{
-    const r2 = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
-    if(r2.ok){ const d = await r2.json(); return JSON.parse(d.contents); }
-  }catch(e){}
-  try{
-    const r3 = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
-    if(r3.ok) return await r3.json();
-  }catch(e){}
+  const intentos = [
+    { u: url, envuelto: false },
+    { u: 'https://api.allorigins.win/get?url=' + encodeURIComponent(url), envuelto: true },
+    { u: 'https://corsproxy.io/?' + encodeURIComponent(url), envuelto: false }
+  ];
+  for(const intento of intentos){
+    try{
+      const r = await fetchConCorte(intento.u, FETCH_TIMEOUT);
+      if(!r || !r.ok) continue;
+      const d = await r.json();
+      // allorigins devuelve la respuesta original como texto dentro de .contents
+      if(intento.envuelto) return typeof d.contents === 'string' ? JSON.parse(d.contents) : d.contents;
+      return d;
+    }catch(e){ /* se prueba la fuente siguiente */ }
+  }
   throw new Error('sin acceso a ' + url);
 }
 
