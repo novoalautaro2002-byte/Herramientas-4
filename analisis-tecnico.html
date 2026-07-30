@@ -890,7 +890,7 @@ tbody tr.clk{cursor:pointer}
  */
 // Versión visible arriba a la derecha. SUMAR 1 EN CADA CAMBIO PUBLICADO,
 // así se puede verificar de un vistazo que el sitio sirve la última build.
-const APP_VERSION = 9;
+const APP_VERSION = 10;
 
 const UNIVERSOS = {
   usd: {
@@ -2253,7 +2253,8 @@ function chartInit(){
       const bw = CH.layout ? CH.layout.bw : 6;
       const shift = Math.round(dx / bw);
       if(shift !== 0){
-        CH.start = clamp(CH.drag.start - shift, 0, Math.max(0, CH.bars.c.length - CH.count));
+        const lim = limitesPan(CH.bars.c.length);
+        CH.start = clamp(CH.drag.start - shift, lim.min, lim.max);
         CH.drag.x = CH.mouse.x; CH.drag.start = CH.start;
         chartDraw();
       }
@@ -2275,8 +2276,9 @@ function chartInit(){
     const anchor = xToIdx(CH.mouse ? CH.mouse.x : null);
     const newCount = clamp(Math.round(CH.count * f), 25, n);
     const rel = anchor != null ? (anchor - CH.start) / Math.max(1, CH.count) : 0.5;
-    CH.start = clamp(Math.round((anchor != null ? anchor : CH.start + CH.count/2) - rel * newCount), 0, n - newCount);
     CH.count = newCount;
+    const limZ = limitesPan(n);
+    CH.start = clamp(Math.round((anchor != null ? anchor : CH.start + CH.count/2) - rel * newCount), limZ.min, limZ.max);
     chartDraw();
   }, { passive: false });
   CH.cv.addEventListener('dblclick', () => { chartResetView(); chartDraw(); });
@@ -2290,11 +2292,23 @@ function chartResetView(){
   CH.start = n - CH.count;
 }
 
+/**
+ * Hasta dónde se puede desplazar el gráfico. Se admite espacio vacío después de la
+ * última vela para poder ver hacia dónde van las directrices y las medias, que es
+ * justamente donde se decide. A la izquierda un margen menor, sólo para despegar la
+ * primera vela del borde. Siempre queda al menos un cuarto del panel con precios.
+ */
+function limitesPan(n){
+  const c = CH.count || 130;
+  return { min: -Math.round(c * 0.12), max: n - Math.max(5, Math.round(c * 0.28)) };
+}
+
 function xToIdx(x){
   if(x == null || !CH.layout) return null;
   const L = CH.layout;
   if(x < L.padL || x > L.padL + L.plotW) return null;
-  return clamp(CH.start + Math.floor((x - L.padL) / L.bw), CH.start, CH.start + CH.count - 1);
+  const i = CH.start + Math.floor((x - L.padL) / L.bw);
+  return (i < 0 || !CH.bars || i >= CH.bars.c.length) ? null : i;
 }
 
 function chartLoad(bars, I, S, ccy, intraday){
@@ -2319,8 +2333,12 @@ function chartDraw(){
 
   const b = CH.bars, n = b.c.length;
   CH.count = clamp(CH.count || 130, 25, n);
-  CH.start = clamp(CH.start, 0, n - CH.count);
-  const i0 = CH.start, i1 = Math.min(n, i0 + CH.count);
+  const lim = limitesPan(n);
+  CH.start = clamp(CH.start, lim.min, lim.max);
+  // i0/i1 pueden caer fuera de la serie: son la ventana visible, no índices de datos.
+  // Los bucles de dibujo recortan contra [0, n) con iA/iB.
+  const i0 = CH.start, i1 = i0 + CH.count;
+  const iA = Math.max(0, i0), iB = Math.min(n, i1);
 
   /* ── layout ── */
   const padL = 8, padR = 66, padT = 26, padB = 20;
@@ -2338,8 +2356,8 @@ function chartDraw(){
 
   /* ── rango de precios visible ── */
   let lo = Infinity, hi = -Infinity;
-  for(let i = i0; i < i1; i++){ if(b.h[i] > hi) hi = b.h[i]; if(b.l[i] < lo) lo = b.l[i]; }
-  const consider = arr => { for(let i = i0; i < i1; i++){ const v = arr && arr[i]; if(isNum(v)){ if(v > hi) hi = v; if(v < lo) lo = v; } } };
+  for(let i = iA; i < iB; i++){ if(b.h[i] > hi) hi = b.h[i]; if(b.l[i] < lo) lo = b.l[i]; }
+  const consider = arr => { for(let i = iA; i < iB; i++){ const v = arr && arr[i]; if(isNum(v)){ if(v > hi) hi = v; if(v < lo) lo = v; } } };
   if(CH.overlays.sma20) consider(CH.I.sma20);
   if(CH.overlays.sma50) consider(CH.I.sma50);
   if(CH.overlays.sma200) consider(CH.I.sma200);
@@ -2348,7 +2366,7 @@ function chartDraw(){
   if(CH.overlays.trend){
     [CH.S.tlLow, CH.S.tlHigh].forEach(t => {
       if(!t) return;
-      [Math.max(t.i0, i0), i1 - 1].forEach(i => { const v = t.a*i + t.b; if(v > hi) hi = v; if(v < lo) lo = v; });
+      [Math.max(t.i0, iA), Math.min(n - 1, iB - 1)].forEach(i => { const v = t.a*i + t.b; if(v > hi) hi = v; if(v < lo) lo = v; });
     });
   }
   const span = (hi - lo) || (hi * 0.02) || 1;
@@ -2373,6 +2391,7 @@ function chartDraw(){
   ctx.textAlign = 'center'; ctx.fillStyle = COL.txt2;
   const step = Math.max(1, Math.round(CH.count / 8));
   for(let i = i0; i < i1; i += step){
+    if(i < 0 || i >= n) continue;          // el margen vacío no lleva fecha
     const x = xI(i);
     ctx.strokeStyle = COL.grid; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(Math.round(x)+.5, L.priceY0); ctx.lineTo(Math.round(x)+.5, L.indY1 || L.volY1 || L.priceY1); ctx.stroke();
@@ -2385,8 +2404,8 @@ function chartDraw(){
     ctx.fillStyle = COL.bbFill;
     ctx.beginPath();
     let started = false;
-    for(let i = i0; i < i1; i++){ const v = CH.I.bb.up[i]; if(!isNum(v)) continue; const x = xI(i), y = yP(v); started ? ctx.lineTo(x,y) : (ctx.moveTo(x,y), started = true); }
-    for(let i = i1-1; i >= i0; i--){ const v = CH.I.bb.lo[i]; if(!isNum(v)) continue; ctx.lineTo(xI(i), yP(v)); }
+    for(let i = iA; i < iB; i++){ const v = CH.I.bb.up[i]; if(!isNum(v)) continue; const x = xI(i), y = yP(v); started ? ctx.lineTo(x,y) : (ctx.moveTo(x,y), started = true); }
+    for(let i = iB-1; i >= iA; i--){ const v = CH.I.bb.lo[i]; if(!isNum(v)) continue; ctx.lineTo(xI(i), yP(v)); }
     if(started){ ctx.closePath(); ctx.fill(); }
     line(ctx, CH.I.bb.up, i0, i1, xI, yP, COL.bb, 1, [3,3]);
     line(ctx, CH.I.bb.lo, i0, i1, xI, yP, COL.bb, 1, [3,3]);
@@ -2395,7 +2414,7 @@ function chartDraw(){
 
   /* ── velas ── */
   const cw = Math.max(1, Math.min(bw * 0.68, 16));
-  for(let i = i0; i < i1; i++){
+  for(let i = iA; i < iB; i++){
     const x = xI(i), up = b.c[i] >= b.o[i];
     ctx.strokeStyle = up ? COL.up : COL.dn;
     ctx.fillStyle = up ? COL.upF : COL.dnF;
@@ -2415,7 +2434,7 @@ function chartDraw(){
   if(CH.overlays.ema9)   line(ctx, CH.I.ema9,   i0, i1, xI, yP, COL.ema9, 1.2);
   if(CH.overlays.st){
     // Se corta en cada giro para que no aparezca un salto vertical entre bandas
-    for(let i = i0 + 1; i < i1; i++){
+    for(let i = Math.max(1, iA); i < iB; i++){
       const a = CH.I.st.linea[i-1], b2 = CH.I.st.linea[i];
       if(!isNum(a) || !isNum(b2) || CH.I.st.dir[i] !== CH.I.st.dir[i-1]) continue;
       ctx.strokeStyle = CH.I.st.dir[i] > 0 ? COL.up : COL.dn; ctx.lineWidth = 1.8;
@@ -2452,14 +2471,15 @@ function chartDraw(){
   }
   function drawTL(ctx, t, color, label, dy){
     if(!t) return;
-    const a = Math.max(t.i0, i0), z = i1 - 1;
+    const a = Math.max(t.i0, i0), z = Math.min(n - 1, i1 - 1);
     if(z <= a) return;
     ctx.strokeStyle = color; ctx.lineWidth = 1.6; ctx.setLineDash([]);
     ctx.beginPath(); ctx.moveTo(xI(a), yP(t.a*a + t.b)); ctx.lineTo(xI(z), yP(t.a*z + t.b)); ctx.stroke();
     // proyección punteada 8 barras
     ctx.setLineDash([4,4]); ctx.lineWidth = 1;
+    const hasta = i1 - 1;                  // se extiende por todo el espacio visible
     ctx.beginPath(); ctx.moveTo(xI(z), yP(t.a*z + t.b));
-    ctx.lineTo(xI(z) + bw*6, yP(t.a*(z+6) + t.b)); ctx.stroke();
+    ctx.lineTo(xI(hasta), yP(t.a*hasta + t.b)); ctx.stroke();
     ctx.setLineDash([]);
     // toques
     ctx.fillStyle = color;
@@ -2490,10 +2510,10 @@ function chartDraw(){
   /* ── panel de volumen ── */
   if(CH.overlays.vol){
     let vmax = 0;
-    for(let i = i0; i < i1; i++) if(b.v[i] > vmax) vmax = b.v[i];
+    for(let i = iA; i < iB; i++) if(b.v[i] > vmax) vmax = b.v[i];
     vmax = vmax || 1;
     const yV = v => L.volY1 - (v / vmax) * (L.volH - 4);
-    for(let i = i0; i < i1; i++){
+    for(let i = iA; i < iB; i++){
       const up = b.c[i] >= b.o[i];
       const rv = CH.I.rvolArr[i];
       const destacado = isNum(rv) && rv >= 1.8;
@@ -2537,6 +2557,9 @@ function chartDraw(){
 
 function drawIndicatorPane(ctx, L, i0, i1, xI, cw){
   const I = CH.I, b = CH.bars;
+  // La ventana visible puede exceder la serie por el margen vacío: se recorta acá,
+  // igual que en el panel de precios.
+  const iA = Math.max(0, i0), iB = Math.min(b.c.length, i1);
   const gridLine = (y, txt, col) => {
     ctx.strokeStyle = COL.grid; ctx.lineWidth = 1; ctx.setLineDash([2,3]);
     ctx.beginPath(); ctx.moveTo(L.padL, Math.round(y)+.5); ctx.lineTo(L.padL+L.plotW, Math.round(y)+.5); ctx.stroke();
@@ -2562,7 +2585,7 @@ function drawIndicatorPane(ctx, L, i0, i1, xI, cw){
     mx = mx || 1;
     const y = v => L.indY0 + L.indH/2 - (v/mx) * (L.indH/2 - 4);
     gridLine(y(0), '0');
-    for(let i = i0; i < i1; i++){
+    for(let i = iA; i < iB; i++){
       const v = I.macd.hist[i]; if(!isNum(v)) continue;
       const prev = I.macd.hist[i-1];
       const grow = !isNum(prev) || Math.abs(v) >= Math.abs(prev);
@@ -2595,16 +2618,16 @@ function drawIndicatorPane(ctx, L, i0, i1, xI, cw){
     label('WILLIAMS %R 14');
   } else if(CH.ind === 'konc'){
     let mx = 1;
-    for(let i = i0; i < i1; i++) ['marron','azul','verde'].forEach(k => {
+    for(let i = iA; i < iB; i++) ['marron','azul','verde'].forEach(k => {
       const v = I.konc[k][i]; if(isNum(v)) mx = Math.max(mx, Math.abs(v)); });
     const y = v => L.indY0 + L.indH/2 - (v/mx) * (L.indH/2 - 3);
     gridLine(y(0), '0');
     const area = (arr, color, alpha) => {
       ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.beginPath();
       let started = false;
-      for(let i = i0; i < i1; i++){ const v = arr[i]; if(!isNum(v)) continue;
+      for(let i = iA; i < iB; i++){ const v = arr[i]; if(!isNum(v)) continue;
         const x = xI(i); started ? ctx.lineTo(x, y(v)) : (ctx.moveTo(x, y(0)), ctx.lineTo(x, y(v)), started = true); }
-      if(started){ ctx.lineTo(xI(i1-1), y(0)); ctx.closePath(); ctx.fill(); }
+      if(started){ ctx.lineTo(xI(iB-1), y(0)); ctx.closePath(); ctx.fill(); }
       ctx.globalAlpha = 1;
     };
     area(I.konc.verde, COL.up, .22);
@@ -2619,6 +2642,7 @@ function drawIndicatorPane(ctx, L, i0, i1, xI, cw){
 
 function line(ctx, arr, i0, i1, xI, yF, color, w, dash){
   if(!arr) return;
+  i0 = Math.max(0, i0); i1 = Math.min(arr.length, i1);
   ctx.strokeStyle = color; ctx.lineWidth = w || 1;
   ctx.setLineDash(dash || []);
   ctx.beginPath();
