@@ -210,6 +210,7 @@ body{padding:18px 22px 44px}
 .tv-fallback.on{display:flex}
 .tv-fallback b{color:var(--text2)}
 .mode-sw button[data-c].on{background:var(--accent);color:#fff}
+.mode-sw button[data-b].on{background:var(--accent);color:#fff}
 .spin{width:26px;height:26px;border:2.5px solid var(--border);border-top-color:var(--accent2);border-radius:50%;animation:sp .7s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 
@@ -380,6 +381,7 @@ tbody tr.clk{cursor:pointer}
   <div class="head-right">
     <span class="pill" id="ver-pill" title="Versión de la app">v1</span>
     <span class="pill" id="reg-pill" style="display:none"></span>
+    <span class="pill stale" id="curso-pill" style="display:none"></span>
     <span class="pill" id="src-pill">YAHOO FINANCE</span>
     <span class="pill" id="stat-pill">—</span>
     <button class="tema-btn" id="tema-btn" title="Cambiar entre tema oscuro y claro">
@@ -447,6 +449,13 @@ tbody tr.clk{cursor:pointer}
         <button class="tog on" data-k="trend">TENDENCIA</button>
         <button class="tog" data-k="st">SUPERTREND</button>
         <button class="tog on" data-k="vol">VOLUMEN</button>
+      </div>
+    </div>
+    <div class="fld">
+      <label>Señales</label>
+      <div class="mode-sw" id="barra-sw">
+        <button data-b="cierre" class="on" title="Descarta la rueda en formación: el veredicto no cambia durante el día">Al cierre</button>
+        <button data-b="vivo" title="Incluye la rueda en curso: cambia durante la jornada">En vivo</button>
       </div>
     </div>
     <div class="fld">
@@ -890,7 +899,7 @@ tbody tr.clk{cursor:pointer}
  */
 // Versión visible arriba a la derecha. SUMAR 1 EN CADA CAMBIO PUBLICADO,
 // así se puede verificar de un vistazo que el sitio sirve la última build.
-const APP_VERSION = 10;
+const APP_VERSION = 11;
 
 const UNIVERSOS = {
   usd: {
@@ -999,6 +1008,14 @@ const UNIVERSOS = {
     ]
   }
 };
+
+/**
+ * Con qué barras se calculan las señales.
+ * 'cierre' descarta la rueda en curso, de modo que el veredicto no cambie a lo largo
+ * del día y coincida con lo que mide el backtest, que trabaja sobre velas cerradas.
+ * 'vivo' la incluye, con el volumen proyectado a rueda completa.
+ */
+let MODO_BARRA = 'cierre';
 
 const CACHE_TTL = 5 * 60 * 1000;   // 5 minutos
 const CONCURRENCY = 4;
@@ -1190,13 +1207,18 @@ function roc(src, p){
  * Se excluye la barra en curso a propósito: incluirla diluye el propio pico que se
  * quiere medir (un día de 3× sobre 20 ruedas mediría 2,9× si se auto-promedia).
  */
-function relVolume(v, p = 20){
+function relVolume(v, p = 20, fraccionUltima){
   const out = new Array(v.length).fill(null);
   let acc = 0;
   for(let i = 0; i < v.length; i++){
     if(i >= p){
       const avg = acc / p;
-      out[i] = avg > 0 ? v[i] / avg : null;
+      // La última barra puede ser la rueda en curso: comparar media jornada contra
+      // jornadas enteras daba 0,2× en cualquier papel y se leía como falta de interés.
+      // Se proyecta a rueda completa dividiendo por la fracción transcurrida.
+      const vol = (i === v.length - 1 && isNum(fraccionUltima) && fraccionUltima > 0)
+        ? v[i] / fraccionUltima : v[i];
+      out[i] = avg > 0 ? vol / avg : null;
       acc -= v[i-p];
     }
     acc += v[i];
@@ -1551,7 +1573,21 @@ async function getBars(sym, interval = '1d', range = '1y'){
   }
   if(bars.c.length < 30) throw new Error('histórico insuficiente para ' + sym);
 
+  // ¿La última barra es la rueda en curso? Yahoo devuelve la vela del día en formación:
+  // su volumen está incompleto y su cierre se mueve, así que TODO lo que se calcule
+  // sobre ella es provisorio. Se marca y se mide cuánto lleva transcurrido.
+  const ses = r.meta?.currentTradingPeriod?.regular;
+  let enCurso = false, fraccion = 1;
+  if(ses && ses.start && ses.end && bars.t.length){
+    const ahora = Math.floor(Date.now() / 1000);
+    if(bars.t[bars.t.length-1] >= ses.start - 86400 && ahora < ses.end && ahora >= ses.start){
+      enCurso = true;
+      fraccion = clamp((ahora - ses.start) / Math.max(1, ses.end - ses.start), 0.02, 1);
+    }
+  }
+
   bars.meta = {
+    enCurso, fraccion,
     symbol: r.meta?.symbol || sym,
     name: r.meta?.longName || r.meta?.shortName || '',
     ccy: r.meta?.currency || '',
@@ -1562,6 +1598,24 @@ async function getBars(sym, interval = '1d', range = '1y'){
   };
   memCache.set(key, { ts: Date.now(), data: bars });
   return bars;
+}
+
+/**
+ * Serie con la que se calculan las señales según el modo elegido. En 'cierre' se
+ * quita la rueda en formación, pero se conservan su precio y su variación para
+ * poder mostrarlos: lo que se opera es el precio de ahora, lo que se analiza es
+ * la última vela cerrada, y conviene que se vean las dos cosas.
+ */
+function barrasParaSenales(bars){
+  if(MODO_BARRA !== 'cierre' || !bars.meta?.enCurso || bars.c.length < 30) return bars;
+  const rec = {};
+  ['t','o','h','l','c','v'].forEach(k => rec[k] = bars[k].slice(0, -1));
+  rec.meta = Object.assign({}, bars.meta, {
+    recortada: true,
+    precioVivo: bars.c[bars.c.length-1],
+    cambioVivo: bars.c[bars.c.length-2] ? (bars.c[bars.c.length-1]/bars.c[bars.c.length-2]-1)*100 : null
+  });
+  return rec;
 }
 
 /** Ejecuta tareas con concurrencia limitada, reportando progreso */
@@ -1600,7 +1654,7 @@ function computeIndicators(bars){
   I.stoch  = stochastic(h, l, c, 14, 3);
   I.adx    = adx(h, l, c, 14);
   I.volMA  = sma(v, 20);
-  I.rvolArr = relVolume(v, 20);
+  I.rvolArr = relVolume(v, 20, bars.meta?.enCurso ? bars.meta.fraccion : null);
   I.wr      = williamsR(h, l, c, 14);
   I.st      = superTrend(h, l, c, 10, 3);
   I.konc    = koncorde(bars);
@@ -1861,12 +1915,17 @@ function buildSignals(bars, I, S, ctx){
   /* 12 · Posición en el rango de 52 semanas */
   if(isNum(L.hi52) && isNum(L.lo52) && L.hi52 > L.lo52){
     const posPct = (L.close - L.lo52) / (L.hi52 - L.lo52) * 100;
+    // La posición en el rango no alcanza: un papel puede estar a mitad de rango y aun
+    // así 24% por debajo de su máximo, que es una tendencia de fondo distinta a la de
+    // otro que está a 2%. Se mira también esa distancia.
     let st = 0;
-    if(posPct >= 85) st = 1;
-    else if(posPct <= 15) st = -1;
+    if(posPct >= 85 && L.d52h > -8) st = 1;
+    else if(posPct <= 15 || L.d52h < -20) st = -1;
     add('r52', 'Rango 52 semanas',
-      'En el ' + nf(posPct,0) + '% del rango anual (máx ' + px(L.hi52, ccy) + ' / mín ' + px(L.lo52, ccy) + ')',
-      st, 9, posPct >= 95 || posPct <= 5);
+      'En el ' + nf(posPct,0) + '% del rango anual, a ' + nf(Math.abs(L.d52h),1) + '% del máximo' +
+      ' (máx ' + px(L.hi52, ccy) + ' / mín ' + px(L.lo52, ccy) + ')' +
+      (L.d52h < -20 ? ' — lejos del techo anual: la tendencia de fondo no acompaña' : ''),
+      st, 9, posPct >= 95 || posPct <= 5 || L.d52h < -20);
   }
 
   /* 13 · Fuerza relativa vs índice */
@@ -3144,7 +3203,7 @@ async function runAnalisis(){
   try{
     const uk = univOf(sym);
     const u = UNIVERSOS[uk];
-    const bars = await getBars(sym, interval, range);
+    const bars = barrasParaSenales(await getBars(sym, interval, range));
     const I = computeIndicators(bars);
     const S = computeStructure(bars, I, Math.min(lookback, bars.c.length - 5));
 
@@ -3217,10 +3276,17 @@ function renderQuote(sym, bars, I, ccy, m){
   $('#q-head').style.display = 'flex';
   $('#q-sym').textContent = bars.meta.symbol || sym;
   $('#q-name').textContent = m?.name || bars.meta.name || '';
-  $('#q-px').textContent = px(L.close, ccy);
+  const m2 = bars.meta || {};
+  // En modo cierre se muestra el precio de ahora, pero el veredicto es de la última
+  // vela cerrada: mezclarlos sin avisar sería lo más confuso posible.
+  const hayVivo = m2.recortada && isNum(m2.precioVivo);
+  $('#q-px').innerHTML = px(hayVivo ? m2.precioVivo : L.close, ccy) +
+    (hayVivo ? '<span style="font-size:10px;color:var(--warn);margin-left:7px;font-family:var(--font)">en vivo</span>' : '');
   const ce = $('#q-chg');
-  ce.className = 'q-chg ' + (L.chg > 0 ? 'up' : L.chg < 0 ? 'dn' : 'fl');
-  ce.textContent = pf(L.chg, 2);
+  const chgMostrado = hayVivo ? m2.cambioVivo : L.chg;
+  ce.className = 'q-chg ' + (chgMostrado > 0 ? 'up' : chgMostrado < 0 ? 'dn' : 'fl');
+  ce.textContent = pf(chgMostrado, 2);
+  pintarCurso(m2);
   const mini = [
     ['Apertura', px(L.open, ccy)],
     ['Máximo', px(L.high, ccy)],
@@ -3230,6 +3296,19 @@ function renderQuote(sym, bars, I, ccy, m){
     ['RSI', isNum(L.rsi) ? nf(L.rsi,1) : '—']
   ];
   $('#q-mini').innerHTML = mini.map(x => '<div><span>' + x[0] + '</span><b>' + x[1] + '</b></div>').join('');
+}
+
+/** Cápsula de la cabecera: avisa si la rueda está abierta y cuánto lleva */
+function pintarCurso(meta){
+  const el = $('#curso-pill');
+  if(!el) return;
+  if(!meta || !meta.enCurso){ el.style.display = 'none'; return; }
+  const pct = Math.round(meta.fraccion * 100);
+  el.style.display = '';
+  el.textContent = 'RUEDA EN CURSO ' + pct + '%';
+  el.title = MODO_BARRA === 'cierre'
+    ? 'Las señales se calculan sobre la última vela CERRADA. El precio de arriba es el de ahora.'
+    : 'Las señales incluyen la rueda en formación y pueden cambiar hasta el cierre. El volumen se proyecta a rueda completa.';
 }
 
 function renderVerdict(v, score, signals){
@@ -3418,7 +3497,7 @@ async function loadUniverse(uk, onProg){
     if(!r.ok) return;
     const [sym, name, sector] = u.tickers[i];
     try{
-      const bars = r.value.d;
+      const bars = barrasParaSenales(r.value.d);
       const I = computeIndicators(bars);
       items.push({ sym, name, sector, bars, I, barsW: r.value.w });
     }catch(e){ /* histórico insuficiente */ }
@@ -3517,7 +3596,7 @@ async function runScan(){
       r.f.t0  = ev.score > -18 && ev.score < 18;
       r.f.tm1 = ev.score <= -18 && ev.score > -45;
       r.f.tm2 = ev.score <= -45;
-      r.setup = setupLabel(r, ev.signals);
+      r.setup = setupLabel(r, ev.signals);   // usa r.score, ya asignado arriba
       return r;
     });
     renderScan();
@@ -3549,7 +3628,12 @@ function setupLabel(r, signals){
   if(r.f.sqz)               return { t: 'Compresión previa', k: 'nu' };
   if(r.f.mmUp)              return { t: 'Tendencia alcista', k: 'up' };
   if(r.f.mmDn)              return { t: 'Tendencia bajista', k: 'dn' };
-  return { t: 'Sin setup', k: 'nu' };
+  // Antes caía en "Sin setup" incluso con score alto, y quedaba al lado de COMPRA
+  // FUERTE como si el sistema se contradijera. El score no sale de esta lista de
+  // patrones sino de 20 señales; cuando ninguno encaja se describe eso, no un vacío.
+  if(isNum(r.score) && r.score >= 45)  return { t: 'Varias señales alineadas', k: 'up' };
+  if(isNum(r.score) && r.score <= -45) return { t: 'Deterioro generalizado', k: 'dn' };
+  return { t: 'Sin patrón definido', k: 'nu' };
 }
 
 function renderScan(){
@@ -4420,6 +4504,12 @@ function init(){
     redibujarActivo();
   }));
   $('#i-ind').addEventListener('change', e => { CH.ind = e.target.value; redibujarActivo(); });
+  $$('#barra-sw button').forEach(b => b.addEventListener('click', () => {
+    MODO_BARRA = b.dataset.b;
+    $$('#barra-sw button').forEach(x => x.classList.toggle('on', x === b));
+    SCAN.rows = []; renderScan();      // el scanner queda invalidado: se calculó con la otra base
+    runAnalisis();
+  }));
   $$('#chart-sw button').forEach(b => b.addEventListener('click', () => setChartMode(b.dataset.c)));
   setChartMode(TV.modo);   // deja el panel del modo por defecto visible desde el arranque
 
