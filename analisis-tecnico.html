@@ -164,6 +164,11 @@ body{padding:18px 22px 44px}
 .chart-ohlc{position:absolute;top:8px;left:11px;z-index:5;font-family:var(--mono);font-size:10.5px;font-weight:600;
   display:flex;gap:11px;flex-wrap:wrap;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,.9)}
 .chart-ohlc b{color:var(--text4);font-weight:600}
+.chart-toast{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9;pointer-events:none;
+  background:rgba(0,0,0,.82);color:#fff;border:1px solid var(--border);border-radius:7px;padding:9px 15px;
+  font-size:12.5px;font-weight:600;letter-spacing:.2px;opacity:0;transition:opacity .18s}
+.chart-toast.on{opacity:1}
+[data-tema="claro"] .chart-toast{background:rgba(255,255,255,.95);color:var(--text1);box-shadow:0 3px 14px rgba(0,0,0,.18)}
 .chart-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:9px;
   color:var(--text4);font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;text-align:center;padding:20px}
 
@@ -498,6 +503,7 @@ tbody tr.clk{cursor:pointer}
         <div class="chart-wrap">
           <canvas id="chart"></canvas>
           <div class="chart-ohlc" id="ohlc"></div>
+          <div class="chart-toast" id="chart-toast">Ctrl + rueda para hacer zoom</div>
               <div class="chart-empty" id="chart-empty">
             <div style="font-size:26px;opacity:.35">◱</div>
             <div>Ingresá un ticker y presioná Analizar</div>
@@ -899,7 +905,7 @@ tbody tr.clk{cursor:pointer}
  */
 // Versión visible arriba a la derecha. SUMAR 1 EN CADA CAMBIO PUBLICADO,
 // así se puede verificar de un vistazo que el sitio sirve la última build.
-const APP_VERSION = 11;
+const APP_VERSION = 12;
 
 const UNIVERSOS = {
   usd: {
@@ -1203,6 +1209,34 @@ function roc(src, p){
 }
 
 /**
+ * Reparto del volumen a lo largo de la rueda, medido sobre 720 ruedas completas de
+ * 12 papeles del universo (barras de 15 minutos, 60 días). Cada valor es la porción
+ * del volumen diario ya operada al final de ese tramo de 15 minutos.
+ *
+ * El volumen NO se reparte parejo: a las 11:30 (31% de la rueda transcurrida) ya se
+ * operó el 40% del día, y los últimos 15 minutos concentran el 12,5% por la subasta
+ * de cierre. Proyectar en línea recta sobrestimaba ×2,9 en la primera media hora
+ * —cualquier apertura normal se leía como volumen anormal— y subestimaba ×0,90 en
+ * la última hora.
+ */
+const PERFIL_VOL = [0.1094,0.1623,0.2096,0.2532,0.2922,0.3290,0.3657,0.4001,0.4337,
+                    0.4635,0.4919,0.5188,0.5443,0.5696,0.5946,0.6193,0.6445,0.6682,
+                    0.6947,0.7193,0.7449,0.7710,0.8011,0.8341,0.8748,1.0000];
+
+/** Porción del volumen diario que suele estar operada con `frac` de rueda transcurrida. */
+function porcionVolumen(frac){
+  if(!isNum(frac) || frac >= 1) return 1;
+  const x = frac * PERFIL_VOL.length - 1;         // posición en la grilla de tramos
+  const i = Math.floor(x);
+  const share = i < 0
+    ? PERFIL_VOL[0] * Math.max(0, x + 1)          // dentro del primer tramo
+    : PERFIL_VOL[i] + (PERFIL_VOL[Math.min(i + 1, PERFIL_VOL.length - 1)] - PERFIL_VOL[i]) * (x - i);
+  // Piso: en los primeros minutos el reparto es demasiado ruidoso para proyectar y
+  // sin tope la división explota. Igual el modo "al cierre" descarta esa vela entera.
+  return Math.max(share, 0.02);
+}
+
+/**
  * Volumen relativo: volumen de la barra contra el promedio de las p barras PREVIAS.
  * Se excluye la barra en curso a propósito: incluirla diluye el propio pico que se
  * quiere medir (un día de 3× sobre 20 ruedas mediría 2,9× si se auto-promedia).
@@ -1215,9 +1249,10 @@ function relVolume(v, p = 20, fraccionUltima){
       const avg = acc / p;
       // La última barra puede ser la rueda en curso: comparar media jornada contra
       // jornadas enteras daba 0,2× en cualquier papel y se leía como falta de interés.
-      // Se proyecta a rueda completa dividiendo por la fracción transcurrida.
-      const vol = (i === v.length - 1 && isNum(fraccionUltima) && fraccionUltima > 0)
-        ? v[i] / fraccionUltima : v[i];
+      // Se proyecta a rueda completa con la curva medida de reparto intradiario, no
+      // en línea recta: el volumen se carga a la apertura y al cierre.
+      const vol = (i === v.length - 1 && isNum(fraccionUltima) && fraccionUltima > 0 && fraccionUltima < 1)
+        ? v[i] / porcionVolumen(fraccionUltima) : v[i];
       out[i] = avg > 0 ? vol / avg : null;
       acc -= v[i-p];
     }
@@ -1493,6 +1528,12 @@ function candlePatterns(o, h, l, c, i){
   const upW = h[i] - Math.max(c[i], o[i]);
   const dnW = Math.min(c[i], o[i]) - l[i];
   const pBody = Math.abs(c[i-1] - o[i-1]);
+  // Tolerancia del hueco de apertura para la envolvente. Exigir que la apertura no
+  // supere ni un centavo al cierre previo descarta envolventes válidas: en acciones
+  // que operan con pre-market casi siempre hay un hueco mínimo, y si el impulso se
+  // come toda la vela contraria el patrón está igual. Se admite hasta un 8% del
+  // rango de la vela previa.
+  const hueco = (h[i-1] - l[i-1]) * 0.08;
 
   if(body / range < 0.1) out.push({ n: 'Doji', s: 0, d: 'indecisión: apertura y cierre casi idénticos' });
   // La mecha opuesta se mide contra el rango total, no contra el cuerpo: un cuerpo muy
@@ -1501,9 +1542,9 @@ function candlePatterns(o, h, l, c, i){
     out.push({ n: 'Martillo', s: 1, d: 'mecha inferior larga: rechazo de precios bajos' });
   if(upW > body * 2 && dnW <= range * 0.15 && body / range < 0.4)
     out.push({ n: 'Estrella fugaz', s: -1, d: 'mecha superior larga: rechazo de precios altos' });
-  if(c[i] > o[i] && c[i-1] < o[i-1] && c[i] >= o[i-1] && o[i] <= c[i-1] && body > pBody)
+  if(c[i] > o[i] && c[i-1] < o[i-1] && c[i] >= o[i-1] && o[i] <= c[i-1] + hueco && body > pBody)
     out.push({ n: 'Envolvente alcista', s: 1, d: 'la vela verde cubre por completo la roja previa' });
-  if(c[i] < o[i] && c[i-1] > o[i-1] && c[i] <= o[i-1] && o[i] >= c[i-1] && body > pBody)
+  if(c[i] < o[i] && c[i-1] > o[i-1] && c[i] <= o[i-1] && o[i] >= c[i-1] - hueco && body > pBody)
     out.push({ n: 'Envolvente bajista', s: -1, d: 'la vela roja cubre por completo la verde previa' });
   if(body / range > 0.85 && c[i] > o[i]) out.push({ n: 'Marubozu alcista', s: 1, d: 'cuerpo completo sin mechas: presión compradora' });
   if(body / range > 0.85 && c[i] < o[i]) out.push({ n: 'Marubozu bajista', s: -1, d: 'cuerpo completo sin mechas: presión vendedora' });
@@ -1637,62 +1678,78 @@ async function pool(items, fn, conc, onProg){
 
 /* ───────────────────────── MOTOR DE ANÁLISIS ───────────────────────── */
 
-/** Calcula todos los indicadores sobre un set de barras. */
-function computeIndicators(bars){
-  const { o, h, l, c, v } = bars, n = c.length;
-  const I = {};
-  I.n = n;
-  I.sma20  = sma(c, 20);
-  I.sma50  = sma(c, 50);
-  I.sma200 = sma(c, 200);
-  I.ema9   = ema(c, 9);
-  I.ema21  = ema(c, 21);
-  I.rsi    = rsi(c, 14);
-  I.macd   = macd(c);
-  I.atr    = atr(h, l, c, 14);
-  I.bb     = bollinger(c, 20, 2);
-  I.stoch  = stochastic(h, l, c, 14, 3);
-  I.adx    = adx(h, l, c, 14);
-  I.volMA  = sma(v, 20);
-  I.rvolArr = relVolume(v, 20, bars.meta?.enCurso ? bars.meta.fraccion : null);
-  I.wr      = williamsR(h, l, c, 14);
-  I.st      = superTrend(h, l, c, 10, 3);
-  I.konc    = koncorde(bars);
-  I.roc5   = roc(c, 5);
-  I.roc21  = roc(c, 21);
-  I.roc63  = roc(c, 63);
+/**
+ * Series de indicadores sobre todas las barras.
+ *
+ * Todas son causales: las de ventana móvil (SMA, Bollinger, estocástico, ADX, ROC,
+ * volumen relativo) sólo miran hacia atrás, y las recursivas (EMA, RMA de Wilder,
+ * RSI, MACD, ATR, SuperTrend, Koncorde) arrancan del mismo semilla al principio del
+ * array. Por eso el valor en la posición i es idéntico se calcule sobre la serie
+ * entera o sobre la serie recortada hasta i, y el backtest puede calcularlas UNA vez
+ * en lugar de rehacerlas desde la barra 0 en cada rueda simulada.
+ */
+function computeSeries(bars){
+  const { h, l, c, v } = bars;
+  const A = {};
+  A.sma20  = sma(c, 20);
+  A.sma50  = sma(c, 50);
+  A.sma200 = sma(c, 200);
+  A.ema9   = ema(c, 9);
+  A.ema21  = ema(c, 21);
+  A.rsi    = rsi(c, 14);
+  A.macd   = macd(c);
+  A.atr    = atr(h, l, c, 14);
+  A.bb     = bollinger(c, 20, 2);
+  A.stoch  = stochastic(h, l, c, 14, 3);
+  A.adx    = adx(h, l, c, 14);
+  A.volMA  = sma(v, 20);
+  A.rvolArr = relVolume(v, 20, bars.meta?.enCurso ? bars.meta.fraccion : null);
+  A.wr      = williamsR(h, l, c, 14);
+  A.st      = superTrend(h, l, c, 10, 3);
+  A.konc    = koncorde(bars);
+  A.roc5   = roc(c, 5);
+  A.roc21  = roc(c, 21);
+  A.roc63  = roc(c, 63);
+  return A;
+}
 
-  const i = n - 1;
-  I.last = {
+/**
+ * Foto del estado en la rueda i. Todos los rezagos (máximo de 20, rango de 52
+ * semanas, percentil de compresión de bandas) terminan en i y no miran más allá,
+ * así que la foto en i es la misma se arme sobre la serie entera o sobre la
+ * recortada. `m` es la cantidad de ruedas conocidas hasta i inclusive.
+ */
+function snapshotAt(bars, A, i){
+  const { o, h, l, c, v } = bars, m = i + 1;
+  const L = {
     i, close: c[i], open: o[i], high: h[i], low: l[i], vol: v[i],
     prevClose: c[i-1],
     chg: c[i-1] ? (c[i]/c[i-1] - 1) * 100 : 0,
     gap: c[i-1] ? (o[i]/c[i-1] - 1) * 100 : 0,
-    sma20: I.sma20[i], sma50: I.sma50[i], sma200: I.sma200[i],
-    ema9: I.ema9[i], ema21: I.ema21[i],
-    rsi: I.rsi[i],
-    macdLine: I.macd.line[i], macdSig: I.macd.signal[i], macdHist: I.macd.hist[i],
-    macdHistPrev: I.macd.hist[i-1],
-    atr: I.atr[i],
-    atrp: I.atr[i] && c[i] ? I.atr[i] / c[i] * 100 : null,
-    bbUp: I.bb.up[i], bbLo: I.bb.lo[i], bbMid: I.bb.mid[i], bbW: I.bb.bw[i], bbPB: I.bb.pb[i],
-    stK: I.stoch.k[i], stD: I.stoch.d[i],
-    adx: I.adx.adx[i], pdi: I.adx.pdi[i], ndi: I.adx.ndi[i],
-    volMA: I.volMA[i],
-    rvol: I.rvolArr[i],
-    roc5: I.roc5[i], roc21: I.roc21[i], roc63: I.roc63[i],
-    wr: I.wr[i], stLinea: I.st.linea[i], stDir: I.st.dir[i], stDirPrev: I.st.dir[i-1],
-    koncMarron: I.konc.marron[i], koncAzul: I.konc.azul[i], koncVerde: I.konc.verde[i],
+    sma20: A.sma20[i], sma50: A.sma50[i], sma200: A.sma200[i],
+    ema9: A.ema9[i], ema21: A.ema21[i],
+    rsi: A.rsi[i],
+    macdLine: A.macd.line[i], macdSig: A.macd.signal[i], macdHist: A.macd.hist[i],
+    macdHistPrev: A.macd.hist[i-1],
+    atr: A.atr[i],
+    atrp: A.atr[i] && c[i] ? A.atr[i] / c[i] * 100 : null,
+    bbUp: A.bb.up[i], bbLo: A.bb.lo[i], bbMid: A.bb.mid[i], bbW: A.bb.bw[i], bbPB: A.bb.pb[i],
+    stK: A.stoch.k[i], stD: A.stoch.d[i],
+    adx: A.adx.adx[i], pdi: A.adx.pdi[i], ndi: A.adx.ndi[i],
+    volMA: A.volMA[i],
+    rvol: A.rvolArr[i],
+    roc5: A.roc5[i], roc21: A.roc21[i], roc63: A.roc63[i],
+    wr: A.wr[i], stLinea: A.st.linea[i], stDir: A.st.dir[i], stDirPrev: A.st.dir[i-1],
+    koncMarron: A.konc.marron[i], koncAzul: A.konc.azul[i], koncVerde: A.konc.verde[i],
     hi20: highest(h, 20, i-1), lo20: lowest(l, 20, i-1),
-    hi52: highest(h, Math.min(n, 252), i), lo52: lowest(l, Math.min(n, 252), i)
+    hi52: highest(h, Math.min(m, 252), i), lo52: lowest(l, Math.min(m, 252), i)
   };
-  const L = I.last;
   L.d20h = L.hi20 ? (L.close / L.hi20 - 1) * 100 : null;
   L.d20l = L.lo20 ? (L.close / L.lo20 - 1) * 100 : null;
   L.d52h = L.hi52 ? (L.close / L.hi52 - 1) * 100 : null;
   L.d52l = L.lo52 ? (L.close / L.lo52 - 1) * 100 : null;
   L.bbWmin = (() => {           // percentil de compresión de bandas (squeeze)
-    const w = I.bb.bw.slice(Math.max(0, n-126)).filter(isNum);
+    const w = A.bb.bw.slice(Math.max(0, m-126), m).filter(isNum);
     if(w.length < 20 || !isNum(L.bbW)) return null;
     const below = w.filter(x => x < L.bbW).length;
     return below / w.length * 100;   // 0 = banda más angosta del período
@@ -1706,12 +1763,73 @@ function computeIndicators(bars){
     if(isNum(L.sma20)) s += L.close > L.sma20 ? 1 : -1;
     return s;
   })();
+  return L;
+}
+
+/** Indicadores + foto de la última rueda, que es lo que consume toda la app. */
+function computeIndicators(bars){
+  const A = computeSeries(bars), n = bars.c.length;
+  const I = Object.assign({}, A);
+  I.n = n;
+  I.last = snapshotAt(bars, A, n - 1);
   return I;
 }
 
 /** Estructura de precio: pivotes, S/R, líneas de tendencia */
-function computeStructure(bars, I, lookback){
+/**
+ * Pivotes de la serie entera recortados a la rueda i.
+ *
+ * Un pivote en j necesita w barras a cada lado, así que si j+w <= i el vecindario
+ * completo ya existía en la serie recortada y el resultado es idéntico al de
+ * recalcular. Esto es lo que permite que el backtest no rehaga la búsqueda de
+ * pivotes desde la barra 0 en cada rueda simulada.
+ */
+function pivotesHasta(full, w, i){
+  const tope = i - w;
+  return { hi: full.hi.filter(j => j <= tope), lo: full.lo.filter(j => j <= tope) };
+}
+
+/**
+ * Extremo reciente todavía SIN confirmar como pivote.
+ *
+ * Un pivote fractal necesita w barras a cada lado, así que el mínimo de un desplome
+ * de ayer no puede ser pivote hasta dentro de w ruedas — es la definición, y la
+ * `ta.pivotlow` de TradingView tiene exactamente el mismo rezago. Meterlo igual en
+ * los soportes haría que la app repinte: un nivel que hoy existe y mañana desaparece.
+ *
+ * En lugar de eso se devuelve aparte, para dibujarlo marcado como provisorio sin que
+ * entre en los niveles, en las directrices ni en el puntaje.
+ */
+function extremoSinConfirmar(h, l, w){
+  const n = h.length, out = { hi: null, lo: null };
+  for(let i = Math.max(w, n - w); i < n; i++){
+    let esH = true, esL = true;
+    for(let j = i - w; j < n && j <= i + w; j++){
+      if(j === i) continue;
+      if(j < i){
+        if(h[j] >= h[i]) esH = false;
+        if(l[j] <= l[i]) esL = false;
+      } else {
+        if(h[j] > h[i]) esH = false;
+        if(l[j] < l[i]) esL = false;
+      }
+    }
+    if(esH) out.hi = i;
+    if(esL) out.lo = i;
+  }
+  return out;
+}
+
+/** Juegos de pivotes de la serie entera, para reusar en el backtest. */
+function pivotesPre(bars){
+  const { h, l } = bars, pre = {};
+  [2, 3, 4, 6].forEach(w => pre[w] = pivots(h, l, w));
+  return pre;
+}
+
+function computeStructure(bars, I, lookback, pre){
   const { h, l, c } = bars, n = c.length;
+  const piv_ = w => pre ? pivotesHasta(pre[w], w, n - 1) : pivots(h, l, w);
   const atrV = I.last.atr || (c[n-1] * 0.02);
   // Todas las tolerancias son un PORCENTAJE del precio local, no puntos absolutos:
   // en un papel que multiplicó por 10 en el año, el ATR de hoy aplicado a los precios
@@ -1719,8 +1837,8 @@ function computeStructure(bars, I, lookback){
   // agosto) e infla los toques de las directrices. Tope en 5% / 3,5% para que un
   // ATR% disparado tras un desplome no vuelva a aflojar el criterio.
   const atrPct = atrV / (c[n-1] || 1);
-  const piv = pivots(h, l, n > 400 ? 4 : 3);
-  const pivFino = pivots(h, l, 2);          // anclas alternativas para las directrices
+  const piv = piv_(n > 400 ? 4 : 3);
+  const pivFino = piv_(2);          // anclas alternativas para las directrices
   const levels = srLevels(h, l, c, piv, Math.min(atrPct * 0.9, 0.05));
   const sets = [piv, pivFino];
   const tlLow  = trendline(h, l, c, sets, 'low',  lookback, atrV, n);
@@ -1731,14 +1849,24 @@ function computeStructure(bars, I, lookback){
   // Dos escalas de niveles. Los MAYORES salen de pivotes anchos (6 barras por lado)
   // y marcan la estructura grande del año; los menores, de los pivotes normales.
   // Cuáles se dibujan lo decide el zoom en cada momento (nivelesEnVista).
-  const pivMayor = pivots(h, l, 6);
+  const pivMayor = piv_(6);
   const levelsMayor = srLevels(h, l, c, pivMayor, Math.min(atrPct * 1.1, 0.06));
   const nivelesTodos = levelsMayor.map(l => Object.assign({ escala: 'M' }, l));
   levels.forEach(l => {
     if(!nivelesTodos.some(o => Math.abs(o.price - l.price) <= l.price * 0.015))
       nivelesTodos.push(Object.assign({ escala: 'm' }, l));
   });
-  return { piv, pivFino, levels, nivelesTodos, tlLow, tlHigh, atrV, lookback };
+  // El extremo de las últimas ruedas se muestra aparte, marcado, y NO entra en
+  // `levels` (que es lo que alimenta el puntaje) ni en la búsqueda de directrices.
+  const sinConf = extremoSinConfirmar(h, l, n > 400 ? 4 : 3);
+  const prov = [];
+  if(sinConf.lo != null) prov.push({ price: l[sinConf.lo], touches: 1, lastIdx: sinConf.lo, kind: 'sop', escala: 'P', prov: true });
+  if(sinConf.hi != null) prov.push({ price: h[sinConf.hi], touches: 1, lastIdx: sinConf.hi, kind: 'res', escala: 'P', prov: true });
+  prov.forEach(pv => {
+    if(!nivelesTodos.some(o => Math.abs(o.price - pv.price) <= pv.price * 0.008)) nivelesTodos.push(pv);
+  });
+
+  return { piv, pivFino, levels, nivelesTodos, prov, tlLow, tlHigh, atrV, lookback };
 }
 
 /**
@@ -2028,12 +2156,15 @@ function mesesTxt(lb){
 function nivelesEnVista(S, pLo, pHi, barrasVisibles){
   const todos = S.nivelesTodos || S.levels;
   const enRango = todos.filter(l => l.price >= pLo && l.price <= pHi);
+  // El extremo sin confirmar entra siempre y primero: es la referencia más fresca y
+  // justamente la que el criterio de pivote todavía no puede ver.
+  const prov = enRango.filter(l => l.prov);
   let sel = enRango.filter(l => l.escala === 'M');
-  if(barrasVisibles < 190) sel = sel.concat(enRango.filter(l => l.escala !== 'M' && l.touches >= 3));
-  if(barrasVisibles < 80)  sel = sel.concat(enRango.filter(l => l.escala !== 'M' && l.touches < 3));
+  if(barrasVisibles < 190) sel = sel.concat(enRango.filter(l => l.escala !== 'M' && !l.prov && l.touches >= 3));
+  if(barrasVisibles < 80)  sel = sel.concat(enRango.filter(l => l.escala !== 'M' && !l.prov && l.touches < 3));
   sel.sort((x, y) => y.touches - x.touches);
   const out = [];
-  sel.forEach(l => { if(!out.some(o => Math.abs(o.price - l.price) <= l.price * 0.012)) out.push(l); });
+  prov.concat(sel).forEach(l => { if(!out.some(o => Math.abs(o.price - l.price) <= l.price * 0.012)) out.push(l); });
   return out.slice(0, 8).sort((x, y) => y.price - x.price);
 }
 
@@ -2327,10 +2458,25 @@ function chartInit(){
     CH.cv.style.cursor = 'grabbing';
   });
   window.addEventListener('mouseup', () => { CH.drag = null; if(CH.cv) CH.cv.style.cursor = 'crosshair'; });
+  // La rueda sola NO se intercepta: el gráfico mide 560px y frenar el scroll de la
+  // página cada vez que el puntero lo cruza mientras se baja a leer el plan operativo
+  // es insoportable. El zoom pide Ctrl (o ⌘); Shift y el gesto horizontal desplazan.
   CH.cv.addEventListener('wheel', e => {
     if(!CH.bars) return;
-    e.preventDefault();
     const n = CH.bars.c.length;
+    const lim = limitesPan(n);
+    const horizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+
+    if(e.shiftKey || horizontal){
+      e.preventDefault();
+      const d = horizontal ? e.deltaX : e.deltaY;
+      CH.start = clamp(Math.round(CH.start + Math.sign(d) * Math.max(1, CH.count * 0.06)), lim.min, lim.max);
+      chartDraw();
+      return;
+    }
+    if(!(e.ctrlKey || e.metaKey)){ avisoZoom(); return; }   // scroll normal de la página
+
+    e.preventDefault();
     const f = e.deltaY > 0 ? 1.15 : 1/1.15;
     const anchor = xToIdx(CH.mouse ? CH.mouse.x : null);
     const newCount = clamp(Math.round(CH.count * f), 25, n);
@@ -2341,7 +2487,24 @@ function chartInit(){
     chartDraw();
   }, { passive: false });
   CH.cv.addEventListener('dblclick', () => { chartResetView(); chartDraw(); });
-  window.addEventListener('resize', () => { if(CH.bars) chartDraw(); });
+  // El resize dispara decenas de veces por segundo mientras se arrastra el borde de
+  // la ventana; redibujar el canvas en cada uno satura el hilo principal.
+  let tRz = null;
+  window.addEventListener('resize', () => {
+    if(!CH.bars) return;
+    clearTimeout(tRz);
+    tRz = setTimeout(() => { if(CH.bars) chartDraw(); }, 120);
+  });
+}
+
+/** Aviso pasajero cuando se usa la rueda sin Ctrl sobre el gráfico. */
+let tToast = null;
+function avisoZoom(){
+  const el = $('#chart-toast');
+  if(!el) return;
+  el.classList.add('on');
+  clearTimeout(tToast);
+  tToast = setTimeout(() => el.classList.remove('on'), 1100);
 }
 
 function chartResetView(){
@@ -2509,13 +2672,20 @@ function chartDraw(){
     nivelesEnVista(CH.S, lo, hi, CH.count).forEach(l => {
       const y = yP(l.price);
       if(y < L.priceY0 || y > L.priceY1) return;
+      // El extremo sin confirmar va punteado fino: se ve, pero se distingue de un
+      // soporte con toques de verdad.
+      ctx.setLineDash(l.prov ? [2,4] : [5,4]);
+      ctx.lineWidth = l.prov ? 0.8 : 1;
+      ctx.globalAlpha = l.prov ? 0.6 : 1;
       ctx.strokeStyle = l.kind === 'sop' ? COL.sop : COL.res;
       ctx.beginPath(); ctx.moveTo(L.padL, Math.round(y)+.5); ctx.lineTo(L.padL + plotW, Math.round(y)+.5); ctx.stroke();
+      ctx.globalAlpha = 1;
       if(y - ultimaEtiqY < 12) return;
       ultimaEtiqY = y;
       ctx.fillStyle = l.kind === 'sop' ? COL.up : COL.dn;
       ctx.textAlign = 'left'; ctx.font = '9px "JetBrains Mono", monospace';
-      ctx.fillText((l.kind === 'sop' ? 'S ' : 'R ') + fmtAxis(l.price), L.padL + 4, y - 6);
+      ctx.fillText((l.prov ? '· ' : l.kind === 'sop' ? 'S ' : 'R ') + fmtAxis(l.price) +
+                   (l.prov ? '  sin confirmar' : ''), L.padL + 4, y - 6);
       ctx.font = '10px "JetBrains Mono", monospace';
     });
     ctx.setLineDash([]);
@@ -2932,9 +3102,11 @@ async function lwcRender(){
       LWC.lineas.push(velas.createPriceLine({
         price: l.price,
         color: esRes ? COL.res : COL.sop,
-        lineWidth: l.escala === 'M' ? 2 : 1,
-        lineStyle: L.LineStyle.Dashed, axisLabelVisible: true,
-        title: (esRes ? 'R' : 'S') + ' ·' + l.touches
+        lineWidth: l.prov ? 1 : l.escala === 'M' ? 2 : 1,
+        // Punteado ralo para el extremo que todavía no confirma como pivote
+        lineStyle: l.prov ? L.LineStyle.SparseDotted : L.LineStyle.Dashed,
+        axisLabelVisible: true,
+        title: l.prov ? 'sin confirmar' : (esRes ? 'R' : 'S') + ' ·' + l.touches
       }));
     });
   };
@@ -3461,7 +3633,7 @@ function renderChartNote(bars, S, I, ccy){
   // El recordatorio de controles es del gráfico propio: no se muestra con TradingView activo
   el.innerHTML = bits.join(' · ') +
     '<span id="chart-hint" style="float:right;color:var(--text4)' + (TV.modo === 'tv' ? ';display:none' : '') +
-    '">rueda = zoom · arrastrar = pan · doble click = reset</span>';
+    '">Ctrl + rueda = zoom · arrastrar o Shift + rueda = pan · doble click = reset</span>';
 }
 
 function setStat(txt, k){
@@ -4104,14 +4276,25 @@ function renderSectores(){
   const mx = Math.max(...vals.map(Math.abs), 1);
   const esScore = k === 'score';
 
+  // El tinte se arma como rgba en vez de con color-mix(): esa función no existe en
+  // Safari anterior a 16.2 ni en varios navegadores móviles algo viejos, y ahí las
+  // tarjetas quedaban con el fondo roto en lugar de simplemente más pálidas.
+  const cs = getComputedStyle(document.documentElement);
+  const rgba = (nombre, alpha) => {
+    const hex = cs.getPropertyValue('--' + nombre).trim();
+    const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+    if(!m) return 'transparent';
+    return 'rgba(' + parseInt(m[1],16) + ',' + parseInt(m[2],16) + ',' + parseInt(m[3],16) + ',' + alpha.toFixed(3) + ')';
+  };
+
   cont.innerHTML = orden.map(s => {
     const v = s[k];
     const int = isNum(v) ? clamp(Math.abs(v) / mx, 0, 1) : 0;
     const positivo = isNum(v) && v >= 0;
-    const tinte = positivo ? 'var(--up)' : 'var(--dn)';
+    const tinte = rgba(positivo ? 'up' : 'dn', int * 0.22);
     const papeles = s.papeles.slice().sort((a,b) => (b[k] ?? -999) - (a[k] ?? -999));
     return '<div class="sec-card">' +
-      '<div class="sec-top" style="background:color-mix(in srgb, ' + tinte + ' ' + Math.round(int*22) + '%, transparent)">' +
+      '<div class="sec-top" style="background:' + tinte + '">' +
         '<div class="n">' + esc(s.nombre) + '</div>' +
         '<div class="r ' + cls(v) + '">' + (esScore ? (v>0?'+':'') + nf(v,0) : pf(v,1)) + '</div>' +
         '<div class="c" style="color:var(--text3)">' + s.n + ' activo' + (s.n>1?'s':'') + '</div>' +
@@ -4228,14 +4411,23 @@ async function runBacktest(){
     for(let si = 0; si < series.length; si++){
       const B = series[si], n = B.c.length;
       papeles++;
+      // Indicadores y pivotes se calculan UNA vez por papel, no una vez por rueda.
+      // Todos son causales, así que leer la posición i de la serie entera da el mismo
+      // número que recalcular sobre la serie recortada hasta i — sin esto el backtest
+      // rehacía RSI, MACD, ADX y Koncorde desde la barra 0 en cada uno de los ~1.000
+      // pasos y tardaba once segundos por papel.
+      const A = computeSeries(B), pre = pivotesPre(B);
       for(let i = 220; i < n - H; i++){
         // Corte estricto: la evaluación de la rueda i sólo ve hasta la rueda i
         const b = { t: B.t.slice(0, i+1), o: B.o.slice(0, i+1), h: B.h.slice(0, i+1),
                     l: B.l.slice(0, i+1), c: B.c.slice(0, i+1), v: B.v.slice(0, i+1), meta: B.meta };
         let score, signals;
         try{
-          const I = computeIndicators(b);
-          const S = computeStructure(b, I, 42);
+          // Se pasan las series enteras: el único consumidor que va más allá de
+          // `last` es la divergencia de RSI, y sólo lee posiciones de pivote que
+          // están por detrás de i, así que no se asoma a ruedas futuras.
+          const I = Object.assign({}, A, { last: snapshotAt(B, A, i) });
+          const S = computeStructure(b, I, 42, pre);
           const r2 = buildSignals(b, I, S, { ccy: 'u$s' });
           score = r2.score; signals = r2.signals;
         }catch(e){ continue; }
